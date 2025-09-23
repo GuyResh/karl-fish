@@ -65,10 +65,10 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card">
+        <Link to="/sessions" className="stat-card stat-card-clickable">
           <div className="stat-value">{stats.totalSessions}</div>
           <div className="stat-label">Total Sessions</div>
-        </div>
+        </Link>
         <div className="stat-card">
           <div className="stat-value">{stats.totalCatches}</div>
           <div className="stat-label">Total Catches</div>
