@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Fish, Clock, MapPin, Thermometer, Wind, Plus } from 'lucide-react';
+import { Fish, Clock, MapPin, Thermometer, Wind } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
+import { UnitConverter } from '../utils/unitConverter';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -53,7 +54,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="dashboard">
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">Fishing Dashboard</h1>
@@ -72,10 +73,10 @@ const Dashboard: React.FC = () => {
           <div className="stat-value">{stats.totalSessions}</div>
           <div className="stat-label">Total Sessions</div>
         </Link>
-        <div className="stat-card">
+        <Link to="/catches" className="stat-card stat-card-link">
           <div className="stat-value">{stats.totalCatches}</div>
           <div className="stat-label">Total Catches</div>
-        </div>
+        </Link>
         <div className="stat-card">
           <div className="stat-value">{stats.averageCatchPerSession.toFixed(1)}</div>
           <div className="stat-label">Avg Catches/Session</div>
@@ -113,8 +114,15 @@ const Dashboard: React.FC = () => {
                       {new Date(session.date).toLocaleDateString()}
                     </div>
                     <div className="session-location">
-                      <MapPin size={14} />
-                      {session.location.latitude.toFixed(4)}, {session.location.longitude.toFixed(4)}
+                      <div className="location-line">
+                        <MapPin size={14} />
+                        {session.location.latitude.toFixed(4)}°N, {Math.abs(session.location.longitude).toFixed(4)}°W
+                      </div>
+                      {session.location.description && (
+                        <div className="location-desc">
+                          {session.location.description}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="session-details">
@@ -133,13 +141,13 @@ const Dashboard: React.FC = () => {
                   {session.weather.temperature && (
                     <div className="session-weather">
                       <Thermometer size={14} />
-                      {session.weather.temperature}°C
+                      {UnitConverter.convertTemperature(session.weather.temperature).toFixed(1)}{UnitConverter.getTemperatureUnit()}
                     </div>
                   )}
                   {session.weather.windSpeed && (
                     <div className="session-wind">
                       <Wind size={14} />
-                      {session.weather.windSpeed} kts
+                      {UnitConverter.convertSpeed(session.weather.windSpeed).toFixed(1)} {UnitConverter.getSpeedUnit()}
                     </div>
                   )}
                 </div>

@@ -4,6 +4,8 @@ import { Save, Plus, Trash2, MapPin, Thermometer, Waves, Cloud, Map, Clock } fro
 import { FishingDataService } from '../database';
 import { FishingSession, FishCatch, Location, WeatherConditions, WaterConditions } from '../types';
 import { WeatherService } from '../services/weatherService';
+import { LocationService } from '../services/locationService';
+import { UnitConverter } from '../utils/unitConverter';
 import MapModal from './MapModal';
 
 const SessionForm: React.FC = () => {
@@ -19,6 +21,8 @@ const SessionForm: React.FC = () => {
     water: {},
     catches: []
   });
+  const [locationDescription, setLocationDescription] = useState<string>('');
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -63,8 +67,9 @@ const SessionForm: React.FC = () => {
             location: newLocation
           }));
           
-          // Fetch weather data for the new location
+          // Fetch weather data and location description for the new location
           fetchWeatherData(newLocation.latitude, newLocation.longitude);
+          fetchLocationDescription(newLocation.latitude, newLocation.longitude);
         },
         (error) => {
           console.warn('Could not get location:', error);
@@ -88,6 +93,39 @@ const SessionForm: React.FC = () => {
       console.error('Error fetching weather data:', error);
     } finally {
       setIsLoadingWeather(false);
+    }
+  };
+
+  const fetchLocationDescription = async (latitude: number, longitude: number) => {
+    setIsLoadingLocation(true);
+    try {
+      const description = await LocationService.getLocationDescription({ latitude, longitude });
+      setLocationDescription(description);
+      // Also update the session location with the description
+      setSession(prev => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          latitude,
+          longitude,
+          description
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching location description:', error);
+      const fallbackDescription = `Location: ${latitude.toFixed(4)}°N, ${Math.abs(longitude).toFixed(4)}°W`;
+      setLocationDescription(fallbackDescription);
+      setSession(prev => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          latitude,
+          longitude,
+          description: fallbackDescription
+        }
+      }));
+    } finally {
+      setIsLoadingLocation(false);
     }
   };
 
@@ -202,6 +240,50 @@ const SessionForm: React.FC = () => {
     }
   };
 
+  const handleEndSession = async () => {
+    // First set the end time
+    const updatedSession = { ...session, endTime: new Date() };
+    setSession(updatedSession);
+
+    // Then save the session
+    if (!updatedSession.date || !updatedSession.startTime || !updatedSession.location) {
+      alert('Please fill in all required fields (Date, Start Time, and Location)');
+      return;
+    }
+
+    // Validate catches if any exist
+    if (updatedSession.catches && updatedSession.catches.length > 0) {
+      const invalidCatches = updatedSession.catches.filter(catch_ => 
+        !catch_.species || !catch_.length || catch_.length <= 0
+      );
+      
+      if (invalidCatches.length > 0) {
+        alert('Please fill in species and length for all catches');
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      console.log('Ending and saving session with catches:', updatedSession.catches);
+      
+      if (isEditing && id) {
+        await FishingDataService.updateSession(id, updatedSession);
+        console.log('Session ended and updated successfully');
+      } else {
+        const sessionId = await FishingDataService.createSession(updatedSession as Omit<FishingSession, 'id'>);
+        console.log('Session ended and created with ID:', sessionId);
+      }
+      
+      navigate('/sessions');
+    } catch (error) {
+      console.error('Error ending session:', error);
+      alert('Error ending session: ' + error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="card">
@@ -220,15 +302,14 @@ const SessionForm: React.FC = () => {
           </h1>
           <div className="form-actions">
             {isEditing && !session.endTime && (
-              <button
+              <button 
                 type="button"
-                onClick={() => {
-                  setSession(prev => ({ ...prev, endTime: new Date() }));
-                }}
+                onClick={handleEndSession}
+                disabled={isSaving}
                 className="btn btn-warning"
               >
                 <Clock size={16} />
-                End Session
+                {isSaving ? 'Ending...' : 'End Session'}
               </button>
             )}
             <button 
@@ -310,7 +391,7 @@ const SessionForm: React.FC = () => {
                     )}
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Length (cm) *</label>
+                    <label className="form-label">{UnitConverter.getLengthLabel()} *</label>
                     <input
                       type="number"
                       step="0.1"
@@ -320,7 +401,7 @@ const SessionForm: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Weight (kg)</label>
+                    <label className="form-label">{UnitConverter.getWeightLabel()}</label>
                     <input
                       type="number"
                       step="0.1"
@@ -441,6 +522,20 @@ const SessionForm: React.FC = () => {
                 </button>
                 <button 
                   type="button" 
+                  onClick={() => {
+                    if (session.location?.latitude && session.location?.longitude) {
+                      fetchLocationDescription(session.location.latitude, session.location.longitude);
+                    }
+                  }}
+                  disabled={isLoadingLocation || !session.location?.latitude || !session.location?.longitude}
+                  className="btn btn-secondary btn-sm"
+                  title="Get Location Description"
+                >
+                  <MapPin size={14} />
+                  {isLoadingLocation ? 'Loading...' : 'Get Description'}
+                </button>
+                <button 
+                  type="button" 
                   onClick={getCurrentLocation}
                   className="btn btn-secondary btn-sm"
                 >
@@ -471,6 +566,15 @@ const SessionForm: React.FC = () => {
                 />
               </div>
             </div>
+            
+            {locationDescription && (
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label className="form-label">Location Description</label>
+                <div className="location-description">
+                  {locationDescription}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Weather Conditions */}
@@ -493,7 +597,7 @@ const SessionForm: React.FC = () => {
             </div>
             <div className="form-row-3">
               <div className="form-group">
-                <label className="form-label">Air Temperature (°C)</label>
+                <label className="form-label">{UnitConverter.getTemperatureLabel()}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -567,7 +671,7 @@ const SessionForm: React.FC = () => {
             </div>
             <div className="form-row-3">
               <div className="form-group">
-                <label className="form-label">Water Temperature (°C)</label>
+                <label className="form-label">{UnitConverter.getTemperatureLabel()}</label>
                 <input
                   type="number"
                   step="0.1"

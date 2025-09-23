@@ -5,6 +5,7 @@ export interface Location {
   altitude?: number;
   heading?: number;
   speed?: number;
+  description?: string; // Human-readable location description
 }
 
 export interface WeatherConditions {
@@ -90,6 +91,7 @@ export interface AppSettings {
   units: {
     temperature: 'celsius' | 'fahrenheit';
     distance: 'metric' | 'imperial';
+    weight: 'metric' | 'imperial';
     pressure: 'hpa' | 'inHg';
   };
   furuno: {

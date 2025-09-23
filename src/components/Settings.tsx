@@ -80,17 +80,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
             <h3>Units</h3>
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Temperature</label>
-                <select
-                  className="form-select"
-                  value={localSettings.units.temperature}
-                  onChange={(e) => handleInputChange('units', 'temperature', e.target.value)}
-                >
-                  <option value="celsius">Celsius (°C)</option>
-                  <option value="fahrenheit">Fahrenheit (°F)</option>
-                </select>
-              </div>
-              <div className="form-group">
                 <label className="form-label">Distance</label>
                 <select
                   className="form-select"
@@ -99,6 +88,30 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 >
                   <option value="metric">Metric (m, km)</option>
                   <option value="imperial">Imperial (ft, mi)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Weight</label>
+                <select
+                  className="form-select"
+                  value={localSettings.units.weight}
+                  onChange={(e) => handleInputChange('units', 'weight', e.target.value)}
+                >
+                  <option value="metric">Metric (kg)</option>
+                  <option value="imperial">Imperial (lbs)</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Temperature</label>
+                <select
+                  className="form-select"
+                  value={localSettings.units.temperature}
+                  onChange={(e) => handleInputChange('units', 'temperature', e.target.value)}
+                >
+                  <option value="celsius">Celsius (°C)</option>
+                  <option value="fahrenheit">Fahrenheit (°F)</option>
                 </select>
               </div>
               <div className="form-group">
@@ -260,3 +273,4 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
 };
 
 export default Settings;
+

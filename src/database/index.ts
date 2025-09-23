@@ -173,7 +173,8 @@ export class FishingDataService {
     const totalCatches = allCatches.length;
     
     const speciesCount = allCatches.reduce((acc, catch_) => {
-      acc[catch_.species] = (acc[catch_.species] || 0) + 1;
+      const species = catch_.species?.replace('Custom:', '') || '';
+      acc[species] = (acc[species] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     

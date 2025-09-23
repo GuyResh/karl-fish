@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Edit, Trash2, MapPin, Clock, Fish, Thermometer, Wind, Search } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
+import { UnitConverter } from '../utils/unitConverter';
 
 const SessionList: React.FC = () => {
   const [sessions, setSessions] = useState<FishingSession[]>([]);
@@ -11,7 +12,19 @@ const SessionList: React.FC = () => {
 
   useEffect(() => {
     loadSessions();
+    loadSettings();
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      const appSettings = await FishingDataService.getSettings();
+      if (appSettings) {
+        UnitConverter.setSettings(appSettings);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
 
   const loadSessions = async () => {
     try {
@@ -150,8 +163,15 @@ const SessionList: React.FC = () => {
                 </div>
 
                 <div className="session-location">
-                  <MapPin size={14} />
-                  {session.location.latitude.toFixed(4)}, {session.location.longitude.toFixed(4)}
+                  <div className="location-line">
+                    <MapPin size={14} />
+                    {session.location.latitude.toFixed(4)}°N, {Math.abs(session.location.longitude).toFixed(4)}°W
+                  </div>
+                  {session.location.description && (
+                    <div className="location-desc">
+                      {session.location.description}
+                    </div>
+                  )}
                 </div>
 
                 <div className="session-catches">
@@ -170,13 +190,13 @@ const SessionList: React.FC = () => {
                   {session.weather.temperature && (
                     <div className="condition">
                       <Thermometer size={14} />
-                      {session.weather.temperature}°C
+                      {UnitConverter.convertTemperature(session.weather.temperature).toFixed(1)}{UnitConverter.getTemperatureUnit()}
                     </div>
                   )}
                   {session.weather.windSpeed && (
                     <div className="condition">
                       <Wind size={14} />
-                      {session.weather.windSpeed} kts
+                      {UnitConverter.convertSpeed(session.weather.windSpeed).toFixed(1)} {UnitConverter.getSpeedUnit()}
                     </div>
                   )}
                 </div>
