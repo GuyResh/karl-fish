@@ -13,7 +13,7 @@ export class FishingDatabase extends Dexie {
       sessions: 'id, date, startTime, endTime, location.latitude, location.longitude',
       catches: 'id, species, length, weight, condition, sessionId',
       settings: 'id',
-      nmeaData: 'timestamp, latitude, longitude'
+      nmeaData: 'id, timestamp, latitude, longitude'
     });
   }
 }
@@ -25,6 +25,9 @@ export class FishingDataService {
   // Session management
   static async createSession(session: Omit<FishingSession, 'id'>): Promise<string> {
     const id = crypto.randomUUID();
+    const catches = session.catches || [];
+    
+    // Create session without catches first
     const newSession: FishingSession = {
       ...session,
       id,
@@ -32,6 +35,17 @@ export class FishingDataService {
     };
     
     await db.sessions.add(newSession);
+    
+    // Add catches separately with sessionId
+    for (const catch_ of catches) {
+      const catchWithSessionId = {
+        ...catch_,
+        id: catch_.id || crypto.randomUUID(),
+        sessionId: id
+      };
+      await db.catches.add(catchWithSessionId);
+    }
+    
     return id;
   }
 
@@ -55,7 +69,26 @@ export class FishingDataService {
   }
 
   static async updateSession(id: string, updates: Partial<FishingSession>): Promise<void> {
-    await db.sessions.update(id, updates);
+    // If catches are being updated, handle them separately
+    if (updates.catches) {
+      // Remove existing catches for this session
+      await db.catches.where('sessionId').equals(id).delete();
+      
+      // Add new catches with sessionId
+      for (const catch_ of updates.catches) {
+        const catchWithSessionId = {
+          ...catch_,
+          sessionId: id
+        };
+        await db.catches.add(catchWithSessionId);
+      }
+      
+      // Remove catches from updates to avoid storing them in sessions table
+      const { catches, ...sessionUpdates } = updates;
+      await db.sessions.update(id, sessionUpdates);
+    } else {
+      await db.sessions.update(id, updates);
+    }
   }
 
   static async deleteSession(id: string): Promise<void> {
@@ -105,7 +138,11 @@ export class FishingDataService {
 
   // NMEA data management
   static async addNMEAData(data: NMEAData): Promise<void> {
-    await db.nmeaData.add(data);
+    const nmeaDataWithId = {
+      ...data,
+      id: data.id || crypto.randomUUID()
+    };
+    await db.nmeaData.add(nmeaDataWithId);
   }
 
   static async getNMEAData(startDate?: Date, endDate?: Date): Promise<NMEAData[]> {
