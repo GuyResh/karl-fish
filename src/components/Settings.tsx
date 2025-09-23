@@ -36,28 +36,24 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
   };
 
   const testFurunoConnection = async () => {
-    if (!localSettings.furuno.ipAddress) {
-      setConnectionStatus('Please enter an IP address');
-      return;
-    }
-
     setIsTestingConnection(true);
     setConnectionStatus('Testing connection...');
 
     try {
       const success = await furunoService.connect(
-        localSettings.furuno.ipAddress,
-        localSettings.furuno.port || 10110
+        localSettings.furuno.ipAddress || 'test',
+        localSettings.furuno.port || 10110,
+        true // Enable test mode
       );
       
       if (success) {
-        setConnectionStatus('Connection successful!');
-        setTimeout(() => furunoService.disconnect(), 3000);
+        setConnectionStatus('Test mode started! Simulating Furuno data...');
+        setTimeout(() => furunoService.disconnect(), 10000); // Run for 10 seconds
       } else {
-        setConnectionStatus('Connection failed');
+        setConnectionStatus('Test mode failed');
       }
     } catch (error) {
-      setConnectionStatus(`Connection failed: ${error}`);
+      setConnectionStatus(`Test mode failed: ${error}`);
     } finally {
       setIsTestingConnection(false);
     }
@@ -175,11 +171,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 <div className="connection-test">
                   <button 
                     onClick={testFurunoConnection}
-                    disabled={isTestingConnection || !localSettings.furuno.ipAddress}
+                    disabled={isTestingConnection}
                     className="btn btn-secondary"
                   >
                     <TestTube size={16} />
-                    {isTestingConnection ? 'Testing...' : 'Test Connection'}
+                    {isTestingConnection ? 'Testing...' : 'Test with Simulated Data'}
                   </button>
                   {connectionStatus && (
                     <div className={`connection-status ${connectionStatus.includes('successful') ? 'success' : 'error'}`}>
