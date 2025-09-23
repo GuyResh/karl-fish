@@ -1,0 +1,266 @@
+import React, { useState } from 'react';
+import { Save, Wifi, WifiOff, TestTube } from 'lucide-react';
+import { AppSettings } from '../types';
+import { furunoService } from '../services/furunoService';
+
+interface SettingsProps {
+  settings: AppSettings;
+  onUpdate: (settings: AppSettings) => void;
+}
+
+const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
+  const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('');
+
+  const handleInputChange = (section: keyof AppSettings, field: string, value: any) => {
+    setLocalSettings(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      onUpdate(localSettings);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const testFurunoConnection = async () => {
+    if (!localSettings.furuno.ipAddress) {
+      setConnectionStatus('Please enter an IP address');
+      return;
+    }
+
+    setIsTestingConnection(true);
+    setConnectionStatus('Testing connection...');
+
+    try {
+      const success = await furunoService.connect(
+        localSettings.furuno.ipAddress,
+        localSettings.furuno.port || 10110
+      );
+      
+      if (success) {
+        setConnectionStatus('Connection successful!');
+        setTimeout(() => furunoService.disconnect(), 3000);
+      } else {
+        setConnectionStatus('Connection failed');
+      }
+    } catch (error) {
+      setConnectionStatus(`Connection failed: ${error}`);
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+
+  return (
+    <div className="settings">
+      <div className="card">
+        <div className="card-header">
+          <h1 className="card-title">Settings</h1>
+          <button 
+            onClick={handleSave} 
+            disabled={isSaving}
+            className="btn btn-primary"
+          >
+            <Save size={16} />
+            {isSaving ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
+
+        <div className="settings-content">
+          {/* Units Settings */}
+          <div className="settings-section">
+            <h3>Units</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Temperature</label>
+                <select
+                  className="form-select"
+                  value={localSettings.units.temperature}
+                  onChange={(e) => handleInputChange('units', 'temperature', e.target.value)}
+                >
+                  <option value="celsius">Celsius (°C)</option>
+                  <option value="fahrenheit">Fahrenheit (°F)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Distance</label>
+                <select
+                  className="form-select"
+                  value={localSettings.units.distance}
+                  onChange={(e) => handleInputChange('units', 'distance', e.target.value)}
+                >
+                  <option value="metric">Metric (m, km)</option>
+                  <option value="imperial">Imperial (ft, mi)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Pressure</label>
+                <select
+                  className="form-select"
+                  value={localSettings.units.pressure}
+                  onChange={(e) => handleInputChange('units', 'pressure', e.target.value)}
+                >
+                  <option value="hpa">Hectopascals (hPa)</option>
+                  <option value="inHg">Inches of Mercury (inHg)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Furuno Settings */}
+          <div className="settings-section">
+            <h3>
+              <Wifi size={16} />
+              Furuno TZT19F Integration
+            </h3>
+            
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={localSettings.furuno.enabled}
+                  onChange={(e) => handleInputChange('furuno', 'enabled', e.target.checked)}
+                />
+                Enable Furuno integration
+              </label>
+            </div>
+
+            {localSettings.furuno.enabled && (
+              <>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">IP Address</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={localSettings.furuno.ipAddress || ''}
+                      onChange={(e) => handleInputChange('furuno', 'ipAddress', e.target.value)}
+                      placeholder="192.168.1.100"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Port</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={localSettings.furuno.port || 10110}
+                      onChange={(e) => handleInputChange('furuno', 'port', parseInt(e.target.value))}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={localSettings.furuno.autoConnect}
+                      onChange={(e) => handleInputChange('furuno', 'autoConnect', e.target.checked)}
+                    />
+                    Auto-connect on startup
+                  </label>
+                </div>
+
+                <div className="connection-test">
+                  <button 
+                    onClick={testFurunoConnection}
+                    disabled={isTestingConnection || !localSettings.furuno.ipAddress}
+                    className="btn btn-secondary"
+                  >
+                    <TestTube size={16} />
+                    {isTestingConnection ? 'Testing...' : 'Test Connection'}
+                  </button>
+                  {connectionStatus && (
+                    <div className={`connection-status ${connectionStatus.includes('successful') ? 'success' : 'error'}`}>
+                      {connectionStatus}
+                    </div>
+                  )}
+                </div>
+
+                <div className="furuno-info">
+                  <h4>Furuno TZT19F Setup Instructions:</h4>
+                  <ol>
+                    <li>Ensure your Furuno TZT19F is connected to the same network as this device</li>
+                    <li>Enable NMEA 0183 output on the Furuno device</li>
+                    <li>Configure the device to output data via TCP/IP on the specified port (default: 10110)</li>
+                    <li>Find the device's IP address in the Furuno network settings</li>
+                    <li>Enter the IP address and port above, then test the connection</li>
+                  </ol>
+                  
+                  <h4>Supported NMEA Sentences:</h4>
+                  <ul>
+                    <li><strong>GPGGA</strong> - GPS Fix Data (position, altitude)</li>
+                    <li><strong>GPRMC</strong> - Recommended Minimum (position, speed, heading)</li>
+                    <li><strong>SDDBT/YDBT</strong> - Depth Below Transducer</li>
+                    <li><strong>SDMTW/YMTW</strong> - Water Temperature</li>
+                    <li><strong>SDMDA/YMDA</strong> - Meteorological Composite</li>
+                    <li><strong>SDMWV/YMWV</strong> - Wind Speed and Direction</li>
+                    <li><strong>SDVHW/YVHW</strong> - Water Speed and Heading</li>
+                    <li><strong>SDVWR/YVWR</strong> - Relative Wind Speed and Angle</li>
+                  </ul>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Export Settings */}
+          <div className="settings-section">
+            <h3>Export Settings</h3>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Default Export Format</label>
+                <select
+                  className="form-select"
+                  value={localSettings.export.defaultFormat}
+                  onChange={(e) => handleInputChange('export', 'defaultFormat', e.target.value)}
+                >
+                  <option value="csv">CSV</option>
+                  <option value="json">JSON</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={localSettings.export.autoBackup}
+                  onChange={(e) => handleInputChange('export', 'autoBackup', e.target.checked)}
+                />
+                Enable automatic backup
+              </label>
+            </div>
+
+            {localSettings.export.autoBackup && (
+              <div className="form-group">
+                <label className="form-label">Backup Interval (days)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={localSettings.export.backupInterval}
+                  onChange={(e) => handleInputChange('export', 'backupInterval', parseInt(e.target.value))}
+                  min="1"
+                  max="30"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Settings;

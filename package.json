@@ -1,0 +1,32 @@
+{
+  "name": "carl-fish",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.263.1",
+    "date-fns": "^2.30.0",
+    "nmea-parser": "^1.0.0",
+    "dexie": "^3.2.4",
+    "react-router-dom": "^6.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "@tauri-apps/cli": "^1.5.0",
+    "@tauri-apps/api": "^1.5.0"
+  }
+}
