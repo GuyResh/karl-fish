@@ -48,7 +48,7 @@ body {
 
 .main-content {
   flex: 1;
-  padding: 20px;
+  padding: 12px;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
@@ -76,7 +76,6 @@ body {
   gap: 0.5rem;
   font-size: 1.5rem;
   font-weight: bold;
-  text-decoration: none;
   color: white;
 }
 
@@ -94,9 +93,14 @@ body {
   transition: background-color 0.2s;
 }
 
-.nav a:hover,
-.nav a.active {
+.nav a:hover {
   background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.nav a.active {
+  color: white;
+  font-weight: 600;
 }
 
 .furuno-status {
@@ -122,16 +126,16 @@ body {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid #eee;
 }
 
@@ -203,12 +207,12 @@ body {
 
 /* Form Styles */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   font-weight: 500;
   color: #333;
 }
@@ -217,7 +221,7 @@ body {
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 0.9rem;
@@ -234,25 +238,63 @@ body {
 
 .form-textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 60px;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .form-row-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-row-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-inline-row {
+  display: flex;
+  align-items: end;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-inline-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-inline-group .form-label {
+  margin-bottom: 0;
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.form-inline-group .form-input {
+  flex: 1;
+  min-width: 120px;
+}
+
+.location-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 /* Grid Styles */
 .grid {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .grid-2 {
@@ -271,24 +313,42 @@ body {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .stat-card {
   background: white;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
   text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #667eea;
 }
 
+.stat-card-clickable {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.stat-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+  border-left-color: #5a67d8;
+}
+
+.stat-card-clickable:hover .stat-value {
+  color: #667eea;
+}
+
 .stat-value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: bold;
   color: #667eea;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .stat-label {
@@ -308,7 +368,7 @@ body {
 
 .table th,
 .table td {
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
@@ -435,7 +495,7 @@ body {
 .session-card {
   background: white;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -449,7 +509,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .session-date {
@@ -465,8 +525,8 @@ body {
 .session-info {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .session-time,
@@ -492,8 +552,8 @@ body {
 
 .session-conditions {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .condition {
@@ -505,7 +565,7 @@ body {
 }
 
 .session-notes {
-  padding-top: 1rem;
+  padding-top: 0.75rem;
   border-top: 1px solid #eee;
 }
 
@@ -540,17 +600,17 @@ body {
 .form-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
 }
 
 .form-section {
   border: 1px solid #eee;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .form-section h3 {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #333;
   display: flex;
   align-items: center;
@@ -561,14 +621,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .catch-form {
   border: 1px solid #eee;
   border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
   background: #f8f9fa;
 }
 
@@ -576,7 +636,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .catch-header h4 {
@@ -593,17 +653,17 @@ body {
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
 }
 
 .settings-section {
   border: 1px solid #eee;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .settings-section h3 {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #333;
   display: flex;
   align-items: center;
@@ -681,17 +741,17 @@ body {
 .export-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
 }
 
 .export-section {
   border: 1px solid #eee;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .export-section h3 {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #333;
   display: flex;
   align-items: center;
@@ -851,4 +911,129 @@ body {
   font-size: 0.8rem;
   color: #888;
   margin-top: 0.5rem;
+}
+
+/* Map Modal Styles */
+.map-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.map-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: mapModalSlideIn 0.3s ease-out;
+}
+
+@keyframes mapModalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.map-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.map-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.map-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: #666;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-modal-close:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.map-modal-content {
+  padding: 1.5rem;
+}
+
+.map-container {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.map-coordinates {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.coordinate-item {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.coordinate-item strong {
+  color: #333;
+  margin-right: 0.5rem;
+}
+
+
+/* Responsive map modal */
+@media (max-width: 768px) {
+  .map-modal {
+    margin: 10px;
+    max-height: 95vh;
+  }
+  
+  .map-modal-content {
+    padding: 1rem;
+  }
+  
+  .map-container iframe {
+    height: 300px;
+  }
+  
+  .map-coordinates {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
