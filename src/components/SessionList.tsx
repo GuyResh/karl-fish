@@ -80,9 +80,12 @@ const SessionList: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">Fishing Sessions</h1>
+          {/* New Session button commented out - redundant with header navigation */}
+          {/* 
           <Link to="/sessions/new" className="btn btn-primary">
             New Session
           </Link>
+          */}
         </div>
         
         <div className="search-container">
