@@ -68,6 +68,7 @@ body {
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
+  gap: 3rem;
 }
 
 .logo {
@@ -200,6 +201,17 @@ body {
   background: #c82333;
 }
 
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+  border-color: #ffc107;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
+  border-color: #d39e00;
+}
+
 .btn-sm {
   padding: 0.5rem 1rem;
   font-size: 0.8rem;
@@ -291,6 +303,12 @@ body {
   align-items: center;
 }
 
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 /* Grid Styles */
 .grid {
   display: grid;
@@ -312,7 +330,7 @@ body {
 /* Stats Cards */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
@@ -593,7 +611,6 @@ body {
 
 /* Session Form Styles */
 .session-form {
-  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -601,12 +618,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  padding: 0;
 }
 
 .form-section {
   border: 1px solid #eee;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 .form-section h3 {
@@ -932,9 +950,10 @@ body {
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 800px;
-  width: 100%;
-  max-height: 90vh;
+  width: 95vw;
+  height: 95vh;
+  max-width: none;
+  max-height: none;
   overflow: hidden;
   animation: mapModalSlideIn 0.3s ease-out;
 }
@@ -968,6 +987,13 @@ body {
   font-size: 1.1rem;
 }
 
+.map-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.map-modal-refresh,
 .map-modal-close {
   background: none;
   border: none;
@@ -981,6 +1007,7 @@ body {
   justify-content: center;
 }
 
+.map-modal-refresh:hover,
 .map-modal-close:hover {
   background: #e9ecef;
   color: #333;
@@ -995,6 +1022,8 @@ body {
   overflow: hidden;
   margin-bottom: 1rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  height: calc(95vh - 200px);
+  min-height: 400px;
 }
 
 .map-coordinates {
