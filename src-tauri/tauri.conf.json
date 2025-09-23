@@ -1,72 +1,46 @@
 {
+  "productName": "Carl Fish",
+  "version": "0.1.0",
+  "identifier": "com.carlfish.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist",
-    "withGlobalTauri": false
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
   },
-  "package": {
-    "productName": "Carl Fish",
-    "version": "0.1.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "dialog": {
-        "all": false,
-        "open": true,
-        "save": true
-      },
-      "fs": {
-        "all": false,
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "copyFile": true,
-        "createDir": true,
-        "removeFile": true,
-        "removeDir": true,
-        "renameFile": true,
-        "exists": true
-      },
-      "path": {
-        "all": true
-      },
-      "os": {
-        "all": false,
-        "platform": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.carlfish.app",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
-    },
-    "security": {
-      "csp": null
-    },
+  "app": {
     "windows": [
       {
-        "fullscreen": false,
-        "resizable": true,
         "title": "Carl Fish - Fishing Log",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
-        "minHeight": 600
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false
       }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
     ]
-  }
+  },
+  "permissions": [
+    "core:default",
+    "shell:default",
+    "dialog:default",
+    "fs:default",
+    "path:default",
+    "os:default"
+  ]
 }
