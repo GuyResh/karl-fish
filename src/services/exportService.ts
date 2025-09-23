@@ -133,9 +133,9 @@ export class ExportService {
     recipients: string[],
     subject: string,
     body: string,
-    attachmentContent: string,
-    filename: string,
-    mimeType: string
+    _attachmentContent: string,
+    _filename: string,
+    _mimeType: string
   ): string {
     const params = new URLSearchParams({
       to: recipients.join(','),

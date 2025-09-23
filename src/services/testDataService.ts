@@ -3,7 +3,7 @@ import { NMEAData } from '../types';
 export class TestDataService {
   private static instance: TestDataService;
   private isRunning = false;
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: number | null = null;
   private onDataCallback: ((data: NMEAData) => void) | null = null;
 
   private constructor() {}

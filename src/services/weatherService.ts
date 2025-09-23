@@ -32,13 +32,14 @@ export class WeatherService {
   private static readonly OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
   private static readonly WATER_TEMP_API_URL = 'https://api.openweathermap.org/data/2.5/onecall';
 
-  static async getWeatherConditions(latitude: number, longitude: number): Promise<WeatherConditions | null> {
+  static async getWeatherConditions(_latitude: number, _longitude: number): Promise<WeatherConditions | null> {
     try {
       // For demo purposes, return mock data
       // In production, you would use a real weather API
       return this.getMockWeatherData();
       
       // Real API call (commented out for demo):
+      // This would use OpenWeatherResponse interface and the constants above
       /*
       const response = await fetch(
         `${this.OPENWEATHER_BASE_URL}?lat=${latitude}&lon=${longitude}&appid=${this.OPENWEATHER_API_KEY}&units=metric`
@@ -67,7 +68,7 @@ export class WeatherService {
     }
   }
 
-  static async getWaterConditions(latitude: number, longitude: number): Promise<WaterConditions | null> {
+  static async getWaterConditions(_latitude: number, _longitude: number): Promise<WaterConditions | null> {
     try {
       // For demo purposes, return mock data
       // In production, you would use a marine weather API

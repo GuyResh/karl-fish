@@ -1,6 +1,6 @@
 import { NMEAParser } from '../utils/nmeaParser';
 import { FishingDataService } from '../database';
-import { NMEAData, Location, WeatherConditions, WaterConditions } from '../types';
+import { NMEAData } from '../types';
 import { testDataService } from './testDataService';
 
 export class FurunoService {
@@ -113,7 +113,6 @@ export class FurunoService {
           ...session.location,
           latitude: nmeaData.latitude,
           longitude: nmeaData.longitude,
-          accuracy: nmeaData.accuracy,
           heading: nmeaData.heading,
           speed: nmeaData.speed
         };
