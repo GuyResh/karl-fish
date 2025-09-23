@@ -1,6 +1,7 @@
 import { NMEAParser } from '../utils/nmeaParser';
 import { FishingDataService } from '../database';
 import { NMEAData, Location, WeatherConditions, WaterConditions } from '../types';
+import { testDataService } from './testDataService';
 
 export class FurunoService {
   private static instance: FurunoService;
@@ -20,7 +21,11 @@ export class FurunoService {
     return FurunoService.instance;
   }
 
-  async connect(ipAddress: string, port: number = 10110): Promise<boolean> {
+  async connect(ipAddress: string, port: number = 10110, testMode: boolean = false): Promise<boolean> {
+    if (testMode) {
+      return this.startTestMode();
+    }
+
     return new Promise((resolve, reject) => {
       try {
         const wsUrl = `ws://${ipAddress}:${port}`;
@@ -147,11 +152,28 @@ export class FurunoService {
     this.currentSessionId = sessionId;
   }
 
+  private async startTestMode(): Promise<boolean> {
+    console.log('Starting Furuno test mode with simulated data');
+    this.isConnected = true;
+    this.reconnectAttempts = 0;
+    
+    testDataService.startSimulation((data) => {
+      this.handleNMEAData(data.rawSentence);
+    });
+    
+    return true;
+  }
+
   disconnect(): void {
     if (this.socket) {
       this.socket.close();
       this.socket = null;
     }
+    
+    if (testDataService.isSimulationRunning()) {
+      testDataService.stopSimulation();
+    }
+    
     this.isConnected = false;
     this.currentSessionId = null;
   }
