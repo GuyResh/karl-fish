@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, Plus, Trash2, MapPin, Thermometer, Wind, Waves, Cloud, Map } from 'lucide-react';
+import { Save, Plus, Trash2, MapPin, Thermometer, Wind, Waves, Cloud, Map, Clock } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession, FishCatch, Location, WeatherConditions, WaterConditions } from '../types';
 import { WeatherService } from '../services/weatherService';
@@ -218,14 +218,28 @@ const SessionForm: React.FC = () => {
           <h1 className="card-title">
             {isEditing ? 'Edit Session' : 'New Fishing Session'}
           </h1>
-          <button 
-            onClick={handleSave} 
-            disabled={isSaving}
-            className="btn btn-primary"
-          >
-            <Save size={16} />
-            {isSaving ? 'Saving...' : 'Save Session'}
-          </button>
+          <div className="form-actions">
+            {isEditing && !session.endTime && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSession(prev => ({ ...prev, endTime: new Date() }));
+                }}
+                className="btn btn-warning"
+              >
+                <Clock size={16} />
+                End Session
+              </button>
+            )}
+            <button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="btn btn-primary"
+            >
+              <Save size={16} />
+              {isSaving ? 'Saving...' : 'Save Session'}
+            </button>
+          </div>
         </div>
 
         <div className="form-content">
