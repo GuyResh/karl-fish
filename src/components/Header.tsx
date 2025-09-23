@@ -19,10 +19,10 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
   return (
     <header className="header">
       <div className="header-content">
-        <Link to="/" className="logo">
+        <div className="logo">
           <Fish size={24} />
           Carl Fish
-        </Link>
+        </div>
         
         <nav className="nav">
           <Link 
