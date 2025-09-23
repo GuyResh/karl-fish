@@ -133,7 +133,7 @@ export class FishingDataService {
   }
 
   static async updateSettings(settings: AppSettings): Promise<void> {
-    await db.settings.put({ ...settings, id: 'main' });
+    await db.settings.put({ ...settings, id: 'main' } as any);
   }
 
   // NMEA data management
