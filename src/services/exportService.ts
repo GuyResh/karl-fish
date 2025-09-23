@@ -70,7 +70,7 @@ export class ExportService {
       filename = `fishing-log-${format(new Date(), 'yyyy-MM-dd')}.json`;
     }
 
-    const subject = options.emailSubject || `Fishing Log Export - ${format(new Date(), 'yyyy-MM-dd')}`;
+    const subject = options.emailSubject || `Fishing Log Export ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`;
     const body = `Please find attached the fishing log export.\n\nTotal sessions: ${(await this.getSessionsForExport(options)).length}\nExport date: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`;
 
     // Create mailto link
@@ -120,7 +120,7 @@ export class ExportService {
       session.weather.windDirection || '',
       session.weather.pressure || '',
       session.water.depth || '',
-      catch_?.species || '',
+      catch_?.species?.replace('Custom:', '') || '',
       catch_?.length || '',
       catch_?.weight || '',
       catch_?.condition || '',
@@ -199,7 +199,8 @@ export class ExportService {
 
     // Species breakdown
     const speciesCount = sessions.flatMap(s => s.catches).reduce((acc, catch_) => {
-      acc[catch_.species] = (acc[catch_.species] || 0) + 1;
+      const species = catch_.species?.replace('Custom:', '') || '';
+      acc[species] = (acc[species] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Download, Mail, FileText, Filter } from 'lucide-react';
 import { ExportService } from '../services/exportService';
 import { ExportOptions } from '../types';
+import { format } from 'date-fns';
 
 const Export: React.FC = () => {
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
@@ -13,7 +14,7 @@ const Export: React.FC = () => {
     end: ''
   });
   const [emailRecipients, setEmailRecipients] = useState('');
-  const [emailSubject, setEmailSubject] = useState('');
+  const [emailSubject, setEmailSubject] = useState(`Fishing Log Export ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`);
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState('');
 
