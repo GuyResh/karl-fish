@@ -1,5 +1,7 @@
 # Carl Fish - Fishing Log Application
 
+![Carl Fish Logo](CarlFish.png)
+
 A comprehensive React-based fishing log application that can be deployed as a web app or desktop application using Tauri. Features integration with Furuno multi-function displays for automatic data collection.
 
 ## Features
