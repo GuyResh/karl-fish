@@ -32,6 +32,7 @@ export interface WaterConditions {
 
 export interface FishCatch {
   id: string;
+  sessionId?: string; // Link to parent session
   species: string;
   length: number; // Length in cm
   weight?: number; // Weight in kg
@@ -59,6 +60,7 @@ export interface FishingSession {
 }
 
 export interface NMEAData {
+  id?: string;
   timestamp: Date;
   latitude?: number;
   longitude?: number;
