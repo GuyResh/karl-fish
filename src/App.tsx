@@ -73,7 +73,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router future={{ v7_relativeSplatPath: true }}>
       <div className="app">
         <Header settings={settings} />
         <main className="main-content">
