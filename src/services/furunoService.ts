@@ -32,7 +32,7 @@ export class FurunoService {
         this.socket = new WebSocket(wsUrl);
 
         this.socket.onopen = () => {
-          console.log('Connected to Furuno TZT19F');
+          console.log('Connected to Furuno unit');
           this.isConnected = true;
           this.reconnectAttempts = 0;
           resolve(true);
@@ -43,7 +43,7 @@ export class FurunoService {
         };
 
         this.socket.onclose = () => {
-          console.log('Disconnected from Furuno TZT19F');
+          console.log('Disconnected from Furuno unit');
           this.isConnected = false;
           this.handleReconnect(ipAddress, port);
         };
