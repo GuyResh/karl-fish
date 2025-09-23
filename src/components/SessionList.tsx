@@ -1,66 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2, MapPin, Clock, Fish, Thermometer, Wind, Search } from 'lucide-react';
-import { FishingDataService } from '../database';
-import { FishingSession } from '../types';
+import { useSessions, useDeleteSession, useSearchSessions, useSettings } from '../hooks/useFishingData';
 import { UnitConverter } from '../utils/unitConverter';
 
 const SessionList: React.FC = () => {
-  const [sessions, setSessions] = useState<FishingSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const { data: settings } = useSettings();
+  const { data: allSessions, isLoading: sessionsLoading, error: sessionsError } = useSessions();
+  const { data: searchResults, isLoading: searchLoading } = useSearchSessions(searchQuery);
+  const deleteSessionMutation = useDeleteSession();
 
-  useEffect(() => {
-    loadSessions();
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      const appSettings = await FishingDataService.getSettings();
-      if (appSettings) {
-        UnitConverter.setSettings(appSettings);
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
+  // Load settings for unit converter
+  React.useEffect(() => {
+    if (settings) {
+      UnitConverter.setSettings(settings);
     }
-  };
+  }, [settings]);
 
-  const loadSessions = async () => {
-    try {
-      const allSessions = await FishingDataService.getAllSessions();
-      setSessions(allSessions);
-    } catch (error) {
-      console.error('Error loading sessions:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const sessions = searchQuery.trim() ? searchResults : allSessions;
+  const isLoading = sessionsLoading || (searchQuery.trim() ? searchLoading : false);
+  const error = sessionsError;
 
   const handleDelete = async (sessionId: string) => {
     if (window.confirm('Are you sure you want to delete this session?')) {
-      try {
-        await FishingDataService.deleteSession(sessionId);
-        setSessions(sessions.filter(s => s.id !== sessionId));
-      } catch (error) {
-        console.error('Error deleting session:', error);
-        alert('Error deleting session');
-      }
+      deleteSessionMutation.mutate(sessionId, {
+        onError: (error) => {
+          console.error('Error deleting session:', error);
+          alert('Error deleting session');
+        }
+      });
     }
   };
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim()) {
-      try {
-        const results = await FishingDataService.searchSessions(query);
-        setSessions(results);
-      } catch (error) {
-        console.error('Error searching sessions:', error);
-      }
-    } else {
-      loadSessions();
-    }
   };
 
   const formatDate = (date: Date) => {
@@ -84,6 +59,16 @@ const SessionList: React.FC = () => {
       <div className="card">
         <div className="loading-spinner"></div>
         <p>Loading sessions...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card">
+        <div className="error-message">
+          <p>Error loading sessions: {error.message}</p>
+        </div>
       </div>
     );
   }
@@ -115,7 +100,7 @@ const SessionList: React.FC = () => {
         </div>
       </div>
 
-      {sessions.length === 0 ? (
+      {sessions?.length === 0 ? (
         <div className="card">
           <div className="empty-state">
             <Fish size={48} />
@@ -133,7 +118,7 @@ const SessionList: React.FC = () => {
         </div>
       ) : (
         <div className="sessions-grid">
-          {sessions.map(session => (
+          {sessions?.map(session => (
             <div key={session.id} className="session-card">
               <div className="session-card-header">
                 <div className="session-date">

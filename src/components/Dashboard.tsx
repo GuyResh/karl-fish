@@ -1,41 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Fish, Clock, MapPin, Thermometer, Wind } from 'lucide-react';
-import { FishingDataService } from '../database';
-import { FishingSession } from '../types';
+import { useSessionStats, useSessions } from '../hooks/useFishingData';
 import { UnitConverter } from '../utils/unitConverter';
 
 const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState({
-    totalSessions: 0,
-    totalCatches: 0,
-    totalSpecies: 0,
-    averageCatchPerSession: 0,
-    mostCommonSpecies: 'None',
-    totalFishingTime: 0
-  });
-  const [recentSessions, setRecentSessions] = useState<FishingSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: stats, isLoading: statsLoading, error: statsError } = useSessionStats();
+  const { data: sessions, isLoading: sessionsLoading, error: sessionsError } = useSessions();
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const [statsData, sessions] = await Promise.all([
-          FishingDataService.getSessionStats(),
-          FishingDataService.getAllSessions()
-        ]);
-        
-        setStats(statsData);
-        setRecentSessions(sessions.slice(0, 5)); // Show last 5 sessions
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDashboardData();
-  }, []);
+  const isLoading = statsLoading || sessionsLoading;
+  const error = statsError || sessionsError;
+  const recentSessions = sessions?.slice(0, 5) || []; // Show last 5 sessions
 
   const formatDuration = (hours: number): string => {
     if (hours < 1) {
@@ -49,6 +24,16 @@ const Dashboard: React.FC = () => {
       <div className="card">
         <div className="loading-spinner"></div>
         <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card">
+        <div className="error-message">
+          <p>Error loading dashboard data: {error.message}</p>
+        </div>
       </div>
     );
   }
@@ -70,27 +55,27 @@ const Dashboard: React.FC = () => {
 
       <div className="stats-grid">
         <Link to="/sessions" className="stat-card stat-card-clickable">
-          <div className="stat-value">{stats.totalSessions}</div>
+          <div className="stat-value">{stats?.totalSessions || 0}</div>
           <div className="stat-label">Total Sessions</div>
         </Link>
         <Link to="/catches" className="stat-card stat-card-link">
-          <div className="stat-value">{stats.totalCatches}</div>
+          <div className="stat-value">{stats?.totalCatches || 0}</div>
           <div className="stat-label">Total Catches</div>
         </Link>
         <div className="stat-card">
-          <div className="stat-value">{stats.averageCatchPerSession.toFixed(1)}</div>
+          <div className="stat-value">{(stats?.averageCatchPerSession || 0).toFixed(1)}</div>
           <div className="stat-label">Avg Catches/Session</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{formatDuration(stats.totalFishingTime)}</div>
+          <div className="stat-value">{formatDuration(stats?.totalFishingTime || 0)}</div>
           <div className="stat-label">Total Fishing Time</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{stats.totalSpecies}</div>
+          <div className="stat-value">{stats?.totalSpecies || 0}</div>
           <div className="stat-label">Species Caught</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{stats.mostCommonSpecies}</div>
+          <div className="stat-value">{stats?.mostCommonSpecies || 'None'}</div>
           <div className="stat-label">Most Common Species</div>
         </div>
       </div>
