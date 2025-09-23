@@ -34,13 +34,5 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-  },
-  "permissions": [
-    "core:default",
-    "shell:default",
-    "dialog:default",
-    "fs:default",
-    "path:default",
-    "os:default"
-  ]
+  }
 }
