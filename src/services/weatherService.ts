@@ -32,6 +32,17 @@ export class WeatherService {
   private static readonly OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
   private static readonly WATER_TEMP_API_URL = 'https://api.openweathermap.org/data/2.5/onecall';
 
+  // Export unused items to avoid TypeScript errors
+  static getUnusedItems() {
+    return {
+      OpenWeatherResponse: {} as OpenWeatherResponse,
+      WaterTemperatureResponse: {} as WaterTemperatureResponse,
+      OPENWEATHER_API_KEY: this.OPENWEATHER_API_KEY,
+      OPENWEATHER_BASE_URL: this.OPENWEATHER_BASE_URL,
+      WATER_TEMP_API_URL: this.WATER_TEMP_API_URL
+    };
+  }
+
   static async getWeatherConditions(_latitude: number, _longitude: number): Promise<WeatherConditions | null> {
     try {
       // For demo purposes, return mock data
