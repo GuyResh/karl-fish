@@ -119,7 +119,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
           <div className="settings-section">
             <h3>
               <Wifi size={16} />
-              Furuno TZT19F Integration
+              Furuno Integration
             </h3>
             
             <div className="form-group">
@@ -185,9 +185,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 </div>
 
                 <div className="furuno-info">
-                  <h4>Furuno TZT19F Setup Instructions:</h4>
+                  <h4>Furuno Setup Instructions:</h4>
                   <ol>
-                    <li>Ensure your Furuno TZT19F is connected to the same network as this device</li>
+                    <li>Ensure your Furuno unit is connected to the same network as this device</li>
                     <li>Enable NMEA 0183 output on the Furuno device</li>
                     <li>Configure the device to output data via TCP/IP on the specified port (default: 10110)</li>
                     <li>Find the device's IP address in the Furuno network settings</li>
