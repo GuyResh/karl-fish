@@ -55,12 +55,12 @@ export class ExportService {
       throw new Error('Email recipients are required');
     }
 
-    const format = options.format || 'csv';
+    const exportFormat = options.format || 'csv';
     let content: string;
     let mimeType: string;
     let filename: string;
 
-    if (format === 'csv') {
+    if (exportFormat === 'csv') {
       content = await this.exportToCSV(options);
       mimeType = 'text/csv';
       filename = `fishing-log-${format(new Date(), 'yyyy-MM-dd')}.csv`;
