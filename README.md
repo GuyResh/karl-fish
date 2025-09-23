@@ -1,6 +1,6 @@
 # Carl Fish - Fishing Log Application
 
-A comprehensive React-based fishing log application that can be deployed as a web app or desktop application using Tauri. Features integration with Furuno TZT19F multi-function displays for automatic data collection.
+A comprehensive React-based fishing log application that can be deployed as a web app or desktop application using Tauri. Features integration with Furuno multi-function displays for automatic data collection.
 
 ## Features
 
@@ -11,7 +11,7 @@ A comprehensive React-based fishing log application that can be deployed as a we
 - **Location Services**: GPS integration for accurate position logging
 
 ### 📡 Furuno Integration
-- **NMEA 0183/2000 Support**: Automatic data collection from Furuno TZT19F via WiFi
+- **NMEA 0183/2000 Support**: Automatic data collection from Furuno unit via WiFi
 - **Real-time Data**: Live updates of position, depth, water temperature, and weather
 - **Supported NMEA Sentences**:
   - GPGGA - GPS Fix Data
@@ -70,10 +70,10 @@ npm run tauri:dev
 npm run tauri:build
 ```
 
-## Furuno TZT19F Setup
+## Furuno Setup
 
 ### 1. Network Configuration
-1. Connect your Furuno TZT19F to the same network as your device
+1. Connect your Furuno unit to the same network as your device
 2. Note the device's IP address from the Furuno network settings
 3. Enable NMEA 0183 output on the Furuno device
 
