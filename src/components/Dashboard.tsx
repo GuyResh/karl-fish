@@ -57,10 +57,13 @@ const Dashboard: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">Fishing Dashboard</h1>
+          {/* New Session button commented out - redundant with header navigation */}
+          {/* 
           <Link to="/sessions/new" className="btn btn-primary">
             <Plus size={16} />
             New Session
           </Link>
+          */}
         </div>
       </div>
 

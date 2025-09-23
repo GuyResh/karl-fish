@@ -275,8 +275,14 @@ const SessionForm: React.FC = () => {
                     <label className="form-label">Species *</label>
                     <select
                       className="form-select"
-                      value={catch_.species}
-                      onChange={(e) => updateCatch(catch_.id, 'species', e.target.value)}
+                      value={catch_.species?.startsWith('Custom:') ? 'Custom' : catch_.species}
+                      onChange={(e) => {
+                        if (e.target.value === 'Custom') {
+                          updateCatch(catch_.id, 'species', 'Custom:');
+                        } else {
+                          updateCatch(catch_.id, 'species', e.target.value);
+                        }
+                      }}
                     >
                       <option value="">Select species</option>
                       <option value="Bluefin Tuna">Bluefin Tuna</option>
@@ -290,7 +296,18 @@ const SessionForm: React.FC = () => {
                       <option value="Halibut">Halibut</option>
                       <option value="Large Black Sea Bass">Large Black Sea Bass</option>
                       <option value="Pollock">Pollock</option>
+                      <option value="Custom">Custom (Other)</option>
                     </select>
+                    {catch_.species?.startsWith('Custom:') && (
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Enter custom species name"
+                        value={catch_.species.replace('Custom:', '')}
+                        onChange={(e) => updateCatch(catch_.id, 'species', `Custom:${e.target.value}`)}
+                        style={{ marginTop: '0.5rem' }}
+                      />
+                    )}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Length (cm) *</label>

@@ -159,7 +159,7 @@ const SessionList: React.FC = () => {
                   {session.catches.length} catches
                   {session.catches.length > 0 && (
                     <div className="catch-species">
-                      {session.catches.map(catch_ => catch_.species).join(', ')}
+                      {session.catches.map(catch_ => catch_.species?.replace('Custom:', '') || '').join(', ')}
                     </div>
                   )}
                 </div>
