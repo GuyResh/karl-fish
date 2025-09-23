@@ -74,16 +74,16 @@ const Dashboard: React.FC = () => {
           <div className="stat-label">Total Catches</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{stats.totalSpecies}</div>
-          <div className="stat-label">Species Caught</div>
-        </div>
-        <div className="stat-card">
           <div className="stat-value">{stats.averageCatchPerSession.toFixed(1)}</div>
           <div className="stat-label">Avg Catches/Session</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{formatDuration(stats.totalFishingTime)}</div>
           <div className="stat-label">Total Fishing Time</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{stats.totalSpecies}</div>
+          <div className="stat-label">Species Caught</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{stats.mostCommonSpecies}</div>
@@ -145,6 +145,8 @@ const Dashboard: React.FC = () => {
           )}
         </div>
 
+        {/* Quick Actions panel commented out - redundant with header navigation */}
+        {/* 
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">Quick Actions</h2>
@@ -164,6 +166,7 @@ const Dashboard: React.FC = () => {
             </Link>
           </div>
         </div>
+        */}
       </div>
     </div>
   );
