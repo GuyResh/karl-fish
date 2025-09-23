@@ -68,7 +68,7 @@ body {
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 3rem;
+  gap: 2rem;
 }
 
 .logo {
@@ -82,16 +82,17 @@ body {
 
 .nav {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   list-style: none;
 }
 
 .nav a {
   color: white;
   text-decoration: none;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 4px;
   transition: background-color 0.2s;
+  font-size: 1.1rem;
 }
 
 .nav a:hover {
@@ -674,7 +675,13 @@ body {
 
 /* Session Form Styles */
 .session-form {
+  max-width: 1000px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.session-form .card {
+  width: 100%;
 }
 
 .form-content {
