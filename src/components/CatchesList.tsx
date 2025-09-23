@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown, MapPin, Calendar, Clock, Fish, Scale } from 'lucide-react';
-import { FishingDataService } from '../database';
+import { useCatches, useSettings } from '../hooks/useFishingData';
 import { FishCatch, FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
 
@@ -8,44 +8,23 @@ type SortField = 'date' | 'time' | 'location' | 'species' | 'length' | 'weight';
 type SortDirection = 'asc' | 'desc';
 
 const CatchesList: React.FC = () => {
-  const [catches, setCatches] = useState<(FishCatch & { session: FishingSession })[]>([]);
-  const [filteredCatches, setFilteredCatches] = useState<(FishCatch & { session: FishingSession })[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  useEffect(() => {
-    loadCatches();
-  }, []);
+  const { data: catches, isLoading, error } = useCatches();
+  const { data: settings } = useSettings();
 
+  // Load settings for unit converter
   useEffect(() => {
-    filterAndSortCatches();
-  }, [catches, searchQuery, sortField, sortDirection]);
-
-  const loadCatches = async () => {
-    try {
-      const sessions = await FishingDataService.getAllSessions();
-      const allCatches: (FishCatch & { session: FishingSession })[] = [];
-      
-      sessions.forEach(session => {
-        session.catches.forEach(catch_ => {
-          allCatches.push({
-            ...catch_,
-            session
-          });
-        });
-      });
-      
-      setCatches(allCatches);
-    } catch (error) {
-      console.error('Error loading catches:', error);
-    } finally {
-      setIsLoading(false);
+    if (settings) {
+      UnitConverter.setSettings(settings);
     }
-  };
+  }, [settings]);
 
-  const filterAndSortCatches = () => {
+  const filteredCatches = useMemo(() => {
+    if (!catches) return [];
+
     let filtered = catches;
 
     // Filter by search query
@@ -59,7 +38,7 @@ const CatchesList: React.FC = () => {
     }
 
     // Sort catches
-    filtered.sort((a, b) => {
+    return filtered.sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
@@ -96,9 +75,7 @@ const CatchesList: React.FC = () => {
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-
-    setFilteredCatches(filtered);
-  };
+  }, [catches, searchQuery, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -133,6 +110,16 @@ const CatchesList: React.FC = () => {
       <div className="card">
         <div className="loading-spinner"></div>
         <p>Loading catches...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card">
+        <div className="error-message">
+          <p>Error loading catches: {error.message}</p>
+        </div>
       </div>
     );
   }
