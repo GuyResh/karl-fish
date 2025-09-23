@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, Plus, Trash2, MapPin, Thermometer, Wind, Waves } from 'lucide-react';
+import { Save, Plus, Trash2, MapPin, Thermometer, Wind, Waves, Cloud, Map } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession, FishCatch, Location, WeatherConditions, WaterConditions } from '../types';
+import { WeatherService } from '../services/weatherService';
+import MapModal from './MapModal';
 
 const SessionForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +22,8 @@ const SessionForm: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -48,19 +52,42 @@ const SessionForm: React.FC = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          const newLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          };
+          
           setSession(prev => ({
             ...prev,
-            location: {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy: position.coords.accuracy
-            }
+            location: newLocation
           }));
+          
+          // Fetch weather data for the new location
+          fetchWeatherData(newLocation.latitude, newLocation.longitude);
         },
         (error) => {
           console.warn('Could not get location:', error);
         }
       );
+    }
+  };
+
+  const fetchWeatherData = async (latitude: number, longitude: number) => {
+    setIsLoadingWeather(true);
+    try {
+      const weatherData = await WeatherService.getLocationWeatherData(latitude, longitude);
+      if (weatherData) {
+        setSession(prev => ({
+          ...prev,
+          weather: weatherData.weather,
+          water: weatherData.water
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+    } finally {
+      setIsLoadingWeather(false);
     }
   };
 
@@ -104,6 +131,7 @@ const SessionForm: React.FC = () => {
   const addCatch = () => {
     const newCatch: FishCatch = {
       id: crypto.randomUUID(),
+      sessionId: id || undefined, // Link to current session if editing
       species: '',
       length: 0,
       condition: 'alive',
@@ -137,22 +165,38 @@ const SessionForm: React.FC = () => {
 
   const handleSave = async () => {
     if (!session.date || !session.startTime || !session.location) {
-      alert('Please fill in all required fields');
+      alert('Please fill in all required fields (Date, Start Time, and Location)');
       return;
+    }
+
+    // Validate catches if any exist
+    if (session.catches && session.catches.length > 0) {
+      const invalidCatches = session.catches.filter(catch_ => 
+        !catch_.species || !catch_.length || catch_.length <= 0
+      );
+      
+      if (invalidCatches.length > 0) {
+        alert('Please fill in species and length for all catches');
+        return;
+      }
     }
 
     setIsSaving(true);
     try {
+      console.log('Saving session with catches:', session.catches);
+      
       if (isEditing && id) {
         await FishingDataService.updateSession(id, session);
+        console.log('Session updated successfully');
       } else {
         const sessionId = await FishingDataService.createSession(session as Omit<FishingSession, 'id'>);
+        console.log('Session created with ID:', sessionId);
         navigate(`/sessions/${sessionId}`);
       }
       navigate('/sessions');
     } catch (error) {
       console.error('Error saving session:', error);
-      alert('Error saving session');
+      alert('Error saving session: ' + error);
     } finally {
       setIsSaving(false);
     }
@@ -185,171 +229,6 @@ const SessionForm: React.FC = () => {
         </div>
 
         <div className="form-content">
-          {/* Basic Information */}
-          <div className="form-section">
-            <h3>Basic Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Date *</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={session.date ? session.date.toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleInputChange('date', new Date(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Start Time *</label>
-                <input
-                  type="time"
-                  className="form-input"
-                  value={session.startTime ? session.startTime.toTimeString().slice(0, 5) : ''}
-                  onChange={(e) => {
-                    const [hours, minutes] = e.target.value.split(':');
-                    const newTime = new Date(session.date || new Date());
-                    newTime.setHours(parseInt(hours), parseInt(minutes));
-                    handleInputChange('startTime', newTime);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Location */}
-          <div className="form-section">
-            <h3><MapPin size={16} /> Location</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Latitude *</label>
-                <input
-                  type="number"
-                  step="any"
-                  className="form-input"
-                  value={session.location?.latitude || ''}
-                  onChange={(e) => handleLocationChange('latitude', parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Longitude *</label>
-                <input
-                  type="number"
-                  step="any"
-                  className="form-input"
-                  value={session.location?.longitude || ''}
-                  onChange={(e) => handleLocationChange('longitude', parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-            <button 
-              type="button" 
-              onClick={getCurrentLocation}
-              className="btn btn-secondary btn-sm"
-            >
-              <MapPin size={14} />
-              Use Current Location
-            </button>
-          </div>
-
-          {/* Weather Conditions */}
-          <div className="form-section">
-            <h3><Thermometer size={16} /> Weather Conditions</h3>
-            <div className="form-row-3">
-              <div className="form-group">
-                <label className="form-label">Air Temperature (°C)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="form-input"
-                  value={session.weather?.temperature || ''}
-                  onChange={(e) => handleWeatherChange('temperature', parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Wind Speed (kts)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="form-input"
-                  value={session.weather?.windSpeed || ''}
-                  onChange={(e) => handleWeatherChange('windSpeed', parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Wind Direction (°)</label>
-                <input
-                  type="number"
-                  step="1"
-                  className="form-input"
-                  value={session.weather?.windDirection || ''}
-                  onChange={(e) => handleWeatherChange('windDirection', parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Pressure (hPa)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="form-input"
-                  value={session.weather?.pressure || ''}
-                  onChange={(e) => handleWeatherChange('pressure', parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Humidity (%)</label>
-                <input
-                  type="number"
-                  step="1"
-                  className="form-input"
-                  value={session.weather?.humidity || ''}
-                  onChange={(e) => handleWeatherChange('humidity', parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Water Conditions */}
-          <div className="form-section">
-            <h3><Waves size={16} /> Water Conditions</h3>
-            <div className="form-row-3">
-              <div className="form-group">
-                <label className="form-label">Water Temperature (°C)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="form-input"
-                  value={session.water?.temperature || ''}
-                  onChange={(e) => handleWaterChange('temperature', parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Depth (m)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="form-input"
-                  value={session.water?.depth || ''}
-                  onChange={(e) => handleWaterChange('depth', parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Clarity</label>
-                <select
-                  className="form-select"
-                  value={session.water?.clarity || ''}
-                  onChange={(e) => handleWaterChange('clarity', e.target.value)}
-                >
-                  <option value="">Select clarity</option>
-                  <option value="clear">Clear</option>
-                  <option value="slightly_murky">Slightly Murky</option>
-                  <option value="murky">Murky</option>
-                  <option value="very_murky">Very Murky</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
           {/* Fish Catches */}
           <div className="form-section">
             <div className="form-section-header">
@@ -380,13 +259,24 @@ const SessionForm: React.FC = () => {
                 <div className="form-row-3">
                   <div className="form-group">
                     <label className="form-label">Species *</label>
-                    <input
-                      type="text"
-                      className="form-input"
+                    <select
+                      className="form-select"
                       value={catch_.species}
                       onChange={(e) => updateCatch(catch_.id, 'species', e.target.value)}
-                      placeholder="e.g., Bass, Trout, Salmon"
-                    />
+                    >
+                      <option value="">Select species</option>
+                      <option value="Bluefin Tuna">Bluefin Tuna</option>
+                      <option value="Yellowfin Tuna">Yellowfin Tuna</option>
+                      <option value="Albacore Tuna">Albacore Tuna</option>
+                      <option value="Bigeye Tuna">Bigeye Tuna</option>
+                      <option value="White Marlin">White Marlin</option>
+                      <option value="Blue Marlin">Blue Marlin</option>
+                      <option value="Swordfish">Swordfish</option>
+                      <option value="Giant Bluefin">Giant Bluefin</option>
+                      <option value="Halibut">Halibut</option>
+                      <option value="Large Black Sea Bass">Large Black Sea Bass</option>
+                      <option value="Pollock">Pollock</option>
+                    </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Length (cm) *</label>
@@ -470,8 +360,229 @@ const SessionForm: React.FC = () => {
               />
             </div>
           </div>
+
+          {/* Basic Information */}
+          <div className="form-section">
+            <div className="form-section-header">
+              <h3>Basic Information</h3>
+            </div>
+            <div className="form-inline-row">
+              <div className="form-inline-group">
+                <label className="form-label">Date *</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={session.date ? session.date.toISOString().split('T')[0] : ''}
+                  onChange={(e) => handleInputChange('date', new Date(e.target.value))}
+                />
+              </div>
+              <div className="form-inline-group">
+                <label className="form-label">Start Time *</label>
+                <input
+                  type="time"
+                  className="form-input"
+                  value={session.startTime ? session.startTime.toTimeString().slice(0, 5) : ''}
+                  onChange={(e) => {
+                    const [hours, minutes] = e.target.value.split(':');
+                    const newTime = new Date(session.date || new Date());
+                    newTime.setHours(parseInt(hours), parseInt(minutes));
+                    handleInputChange('startTime', newTime);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="form-section">
+            <div className="form-section-header">
+              <h3><MapPin size={16} /> Location</h3>
+              <div className="location-buttons">
+                <button 
+                  type="button" 
+                  onClick={() => setIsMapModalOpen(true)}
+                  disabled={!session.location?.latitude || !session.location?.longitude}
+                  className="btn btn-secondary btn-sm"
+                  title="View on Map"
+                >
+                  <Map size={14} />
+                  Map
+                </button>
+                <button 
+                  type="button" 
+                  onClick={getCurrentLocation}
+                  className="btn btn-secondary btn-sm"
+                >
+                  <MapPin size={14} />
+                  Use Current Location
+                </button>
+              </div>
+            </div>
+            <div className="form-inline-row">
+              <div className="form-inline-group">
+                <label className="form-label">Latitude *</label>
+                <input
+                  type="number"
+                  step="any"
+                  className="form-input"
+                  value={session.location?.latitude || ''}
+                  onChange={(e) => handleLocationChange('latitude', parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="form-inline-group">
+                <label className="form-label">Longitude *</label>
+                <input
+                  type="number"
+                  step="any"
+                  className="form-input"
+                  value={session.location?.longitude || ''}
+                  onChange={(e) => handleLocationChange('longitude', parseFloat(e.target.value))}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Weather Conditions */}
+          <div className="form-section">
+            <div className="form-section-header">
+              <h3><Thermometer size={16} /> Weather Conditions</h3>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (session.location?.latitude && session.location?.longitude) {
+                    fetchWeatherData(session.location.latitude, session.location.longitude);
+                  }
+                }}
+                disabled={isLoadingWeather || !session.location?.latitude || !session.location?.longitude}
+                className="btn btn-secondary btn-sm"
+              >
+                <Cloud size={14} />
+                {isLoadingWeather ? 'Loading...' : 'Get Weather Data'}
+              </button>
+            </div>
+            <div className="form-row-3">
+              <div className="form-group">
+                <label className="form-label">Air Temperature (°C)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  value={session.weather?.temperature || ''}
+                  onChange={(e) => handleWeatherChange('temperature', parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Wind Speed (kts)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  value={session.weather?.windSpeed || ''}
+                  onChange={(e) => handleWeatherChange('windSpeed', parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Wind Direction (°)</label>
+                <input
+                  type="number"
+                  step="1"
+                  className="form-input"
+                  value={session.weather?.windDirection || ''}
+                  onChange={(e) => handleWeatherChange('windDirection', parseFloat(e.target.value))}
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Pressure (hPa)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  value={session.weather?.pressure || ''}
+                  onChange={(e) => handleWeatherChange('pressure', parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Humidity (%)</label>
+                <input
+                  type="number"
+                  step="1"
+                  className="form-input"
+                  value={session.weather?.humidity || ''}
+                  onChange={(e) => handleWeatherChange('humidity', parseFloat(e.target.value))}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Water Conditions */}
+          <div className="form-section">
+            <div className="form-section-header">
+              <h3><Waves size={16} /> Water Conditions</h3>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (session.location?.latitude && session.location?.longitude) {
+                    fetchWeatherData(session.location.latitude, session.location.longitude);
+                  }
+                }}
+                disabled={isLoadingWeather || !session.location?.latitude || !session.location?.longitude}
+                className="btn btn-secondary btn-sm"
+              >
+                <Waves size={14} />
+                {isLoadingWeather ? 'Loading...' : 'Get Water Data'}
+              </button>
+            </div>
+            <div className="form-row-3">
+              <div className="form-group">
+                <label className="form-label">Water Temperature (°C)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  value={session.water?.temperature || ''}
+                  onChange={(e) => handleWaterChange('temperature', parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Depth (m)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  value={session.water?.depth || ''}
+                  onChange={(e) => handleWaterChange('depth', parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Clarity</label>
+                <select
+                  className="form-select"
+                  value={session.water?.clarity || ''}
+                  onChange={(e) => handleWaterChange('clarity', e.target.value)}
+                >
+                  <option value="">Select clarity</option>
+                  <option value="clear">Clear</option>
+                  <option value="slightly_murky">Slightly Murky</option>
+                  <option value="murky">Murky</option>
+                  <option value="very_murky">Very Murky</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Map Modal */}
+      {session.location?.latitude && session.location?.longitude && (
+        <MapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          latitude={session.location.latitude}
+          longitude={session.location.longitude}
+        />
+      )}
     </div>
   );
 };
