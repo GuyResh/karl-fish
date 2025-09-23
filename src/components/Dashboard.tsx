@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Fish, Clock, MapPin, Thermometer, Wind, Plus, BarChart3, Download } from 'lucide-react';
+import { Fish, Clock, MapPin, Thermometer, Wind, Plus } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 

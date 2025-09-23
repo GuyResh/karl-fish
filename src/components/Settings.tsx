@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Wifi, WifiOff, TestTube } from 'lucide-react';
+import { Save, Wifi, TestTube } from 'lucide-react';
 import { AppSettings } from '../types';
 import { furunoService } from '../services/furunoService';
 

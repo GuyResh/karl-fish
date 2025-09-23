@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Download, Mail, FileText, Calendar, Filter } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Mail, FileText, Filter } from 'lucide-react';
 import { ExportService } from '../services/exportService';
 import { ExportOptions } from '../types';
 

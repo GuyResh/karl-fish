@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, Plus, Trash2, MapPin, Thermometer, Wind, Waves, Cloud, Map, Clock } from 'lucide-react';
+import { Save, Plus, Trash2, MapPin, Thermometer, Waves, Cloud, Map, Clock } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession, FishCatch, Location, WeatherConditions, WaterConditions } from '../types';
 import { WeatherService } from '../services/weatherService';

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { FishingDataService } from './database';
 import { AppSettings } from './types';
-import { furunoService } from './services/furunoService';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import SessionForm from './components/SessionForm';
