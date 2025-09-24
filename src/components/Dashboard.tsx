@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
         ]);
         
         setStats(statsData);
-        setRecentSessions(sessions.slice(0, 5)); // Show last 5 sessions
+        setRecentSessions(sessions.slice(0, 4)); // Show last 4 sessions
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -106,7 +106,7 @@ const Dashboard: React.FC = () => {
           {recentSessions.length === 0 ? (
             <p>No sessions yet. <Link to="/sessions/new">Start your first fishing session!</Link></p>
           ) : (
-            <div className="recent-sessions">
+            <div className="recent-sessions dashboard-recent-sessions">
               {recentSessions.map(session => (
                 <Link key={session.id} to={`/sessions/${session.id}`} className="session-item session-item-clickable">
                   <div className="session-header">
