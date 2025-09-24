@@ -1433,6 +1433,20 @@ body {
   left: 0;
 }
 
+/* Catches table row clickable styles */
+.catches-row-clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.catches-row-clickable:hover {
+  background-color: #f8f9fa;
+}
+
+.catches-row-clickable:hover td {
+  background-color: transparent;
+}
+
 /* Responsive design for smaller screens */
 @media (max-width: 768px) {
   .info-grid-2x2 {

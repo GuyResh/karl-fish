@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown, MapPin, Calendar, Clock, Fish, Scale } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishCatch, FishingSession } from '../types';
@@ -8,6 +9,7 @@ type SortField = 'date' | 'time' | 'location' | 'species' | 'length' | 'weight';
 type SortDirection = 'asc' | 'desc';
 
 const CatchesList: React.FC = () => {
+  const navigate = useNavigate();
   const [catches, setCatches] = useState<(FishCatch & { session: FishingSession })[]>([]);
   const [filteredCatches, setFilteredCatches] = useState<(FishCatch & { session: FishingSession })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,7 +127,15 @@ const CatchesList: React.FC = () => {
   };
 
   const formatLocation = (session: FishingSession) => {
-    return session.location.description || `${session.location.latitude.toFixed(4)}°N, ${Math.abs(session.location.longitude).toFixed(4)}°W`;
+    return `${session.location.latitude.toFixed(4)}°N, ${Math.abs(session.location.longitude).toFixed(4)}°W`;
+  };
+
+  const getLocationDescription = (session: FishingSession) => {
+    return session.location.description || 'No location description';
+  };
+
+  const handleRowClick = (sessionId: string) => {
+    navigate(`/sessions/${sessionId}`);
   };
 
   if (isLoading) {
@@ -237,11 +247,18 @@ const CatchesList: React.FC = () => {
                   </tr>
                 ) : (
                   filteredCatches.map((catch_) => (
-                    <tr key={catch_.id}>
+                    <tr 
+                      key={catch_.id} 
+                      className="catches-row-clickable"
+                      onClick={() => handleRowClick(catch_.session.id)}
+                    >
                       <td>{formatDate(catch_.session.date)}</td>
                       <td>{formatTime(catch_.session.startTime)}</td>
                       <td className="location-cell">
-                        <div className="location-text" title={formatLocation(catch_.session)}>
+                        <div 
+                          className="location-text" 
+                          title={getLocationDescription(catch_.session)}
+                        >
                           {formatLocation(catch_.session)}
                         </div>
                       </td>

@@ -10,9 +10,9 @@ export class UnitConverter {
   // Temperature conversions
   static convertTemperature(celsius: number): number {
     if (!this.settings || this.settings.units.temperature === 'celsius') {
-      return celsius;
+      return Math.round(celsius * 10) / 10;
     }
-    return (celsius * 9/5) + 32; // Convert to Fahrenheit
+    return Math.round(((celsius * 9/5) + 32) * 10) / 10; // Convert to Fahrenheit
   }
 
   static getTemperatureUnit(): string {
@@ -32,9 +32,9 @@ export class UnitConverter {
   // Distance conversions
   static convertDistance(meters: number): number {
     if (!this.settings || this.settings.units.distance === 'metric') {
-      return meters;
+      return Math.round(meters * 10) / 10;
     }
-    return meters * 3.28084; // Convert to feet
+    return Math.round((meters * 3.28084) * 10) / 10; // Convert to feet
   }
 
   static getDistanceUnit(): string {
@@ -54,9 +54,9 @@ export class UnitConverter {
   // Length conversions (for fish length)
   static convertLength(cm: number): number {
     if (!this.settings || this.settings.units.distance === 'metric') {
-      return cm;
+      return Math.round(cm * 10) / 10;
     }
-    return cm * 0.393701; // Convert to inches
+    return Math.round((cm * 0.393701) * 10) / 10; // Convert to inches
   }
 
   static getLengthUnit(): string {
@@ -76,9 +76,9 @@ export class UnitConverter {
   // Weight conversions (for fish weight)
   static convertWeight(kg: number): number {
     if (!this.settings || this.settings.units.weight === 'metric') {
-      return kg;
+      return Math.round(kg * 10) / 10;
     }
-    return kg * 2.20462; // Convert to pounds
+    return Math.round((kg * 2.20462) * 10) / 10; // Convert to pounds
   }
 
   static getWeightUnit(): string {
@@ -98,9 +98,9 @@ export class UnitConverter {
   // Pressure conversions
   static convertPressure(hpa: number): number {
     if (!this.settings || this.settings.units.pressure === 'hpa') {
-      return hpa;
+      return Math.round(hpa * 10) / 10;
     }
-    return hpa * 0.02953; // Convert to inHg
+    return Math.round((hpa * 0.02953) * 10) / 10; // Convert to inHg
   }
 
   static getPressureUnit(): string {
@@ -120,9 +120,9 @@ export class UnitConverter {
   // Speed conversions (for wind speed)
   static convertSpeed(knots: number): number {
     if (!this.settings || this.settings.units.distance === 'metric') {
-      return knots;
+      return Math.round(knots * 10) / 10;
     }
-    return knots * 1.15078; // Convert to mph
+    return Math.round((knots * 1.15078) * 10) / 10; // Convert to mph
   }
 
   static getSpeedUnit(): string {
@@ -142,9 +142,9 @@ export class UnitConverter {
   // Visibility conversions
   static convertVisibility(nauticalMiles: number): number {
     if (!this.settings || this.settings.units.distance === 'metric') {
-      return nauticalMiles * 1.852; // Convert to km
+      return Math.round((nauticalMiles * 1.852) * 10) / 10; // Convert to km
     }
-    return nauticalMiles * 1.15078; // Convert to miles
+    return Math.round((nauticalMiles * 1.15078) * 10) / 10; // Convert to miles
   }
 
   static getVisibilityUnit(): string {
@@ -159,5 +159,48 @@ export class UnitConverter {
       return 'Visibility (km)';
     }
     return 'Visibility (mi)';
+  }
+
+  // Reverse conversions (from display units back to storage units)
+  static convertToStorageTemperature(displayTemp: number): number {
+    if (!this.settings || this.settings.units.temperature === 'celsius') {
+      return Math.round(displayTemp * 10) / 10;
+    }
+    return Math.round(((displayTemp - 32) * 5/9) * 10) / 10; // Convert from Fahrenheit to Celsius
+  }
+
+  static convertToStorageLength(displayLength: number): number {
+    if (!this.settings || this.settings.units.distance === 'metric') {
+      return Math.round(displayLength * 10) / 10;
+    }
+    return Math.round((displayLength / 0.393701) * 10) / 10; // Convert from inches to cm
+  }
+
+  static convertToStorageWeight(displayWeight: number): number {
+    if (!this.settings || this.settings.units.weight === 'metric') {
+      return Math.round(displayWeight * 10) / 10;
+    }
+    return Math.round((displayWeight / 2.20462) * 10) / 10; // Convert from pounds to kg
+  }
+
+  static convertToStoragePressure(displayPressure: number): number {
+    if (!this.settings || this.settings.units.pressure === 'hpa') {
+      return Math.round(displayPressure * 10) / 10;
+    }
+    return Math.round((displayPressure / 0.02953) * 10) / 10; // Convert from inHg to hPa
+  }
+
+  static convertToStorageSpeed(displaySpeed: number): number {
+    if (!this.settings || this.settings.units.distance === 'metric') {
+      return Math.round(displaySpeed * 10) / 10;
+    }
+    return Math.round((displaySpeed / 1.15078) * 10) / 10; // Convert from mph to knots
+  }
+
+  static convertToStorageVisibility(displayVisibility: number): number {
+    if (!this.settings || this.settings.units.distance === 'metric') {
+      return Math.round((displayVisibility / 1.852) * 10) / 10; // Convert from km to nautical miles
+    }
+    return Math.round((displayVisibility / 1.15078) * 10) / 10; // Convert from miles to nautical miles
   }
 }

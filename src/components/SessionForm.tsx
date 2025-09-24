@@ -43,7 +43,24 @@ const SessionForm: React.FC = () => {
     try {
       const loadedSession = await FishingDataService.getSession(sessionId);
       if (loadedSession) {
-        setSession(loadedSession);
+        // Convert stored data to current display units
+        const convertedSession = {
+          ...loadedSession,
+          catches: loadedSession.catches.map(catch_ => ({
+            ...catch_,
+            length: UnitConverter.convertLength(catch_.length),
+            weight: catch_.weight ? UnitConverter.convertWeight(catch_.weight) : catch_.weight
+          })),
+          weather: {
+            ...loadedSession.weather,
+            temperature: loadedSession.weather.temperature ? UnitConverter.convertTemperature(loadedSession.weather.temperature) : loadedSession.weather.temperature
+          },
+          water: {
+            ...loadedSession.water,
+            temperature: loadedSession.water.temperature ? UnitConverter.convertTemperature(loadedSession.water.temperature) : loadedSession.water.temperature
+          }
+        };
+        setSession(convertedSession);
       }
     } catch (error) {
       console.error('Error loading session:', error);
@@ -221,13 +238,31 @@ const SessionForm: React.FC = () => {
 
     setIsSaving(true);
     try {
-      console.log('Saving session with catches:', session.catches);
+      // Convert display units back to storage units before saving
+      const sessionToSave = {
+        ...session,
+        catches: session.catches.map(catch_ => ({
+          ...catch_,
+          length: UnitConverter.convertToStorageLength(catch_.length),
+          weight: catch_.weight ? UnitConverter.convertToStorageWeight(catch_.weight) : catch_.weight
+        })),
+        weather: {
+          ...session.weather,
+          temperature: session.weather.temperature ? UnitConverter.convertToStorageTemperature(session.weather.temperature) : session.weather.temperature
+        },
+        water: {
+          ...session.water,
+          temperature: session.water.temperature ? UnitConverter.convertToStorageTemperature(session.water.temperature) : session.water.temperature
+        }
+      };
+      
+      console.log('Saving session with catches:', sessionToSave.catches);
       
       if (isEditing && id) {
-        await FishingDataService.updateSession(id, session);
+        await FishingDataService.updateSession(id, sessionToSave);
         console.log('Session updated successfully');
       } else {
-        const sessionId = await FishingDataService.createSession(session as Omit<FishingSession, 'id'>);
+        const sessionId = await FishingDataService.createSession(sessionToSave as Omit<FishingSession, 'id'>);
         console.log('Session created with ID:', sessionId);
         navigate(`/sessions/${sessionId}`);
       }
@@ -265,13 +300,31 @@ const SessionForm: React.FC = () => {
 
     setIsSaving(true);
     try {
-      console.log('Ending and saving session with catches:', updatedSession.catches);
+      // Convert display units back to storage units before saving
+      const sessionToSave = {
+        ...updatedSession,
+        catches: updatedSession.catches.map(catch_ => ({
+          ...catch_,
+          length: UnitConverter.convertToStorageLength(catch_.length),
+          weight: catch_.weight ? UnitConverter.convertToStorageWeight(catch_.weight) : catch_.weight
+        })),
+        weather: {
+          ...updatedSession.weather,
+          temperature: updatedSession.weather.temperature ? UnitConverter.convertToStorageTemperature(updatedSession.weather.temperature) : updatedSession.weather.temperature
+        },
+        water: {
+          ...updatedSession.water,
+          temperature: updatedSession.water.temperature ? UnitConverter.convertToStorageTemperature(updatedSession.water.temperature) : updatedSession.water.temperature
+        }
+      };
+      
+      console.log('Ending and saving session with catches:', sessionToSave.catches);
       
       if (isEditing && id) {
-        await FishingDataService.updateSession(id, updatedSession);
+        await FishingDataService.updateSession(id, sessionToSave);
         console.log('Session ended and updated successfully');
       } else {
-        const sessionId = await FishingDataService.createSession(updatedSession as Omit<FishingSession, 'id'>);
+        const sessionId = await FishingDataService.createSession(sessionToSave as Omit<FishingSession, 'id'>);
         console.log('Session ended and created with ID:', sessionId);
       }
       
