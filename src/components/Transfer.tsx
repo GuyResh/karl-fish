@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Download, Mail, FileText, Filter, Upload } from 'lucide-react';
 import { ExportService } from '../services/exportService';
-import { ExportOptions } from '../types';
+import { ExportOptions, FishCatch } from '../types';
 import { format } from 'date-fns';
 import { FishingDataService } from '../database';
 
@@ -180,7 +180,7 @@ const Transfer: React.FC = () => {
               temperature: firstRow[8] ? parseFloat(firstRow[8]) : undefined,
               depth: firstRow[12] ? parseFloat(firstRow[12]) : undefined
             },
-            catches: [],
+            catches: [] as FishCatch[],
             notes: firstRow[20] || ''
           };
 
