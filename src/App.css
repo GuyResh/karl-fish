@@ -416,7 +416,8 @@ body {
 
 .stat-label {
   color: #666;
-  font-size: 0.8rem;
+  font-size: 1rem; /* larger label text */
+  line-height: 1.1; /* keep overall card height tight */
 }
 
 /* Table Styles */
@@ -996,13 +997,24 @@ body {
 }
 
 .dashboard-recent-sessions .session-details > div {
-  font-size: 0.875rem;
+  font-size: 0.95rem; /* slightly larger */
+  line-height: 1.1;   /* keep rows compact */
 }
 
 .dashboard-recent-sessions .catch-species {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   margin-top: 0.25rem;
   opacity: 0.8;
+}
+
+/* Make key detail lines slightly larger without increasing height */
+.dashboard-recent-sessions .location-line,
+.dashboard-recent-sessions .session-catches,
+.dashboard-recent-sessions .session-time,
+.dashboard-recent-sessions .session-weather,
+.dashboard-recent-sessions .session-wind {
+  font-size: 0.95rem;
+  line-height: 1.1;
 }
 
 .session-item {
@@ -1200,7 +1212,7 @@ body {
 }
 
 .search-container {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.25rem; /* reduce whitespace below search */
 }
 
 .search-input-wrapper {

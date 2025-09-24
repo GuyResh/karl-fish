@@ -12,10 +12,14 @@ import Settings from './components/Settings';
 import Transfer from './components/Transfer';
 import './App.css';
 import { importFishingCSV } from './utils/csvImporter';
+import Modal from './components/Modal';
+import ConfirmModal from './components/ConfirmModal';
 
 function App() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sampleOpen, setSampleOpen] = useState(false);
+  const [sampleCsv, setSampleCsv] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -56,15 +60,12 @@ function App() {
         try {
           const sessions = await FishingDataService.getAllSessions();
           if (!sessions || sessions.length === 0) {
-            // Prompt user to load sample data
-            const shouldLoad = window.confirm('No data found. Load 2024 sample data?');
-            if (shouldLoad) {
-              const url = `${import.meta.env.BASE_URL}data/karl-fish-log-2024.csv`;
-              const res = await fetch(url, { cache: 'no-store' });
-              if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+            const url = `${import.meta.env.BASE_URL}data/karl-fish-log-2024.csv`;
+            const res = await fetch(url, { cache: 'no-store' });
+            if (res.ok) {
               const csv = await res.text();
-              const result = await importFishingCSV(csv);
-              console.log('Sample import:', result);
+              setSampleCsv(csv);
+              setSampleOpen(true);
             }
           }
         } catch (e) {
@@ -118,6 +119,20 @@ function App() {
             />
           </Routes>
         </main>
+        <ConfirmModal
+          isOpen={sampleOpen}
+          onClose={() => setSampleOpen(false)}
+          title="Load Sample Data?"
+          message={"No data found. Load 2024 sample data?"}
+          confirmLabel="Load"
+          onConfirm={async () => {
+            if (sampleCsv) {
+              await importFishingCSV(sampleCsv);
+              setSampleOpen(false);
+              window.location.reload();
+            }
+          }}
+        />
       </div>
     </Router>
   );

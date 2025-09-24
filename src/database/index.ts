@@ -126,6 +126,16 @@ export class FishingDataService {
     await db.catches.delete(id);
   }
 
+  // Danger: clears all app data
+  static async clearAllData(): Promise<void> {
+    await db.transaction('rw', [db.sessions, db.catches, db.settings, db.nmeaData], async () => {
+      await db.catches.clear();
+      await db.sessions.clear();
+      await db.nmeaData.clear();
+      // preserve settings table entry; do not clear settings to keep user prefs
+    });
+  }
+
   // Settings management
   static async getSettings(): Promise<AppSettings | null> {
     const settings = await db.settings.get('main');

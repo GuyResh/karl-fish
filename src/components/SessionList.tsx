@@ -166,12 +166,12 @@ const SessionList: React.FC = () => {
                   <div className="location-line">
                     <MapPin size={14} />
                     {session.location.latitude.toFixed(4)}°N, {Math.abs(session.location.longitude).toFixed(4)}°W
+                    {session.location.description && (
+                      <span style={{ fontStyle: 'italic', marginLeft: '8px', opacity: 0.85 }}>
+                        {session.location.description}
+                      </span>
+                    )}
                   </div>
-                  {session.location.description && (
-                    <div className="location-desc">
-                      {session.location.description}
-                    </div>
-                  )}
                 </div>
 
                 <div className="session-catches">

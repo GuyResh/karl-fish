@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Fish, Clock, MapPin, Thermometer, Wind } from 'lucide-react';
+import { Fish, Clock, MapPin, Thermometer, Wind, Trash2 } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
+import ConfirmModal from './ConfirmModal';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -16,6 +17,7 @@ const Dashboard: React.FC = () => {
   });
   const [recentSessions, setRecentSessions] = useState<FishingSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -97,11 +99,21 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-2">
         <div className="card">
-          <div className="card-header">
+          <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h2 className="card-title">Recent Sessions</h2>
-            <Link to="/sessions" className="btn btn-secondary btn-sm">
-              View All
-            </Link>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => setIsDeleteAllOpen(true)}
+                title="Delete ALL sessions and catches"
+              >
+                <Trash2 size={14} />
+                Delete All
+              </button>
+              <Link to="/sessions" className="btn btn-secondary btn-sm">
+                View All
+              </Link>
+            </div>
           </div>
           {recentSessions.length === 0 ? (
             <p>No sessions yet. <Link to="/sessions/new">Start your first fishing session!</Link></p>
@@ -112,6 +124,22 @@ const Dashboard: React.FC = () => {
                   <div className="session-header">
                     <div className="session-date">
                       {new Date(session.date).toLocaleDateString()}
+                      {/* time moved next to date */}
+                      <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={14} />
+                        {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {` - `}
+                        {session.endTime
+                          ? (
+                              <>
+                                {new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {` (`}
+                                {`${Math.round((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / (1000 * 60))}m`}
+                                {`)`}
+                              </>
+                            )
+                          : 'In progress'}
+                      </span>
                     </div>
                     <div className="session-location">
                       <div className="location-line">
@@ -147,13 +175,7 @@ const Dashboard: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <div className="session-duration">
-                      <Clock size={14} />
-                      {session.endTime 
-                        ? `${Math.round((session.endTime.getTime() - session.startTime.getTime()) / (1000 * 60))}m`
-                        : 'In progress'
-                      }
-                    </div>
+                    {/* duration removed from here - time moved beside date */}
                   </div>
                   {session.weather.temperature && (
                     <div className="session-weather">
@@ -196,6 +218,18 @@ const Dashboard: React.FC = () => {
         </div>
         */}
       </div>
+      <ConfirmModal
+        isOpen={isDeleteAllOpen}
+        onClose={() => setIsDeleteAllOpen(false)}
+        title="WARNING"
+        message={"You are about to delete ALL log data!"}
+        confirmLabel="Confirm"
+        requiresCount={3}
+        onConfirm={async () => {
+          await FishingDataService.clearAllData();
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };
