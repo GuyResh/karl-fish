@@ -2,7 +2,7 @@
 
 ![Karl Fish Logo](KarlFish.png)
 
-A comprehensive React-based fishing log application that can be deployed as a web app or desktop application using Tauri. Features integration with Furuno multi-function displays for automatic data collection.
+A comprehensive React-based fishing log application that can be deployed as a web app or desktop/tablet application using Tauri. Features integration with Furuno multi-function displays for automatic data collection.
 
 ## Features
 
@@ -228,3 +228,4 @@ For issues and questions:
 - [ ] Additional marine electronics support
 - [ ] Fishing spot recommendations
 - [ ] Weather forecast integration
+
