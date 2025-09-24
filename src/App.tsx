@@ -11,6 +11,7 @@ import CatchesList from './components/CatchesList';
 import Settings from './components/Settings';
 import Transfer from './components/Transfer';
 import './App.css';
+import { importFishingCSV } from './utils/csvImporter';
 
 function App() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -52,6 +53,23 @@ function App() {
         console.error('Error loading settings:', error);
       } finally {
         setIsLoading(false);
+        try {
+          const sessions = await FishingDataService.getAllSessions();
+          if (!sessions || sessions.length === 0) {
+            // Prompt user to load sample data
+            const shouldLoad = window.confirm('No data found. Load 2024 sample data?');
+            if (shouldLoad) {
+              const url = `${import.meta.env.BASE_URL}data/karl-fish-log-2024.csv`;
+              const res = await fetch(url, { cache: 'no-store' });
+              if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+              const csv = await res.text();
+              const result = await importFishingCSV(csv);
+              console.log('Sample import:', result);
+            }
+          }
+        } catch (e) {
+          console.error('Sample data load check failed:', e);
+        }
       }
     };
 
