@@ -10,14 +10,7 @@ const fishSpecies = [
   { name: 'White Marlin', minLength: 80, maxLength: 120, minWeight: 20, maxWeight: 50 },
   { name: 'Sailfish', minLength: 150, maxLength: 250, minWeight: 30, maxWeight: 80 },
   { name: 'Wahoo', minLength: 100, maxLength: 150, minWeight: 15, maxWeight: 40 },
-  { name: 'Dolphin (Mahi-Mahi)', minLength: 60, maxLength: 100, minWeight: 5, maxWeight: 25 },
-  { name: 'King Mackerel', minLength: 80, maxLength: 120, minWeight: 8, maxWeight: 30 },
-  { name: 'Spanish Mackerel', minLength: 50, maxLength: 80, minWeight: 3, maxWeight: 12 },
-  { name: 'Cobia', minLength: 80, maxLength: 120, minWeight: 10, maxWeight: 35 },
-  { name: 'Amberjack', minLength: 60, maxLength: 100, minWeight: 8, maxWeight: 25 },
-  { name: 'Grouper', minLength: 50, maxLength: 120, minWeight: 5, maxWeight: 40 },
-  { name: 'Snapper', minLength: 30, maxLength: 80, minWeight: 2, maxWeight: 15 },
-  { name: 'Triggerfish', minLength: 25, maxLength: 50, minWeight: 1, maxWeight: 8 }
+  { name: 'Dolphin (Mahi-Mahi)', minLength: 60, maxLength: 100, minWeight: 5, maxWeight: 25 }
 ];
 
 // Bait options
