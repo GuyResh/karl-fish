@@ -465,7 +465,22 @@ const SessionForm: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="form-row-3">
+                <div className="form-row-4">
+                  <div className="form-group">
+                    <label className="form-label">Technique</label>
+                    <select
+                      className="form-select"
+                      value={catch_.technique || 'Trolling'}
+                      onChange={(e) => updateCatch(catch_.id, 'technique', e.target.value)}
+                    >
+                      <option value="Trolling">Trolling</option>
+                      <option value="Bottom Fishing">Bottom Fishing</option>
+                      <option value="Jigging">Jigging</option>
+                      <option value="Casting">Casting</option>
+                      <option value="Drift Fishing">Drift Fishing</option>
+                      <option value="Anchored">Anchored</option>
+                    </select>
+                  </div>
                   <div className="form-group">
                     <label className="form-label">Condition</label>
                     <select
