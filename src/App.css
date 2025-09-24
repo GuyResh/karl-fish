@@ -885,7 +885,7 @@ body {
 .format-card {
   border: 2px solid #eee;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem; /* reduced ~33% */
   text-align: center;
   transition: all 0.2s;
 }
@@ -896,14 +896,18 @@ body {
 }
 
 .format-card h4 {
-  margin: 0.5rem 0;
+  margin: 0; /* put icon and title on same line */
   color: #333;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem; /* slightly smaller */
 }
 
 .format-card p {
-  margin: 0;
+  margin: 0.35rem 0 0 0; /* small spacing under title */
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .help-text {
@@ -913,10 +917,18 @@ body {
   font-style: italic;
 }
 
+.help-text-inline {
+  margin-left: 0.75rem;
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+
 .export-actions {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .export-status {
@@ -939,7 +951,7 @@ body {
 }
 
 .export-info {
-  margin-top: 2rem;
+  margin-top: 0.5rem; /* further reduced whitespace above header */
 }
 
 .info-grid {
@@ -1365,4 +1377,67 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* Transfer Information 2x2 Grid */
+.info-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.info-grid-2x2 .info-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.85rem; /* reduced ~32% from 1.25rem */
+  transition: all 0.2s ease;
+}
+
+.info-grid-2x2 .info-item:hover {
+  background: #e9ecef;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.info-grid-2x2 .info-item h4 {
+  color: #333;
+  margin-bottom: 0.5rem; /* was 0.75rem */
+  font-size: 0.95rem; /* reduced from 1.1rem */
+  font-weight: 600;
+}
+
+.info-grid-2x2 .info-item ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-grid-2x2 .info-item li {
+  color: #666;
+  font-size: 0.85rem; /* was 0.9rem */
+  line-height: 1.35; /* was 1.5 */
+  margin-bottom: 0.35rem; /* was 0.5rem */
+  padding-left: 0.9rem; /* slightly tighter */
+  position: relative;
+}
+
+.info-grid-2x2 .info-item li:before {
+  content: "•";
+  color: #667eea;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .info-grid-2x2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 1rem;
+  }
 }

@@ -264,8 +264,10 @@ const Transfer: React.FC = () => {
                   onChange={() => handleFormatChange('csv')}
                 />
                 <div className="format-card">
-                  <FileText size={24} />
-                  <h4>CSV</h4>
+                  <h4>
+                    <FileText size={18} />
+                    CSV
+                  </h4>
                   <p>Comma-separated values for Excel, Google Sheets</p>
                 </div>
               </label>
@@ -279,8 +281,10 @@ const Transfer: React.FC = () => {
                   onChange={() => handleFormatChange('json')}
                 />
                 <div className="format-card">
-                  <FileText size={24} />
-                  <h4>JSON</h4>
+                  <h4>
+                    <FileText size={18} />
+                    JSON
+                  </h4>
                   <p>Structured data for developers and APIs</p>
                 </div>
               </label>
@@ -292,6 +296,9 @@ const Transfer: React.FC = () => {
             <h3>
               <Filter size={16} />
               Date Range Filter
+              <span className="help-text-inline">
+                <em>(leave empty to transfer all sessions)</em>
+              </span>
             </h3>
             <div className="form-row">
               <div className="form-group">
@@ -313,9 +320,6 @@ const Transfer: React.FC = () => {
                 />
               </div>
             </div>
-            <p className="help-text">
-              Leave empty to transfer all sessions
-            </p>
           </div>
 
           {/* Transfer Options */}
@@ -421,7 +425,7 @@ const Transfer: React.FC = () => {
           {/* Transfer Information */}
           <div className="export-info">
             <h3>Transfer Information</h3>
-            <div className="info-grid">
+            <div className="info-grid-2x2">
               <div className="info-item">
                 <h4>CSV Format</h4>
                 <ul>
