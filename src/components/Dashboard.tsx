@@ -5,6 +5,7 @@ import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
 import ConfirmModal from './ConfirmModal';
+import SpeciesModal from './SpeciesModal';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -13,11 +14,14 @@ const Dashboard: React.FC = () => {
     totalSpecies: 0,
     averageCatchPerSession: 0,
     mostCommonSpecies: 'None',
+    mostCommonSpeciesCount: 0,
+    speciesCounts: {} as { [species: string]: number },
     totalFishingTime: 0
   });
   const [recentSessions, setRecentSessions] = useState<FishingSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
+  const [isSpeciesModalOpen, setIsSpeciesModalOpen] = useState(false);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -87,12 +91,23 @@ const Dashboard: React.FC = () => {
           <div className="stat-value">{formatDuration(stats.totalFishingTime)}</div>
           <div className="stat-label">Total Fishing Time</div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card stat-card-clickable" 
+          onClick={() => setIsSpeciesModalOpen(true)}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-value">{stats.totalSpecies}</div>
           <div className="stat-label">Species Caught</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{stats.mostCommonSpecies}</div>
+          <div className="stat-value">
+            {stats.mostCommonSpecies}
+            {stats.mostCommonSpeciesCount > 0 && (
+              <span className="duration" style={{ marginLeft: '4px' }}>
+                ({stats.mostCommonSpeciesCount})
+              </span>
+            )}
+          </div>
           <div className="stat-label">Most Common Species</div>
         </div>
       </div>
@@ -133,17 +148,16 @@ const Dashboard: React.FC = () => {
                           ? (
                               <>
                                 {new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                {` (`}
                                 <span className="duration">
                                   {(() => {
                                     const ms = new Date(session.endTime).getTime() - new Date(session.startTime).getTime();
                                     const totalMinutes = Math.round(ms / (1000 * 60));
                                     const h = Math.floor(totalMinutes / 60);
                                     const m = totalMinutes % 60;
-                                    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+                                    const duration = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                                    return `(${duration})`;
                                   })()}
                                 </span>
-                                {`)`}
                               </>
                             )
                           : 'In progress'}
@@ -237,6 +251,11 @@ const Dashboard: React.FC = () => {
           await FishingDataService.clearAllData();
           window.location.reload();
         }}
+      />
+      <SpeciesModal
+        isOpen={isSpeciesModalOpen}
+        onClose={() => setIsSpeciesModalOpen(false)}
+        speciesData={stats.speciesCounts}
       />
     </div>
   );

@@ -174,6 +174,8 @@ export class FishingDataService {
     totalSpecies: number;
     averageCatchPerSession: number;
     mostCommonSpecies: string;
+    mostCommonSpeciesCount: number;
+    speciesCounts: { [species: string]: number };
     totalFishingTime: number; // in hours
   }> {
     const sessions = await this.getAllSessions();
@@ -188,8 +190,11 @@ export class FishingDataService {
       return acc;
     }, {} as Record<string, number>);
     
-    const mostCommonSpecies = Object.entries(speciesCount)
-      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'None';
+    const sortedSpecies = Object.entries(speciesCount)
+      .sort(([,a], [,b]) => b - a);
+    
+    const mostCommonSpecies = sortedSpecies[0]?.[0] || 'None';
+    const mostCommonSpeciesCount = sortedSpecies[0]?.[1] || 0;
     
     const totalFishingTime = sessions.reduce((total, session) => {
       if (session.endTime) {
@@ -205,6 +210,8 @@ export class FishingDataService {
       totalSpecies: Object.keys(speciesCount).length,
       averageCatchPerSession: totalSessions > 0 ? totalCatches / totalSessions : 0,
       mostCommonSpecies,
+      mostCommonSpeciesCount,
+      speciesCounts: speciesCount,
       totalFishingTime
     };
   }
