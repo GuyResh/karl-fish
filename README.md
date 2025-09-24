@@ -184,7 +184,7 @@ const stats = await FishingDataService.getSessionStats();
 ### Project Structure
 ```
 src/
-├── components/          # React components
+├── components/         # React components
 ├── database/           # IndexedDB data layer
 ├── services/           # Business logic services
 ├── types/              # TypeScript interfaces
@@ -228,4 +228,3 @@ For issues and questions:
 - [ ] Additional marine electronics support
 - [ ] Fishing spot recommendations
 - [ ] Weather forecast integration
-
