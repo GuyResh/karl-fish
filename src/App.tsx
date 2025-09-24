@@ -9,7 +9,7 @@ import SessionForm from './components/SessionForm';
 import SessionList from './components/SessionList';
 import CatchesList from './components/CatchesList';
 import Settings from './components/Settings';
-import Export from './components/Export';
+import Transfer from './components/Transfer';
 import './App.css';
 
 function App() {
@@ -72,7 +72,7 @@ function App() {
     return (
       <div className="app-loading">
         <div className="loading-spinner"></div>
-        <p>Loading Carl Fish...</p>
+        <p>Loading Karl Fish...</p>
       </div>
     );
   }
@@ -88,7 +88,7 @@ function App() {
             <Route path="/sessions/new" element={<SessionForm />} />
             <Route path="/sessions/:id" element={<SessionForm />} />
             <Route path="/catches" element={<CatchesList />} />
-            <Route path="/export" element={<Export />} />
+            <Route path="/export" element={<Transfer />} />
             <Route 
               path="/settings" 
               element={

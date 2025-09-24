@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <div className="recent-sessions">
               {recentSessions.map(session => (
-                <div key={session.id} className="session-item">
+                <Link key={session.id} to={`/sessions/${session.id}`} className="session-item session-item-clickable">
                   <div className="session-header">
                     <div className="session-date">
                       {new Date(session.date).toLocaleDateString()}
@@ -129,6 +129,23 @@ const Dashboard: React.FC = () => {
                     <div className="session-catches">
                       <Fish size={14} />
                       {session.catches.length} catches
+                      {session.catches.length > 0 && (
+                        <div className="catch-species">
+                          {(() => {
+                            // Group catches by species and count them
+                            const speciesCount: { [key: string]: number } = {};
+                            session.catches.forEach(catch_ => {
+                              const species = catch_.species?.replace('Custom:', '') || 'Unknown';
+                              speciesCount[species] = (speciesCount[species] || 0) + 1;
+                            });
+                            
+                            // Create display strings with counts
+                            return Object.entries(speciesCount)
+                              .map(([species, count]) => count > 1 ? `${species} (${count})` : species)
+                              .join(', ');
+                          })()}
+                        </div>
+                      )}
                     </div>
                     <div className="session-duration">
                       <Clock size={14} />
@@ -150,7 +167,7 @@ const Dashboard: React.FC = () => {
                       {UnitConverter.convertSpeed(session.weather.windSpeed).toFixed(1)} {UnitConverter.getSpeedUnit()}
                     </div>
                   )}
-                </div>
+                </Link>
               ))}
             </div>
           )}

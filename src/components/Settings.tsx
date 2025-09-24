@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Wifi, TestTube } from 'lucide-react';
 import { AppSettings } from '../types';
 import { furunoService } from '../services/furunoService';
@@ -11,8 +11,16 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [isSaving, setIsSaving] = useState(false);
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('');
+  const [isTestModeActive, setIsTestModeActive] = useState(false);
+
+  // Cleanup test mode when component unmounts
+  useEffect(() => {
+    return () => {
+      if (isTestModeActive) {
+        furunoService.disconnect();
+      }
+    };
+  }, [isTestModeActive]);
 
   const handleInputChange = (section: keyof AppSettings, field: string, value: any) => {
     setLocalSettings(prev => ({
@@ -35,27 +43,26 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
     }
   };
 
-  const testFurunoConnection = async () => {
-    setIsTestingConnection(true);
-    setConnectionStatus('Testing connection...');
-
-    try {
-      const success = await furunoService.connect(
-        localSettings.furuno.ipAddress || 'test',
-        localSettings.furuno.port || 10110,
-        true // Enable test mode
-      );
-      
-      if (success) {
-        setConnectionStatus('Test mode started! Simulating Furuno data...');
-        setTimeout(() => furunoService.disconnect(), 10000); // Run for 10 seconds
-      } else {
-        setConnectionStatus('Test mode failed');
+  const toggleTestMode = async () => {
+    if (isTestModeActive) {
+      // Stop test mode
+      furunoService.disconnect();
+      setIsTestModeActive(false);
+    } else {
+      // Start test mode
+      try {
+        const success = await furunoService.connect(
+          localSettings.furuno.ipAddress || 'test',
+          localSettings.furuno.port || 10110,
+          true // Enable test mode
+        );
+        
+        if (success) {
+          setIsTestModeActive(true);
+        }
+      } catch (error) {
+        console.error('Failed to start test mode:', error);
       }
-    } catch (error) {
-      setConnectionStatus(`Test mode failed: ${error}`);
-    } finally {
-      setIsTestingConnection(false);
     }
   };
 
@@ -183,18 +190,18 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
 
                 <div className="connection-test">
                   <button 
-                    onClick={testFurunoConnection}
-                    disabled={isTestingConnection}
-                    className="btn btn-secondary"
+                    onClick={toggleTestMode}
+                    className={`btn ${isTestModeActive ? 'btn-danger' : 'btn-secondary'}`}
+                    style={{
+                      backgroundColor: isTestModeActive ? '#ef4444' : undefined,
+                      color: isTestModeActive ? 'white' : undefined,
+                      width: '250px',
+                      justifyContent: 'center'
+                    }}
                   >
                     <TestTube size={16} />
-                    {isTestingConnection ? 'Testing...' : 'Test with Simulated Data'}
+                    {isTestModeActive ? 'Stop Test Mode' : 'Test with Simulated Data'}
                   </button>
-                  {connectionStatus && (
-                    <div className={`connection-status ${connectionStatus.includes('successful') ? 'success' : 'error'}`}>
-                      {connectionStatus}
-                    </div>
-                  )}
                 </div>
 
                 <div className="furuno-info">
@@ -223,13 +230,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
             )}
           </div>
 
-          {/* Export Settings */}
+          {/* Transfer Settings */}
           <div className="settings-section">
-            <h3>Export Settings</h3>
+            <h3>Transfer Settings</h3>
             
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Default Export Format</label>
+                <label className="form-label">Default Transfer Format</label>
                 <select
                   className="form-select"
                   value={localSettings.export.defaultFormat}
