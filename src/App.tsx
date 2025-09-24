@@ -12,7 +12,6 @@ import Settings from './components/Settings';
 import Transfer from './components/Transfer';
 import './App.css';
 import { importFishingCSV } from './utils/csvImporter';
-import Modal from './components/Modal';
 import ConfirmModal from './components/ConfirmModal';
 
 function App() {
