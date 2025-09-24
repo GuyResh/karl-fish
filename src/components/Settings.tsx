@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Save, Wifi, TestTube } from 'lucide-react';
 import { AppSettings } from '../types';
 import { furunoService } from '../services/furunoService';
@@ -13,14 +13,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isTestModeActive, setIsTestModeActive] = useState(false);
 
-  // Cleanup test mode when component unmounts
-  useEffect(() => {
-    return () => {
-      if (isTestModeActive) {
-        furunoService.disconnect();
-      }
-    };
-  }, [isTestModeActive]);
+  // Note: Test mode should persist across the app session, not be cleaned up on component unmount
 
   const handleInputChange = (section: keyof AppSettings, field: string, value: any) => {
     setLocalSettings(prev => ({

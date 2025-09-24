@@ -1351,3 +1351,18 @@ body {
   font-weight: 600;
   font-size: 0.9rem;
 }
+
+/* Location Display Styles */
+.location-display:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.location-display:active {
+  transform: translateY(0);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

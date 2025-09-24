@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Fish, Clock, MapPin, Thermometer, Wind, Trash2 } from 'lucide-react';
+import { Fish, Clock, MapPin, Thermometer, Wind, Trash2, Navigation } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
+import { furunoService } from '../services/furunoService';
 import ConfirmModal from './ConfirmModal';
 import SpeciesModal from './SpeciesModal';
+import LiveMapModal from './LiveMapModal';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -22,6 +24,11 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
   const [isSpeciesModalOpen, setIsSpeciesModalOpen] = useState(false);
+  const [isLiveMapOpen, setIsLiveMapOpen] = useState(false);
+  
+  console.log('Dashboard: isLiveMapOpen state:', isLiveMapOpen);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isGpsConnected, setIsGpsConnected] = useState(false);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -43,6 +50,47 @@ const Dashboard: React.FC = () => {
     loadDashboardData();
   }, []);
 
+  // Monitor GPS connection and location updates
+  useEffect(() => {
+    const updateGpsStatus = async () => {
+      const status = furunoService.getConnectionStatus();
+      setIsGpsConnected(status.connected);
+      
+      if (status.connected) {
+        // Get the latest NMEA data from the database
+        try {
+          const latestNmeaData = await FishingDataService.getLatestNMEAData();
+          if (latestNmeaData && latestNmeaData.latitude && latestNmeaData.longitude) {
+            console.log('Dashboard: Using NMEA coordinates:', latestNmeaData.latitude.toFixed(6), latestNmeaData.longitude.toFixed(6));
+            setCurrentLocation({
+              lat: latestNmeaData.latitude,
+              lng: latestNmeaData.longitude
+            });
+          } else {
+            // Fallback to sample location if no NMEA data yet
+            setCurrentLocation({
+              lat: 41.0, // Offshore fishing area (40+ miles east of Block Island)
+              lng: -70.8
+            });
+          }
+        } catch (error) {
+          console.error('Error getting latest NMEA data:', error);
+          setCurrentLocation(null);
+        }
+      } else {
+        setCurrentLocation(null);
+      }
+    };
+
+    // Initial update
+    updateGpsStatus();
+
+    // Update every 2 seconds to get real-time GPS updates
+    const interval = setInterval(updateGpsStatus, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const formatDuration = (hours: number): string => {
     if (hours < 1) {
       return `${Math.round(hours * 60)}m`;
@@ -62,15 +110,50 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard">
       <div className="card">
-        <div className="card-header">
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 className="card-title">Fishing Dashboard</h1>
-          {/* New Session button commented out - redundant with header navigation */}
-          {/* 
-          <Link to="/sessions/new" className="btn btn-primary">
-            <Plus size={16} />
-            New Session
-          </Link>
-          */}
+          <div 
+            className="location-display"
+            onClick={() => {
+              console.log('Location display clicked, opening live map');
+              setIsLiveMapOpen(true);
+            }}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              cursor: 'pointer',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              background: isGpsConnected ? '#f0f9ff' : '#fef2f2',
+              border: `1px solid ${isGpsConnected ? '#0ea5e9' : '#fca5a5'}`,
+              transition: 'all 0.2s',
+              minWidth: '200px'
+            }}
+          >
+            <Navigation 
+              size={16} 
+              style={{ 
+                color: isGpsConnected ? '#0ea5e9' : '#fca5a5' 
+              }} 
+            />
+            <div style={{ fontSize: '14px', fontWeight: '500' }}>
+              {currentLocation ? (
+                <>
+                  <div style={{ color: isGpsConnected ? '#0ea5e9' : '#fca5a5' }}>
+                    {currentLocation.lat.toFixed(4)}°N, {Math.abs(currentLocation.lng).toFixed(4)}°W
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                    {isGpsConnected ? 'GPS Connected' : 'GPS Disconnected'}
+                  </div>
+                </>
+              ) : (
+                <div style={{ color: '#fca5a5' }}>
+                  No GPS Signal
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -256,6 +339,10 @@ const Dashboard: React.FC = () => {
         isOpen={isSpeciesModalOpen}
         onClose={() => setIsSpeciesModalOpen(false)}
         speciesData={stats.speciesCounts}
+      />
+      <LiveMapModal
+        isOpen={isLiveMapOpen}
+        onClose={() => setIsLiveMapOpen(false)}
       />
     </div>
   );

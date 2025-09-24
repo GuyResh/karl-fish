@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
     updateConnectionStatus();
 
     // Set up interval to check connection status
-    const interval = setInterval(updateConnectionStatus, 1000);
+    const interval = setInterval(updateConnectionStatus, 500); // Check more frequently
 
     return () => clearInterval(interval);
   }, []);

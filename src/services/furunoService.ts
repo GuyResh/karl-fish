@@ -156,25 +156,37 @@ export class FurunoService {
     this.isConnected = true;
     this.reconnectAttempts = 0;
     
+    // Clear any old NMEA data to ensure we start fresh with offshore coordinates
+    try {
+      await FishingDataService.clearNMEAData();
+      console.log('Cleared old NMEA data');
+    } catch (error) {
+      console.error('Error clearing NMEA data:', error);
+    }
+    
     testDataService.startSimulation((data) => {
       this.handleNMEAData(data.rawSentence);
     });
     
+    console.log('Test mode started, isConnected:', this.isConnected);
     return true;
   }
 
   disconnect(): void {
+    console.log('FurunoService: Disconnect called, isConnected:', this.isConnected);
     if (this.socket) {
       this.socket.close();
       this.socket = null;
     }
     
     if (testDataService.isSimulationRunning()) {
+      console.log('FurunoService: Stopping test simulation');
       testDataService.stopSimulation();
     }
     
     this.isConnected = false;
     this.currentSessionId = null;
+    console.log('FurunoService: Disconnected, isConnected:', this.isConnected);
   }
 
   isConnectedToFuruno(): boolean {

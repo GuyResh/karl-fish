@@ -136,6 +136,18 @@ export class FishingDataService {
     });
   }
 
+  static async getLatestNMEAData(): Promise<NMEAData | null> {
+    const latest = await db.nmeaData
+      .orderBy('timestamp')
+      .reverse()
+      .first();
+    return latest || null;
+  }
+
+  static async clearNMEAData(): Promise<void> {
+    await db.nmeaData.clear();
+  }
+
   // Settings management
   static async getSettings(): Promise<AppSettings | null> {
     const settings = await db.settings.get('main');

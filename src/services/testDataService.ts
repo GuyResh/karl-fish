@@ -16,6 +16,7 @@ export class TestDataService {
   }
 
   startSimulation(callback: (data: NMEAData) => void) {
+    console.log('TestDataService: Starting simulation');
     this.onDataCallback = callback;
     this.isRunning = true;
     
@@ -26,13 +27,16 @@ export class TestDataService {
     this.intervalId = setInterval(() => {
       this.generateTestData();
     }, 5000);
+    console.log('TestDataService: Simulation started, interval ID:', this.intervalId);
   }
 
   stopSimulation() {
+    console.log('TestDataService: Stopping simulation, was running:', this.isRunning);
     this.isRunning = false;
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
+      console.log('TestDataService: Simulation stopped');
     }
   }
 
@@ -41,9 +45,13 @@ export class TestDataService {
 
     const now = new Date();
     
-    // Simulate realistic fishing data
-    const baseLat = 40.7128 + (Math.random() - 0.5) * 0.01; // NYC area
-    const baseLon = -74.0060 + (Math.random() - 0.5) * 0.01;
+    // Simulate realistic fishing data - 40+ miles east of Block Island
+    // Block Island is at 41.1724°N, 71.5581°W
+    // Moving 40+ miles east puts us around 41.0°N, 70.8°W (offshore fishing area)
+    const baseLat = 41.0 + (Math.random() - 0.5) * 0.02; // Offshore fishing area
+    const baseLon = -70.8 + (Math.random() - 0.5) * 0.02;
+    
+    console.log('TestDataService: Generating GPS coordinates:', baseLat.toFixed(6), baseLon.toFixed(6));
     
     // Generate GPS data (GPGGA)
     const ggaData: NMEAData = {
