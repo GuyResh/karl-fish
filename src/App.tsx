@@ -106,7 +106,7 @@ function App() {
             <Route path="/sessions/new" element={<SessionForm />} />
             <Route path="/sessions/:id" element={<SessionForm />} />
             <Route path="/catches" element={<CatchesList />} />
-            <Route path="/export" element={<Transfer />} />
+            <Route path="/transfer" element={<Transfer />} />
             <Route 
               path="/settings" 
               element={

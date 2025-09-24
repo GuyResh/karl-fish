@@ -87,8 +87,8 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
             New Session
           </Link>
           <Link 
-            to="/export" 
-            className={isActive('/export') ? 'active' : ''}
+            to="/transfer" 
+            className={isActive('/transfer') ? 'active' : ''}
           >
             <Download size={16} />
             Transfer
