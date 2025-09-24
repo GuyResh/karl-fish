@@ -324,8 +324,8 @@ const SessionForm: React.FC = () => {
         await FishingDataService.updateSession(id, sessionToSave);
         // console.log('Session ended and updated successfully');
       } else {
-        const sessionId = await FishingDataService.createSession(sessionToSave as Omit<FishingSession, 'id'>);
-        // console.log('Session ended and created with ID:', sessionId);
+        await FishingDataService.createSession(sessionToSave as Omit<FishingSession, 'id'>);
+        // console.log('Session ended and created successfully');
       }
       
       navigate('/sessions');
