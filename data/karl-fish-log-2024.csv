@@ -1,0 +1,211 @@
+Session ID,Date,Start Time,End Time,Latitude,Longitude,Location Description,Air Temperature (°C),Water Temperature (°C),Wind Speed (kts),Wind Direction (°),Pressure (hPa),Water Depth (m),Fish Species,Fish Length (cm),Fish Weight (kg),Fish Condition,Bait/Lure,Notes
+session-001,2024-05-05,15:39,23:38,40.7681,-70.1462,Offshore Block Island,18.3,13.5,18.4,282,1009.5,42.2,White Marlin,68.5,35.9,kept,Live Ballyhoo,Great day offshore
+session-001,2024-05-05,15:39,23:38,40.7681,-70.1462,Offshore Block Island,18.3,13.5,18.4,282,1009.5,42.2,Bigeye Tuna,35.5,20.9,kept,Live Squid,Great day offshore
+session-001,2024-05-05,15:39,23:38,40.7681,-70.1462,Offshore Block Island,18.3,13.5,18.4,282,1009.5,42.2,Bigeye Tuna,40.0,14.7,kept,Live Squid,Great day offshore
+session-001,2024-05-05,15:39,23:38,40.7681,-70.1462,Offshore Block Island,18.3,13.5,18.4,282,1009.5,42.2,White Marlin,70.1,47.2,kept,Live Ballyhoo,Great day offshore
+session-001,2024-05-05,15:39,23:38,40.7681,-70.1462,Offshore Block Island,18.3,13.5,18.4,282,1009.5,42.2,Yellowfin Tuna,42.7,10.1,kept,Live Squid,Great day offshore
+session-002,2024-05-06,07:14,15:03,40.9945,-70.1657,Offshore Block Island,19.2,11.2,18.6,201,1014.1,48.6,Yellowfin Tuna,42.3,13.6,kept,Live Mackerel,Great day offshore
+session-002,2024-05-06,07:14,15:03,40.9945,-70.1657,Offshore Block Island,19.2,11.2,18.6,201,1014.1,48.6,Swordfish,90.7,54.4,kept,Live Mackerel,Great day offshore
+session-003,2024-05-12,14:35,23:23,40.8138,-70.3319,Offshore Block Island,15.8,13.4,6.1,88,1010.0,52.1,Blue Marlin,90.1,54.6,kept,Live Mackerel,Great day offshore
+session-003,2024-05-12,14:35,23:23,40.8138,-70.3319,Offshore Block Island,15.8,13.4,6.1,88,1010.0,52.1,Swordfish,73.1,35.1,released,Live Mackerel,Great day offshore
+session-003,2024-05-12,14:35,23:23,40.8138,-70.3319,Offshore Block Island,15.8,13.4,6.1,88,1010.0,52.1,Bigeye Tuna,35.5,12.9,released,Live Ballyhoo,Great day offshore
+session-004,2024-05-13,07:54,13:59,40.8403,-70.2114,Offshore Block Island,16.1,13.1,18.4,313,1018.3,36.0,White Marlin,88.9,30.1,kept,Live Squid,Great day offshore
+session-004,2024-05-13,07:54,13:59,40.8403,-70.2114,Offshore Block Island,16.1,13.1,18.4,313,1018.3,36.0,Blue Marlin,80.1,51.7,kept,Live Ballyhoo,Great day offshore
+session-004,2024-05-13,07:54,13:59,40.8403,-70.2114,Offshore Block Island,16.1,13.1,18.4,313,1018.3,36.0,Yellowfin Tuna,45.3,22.6,kept,Live Ballyhoo,Great day offshore
+session-004,2024-05-13,07:54,13:59,40.8403,-70.2114,Offshore Block Island,16.1,13.1,18.4,313,1018.3,36.0,Swordfish,102.8,53.3,kept,Live Mackerel,Great day offshore
+session-004,2024-05-13,07:54,13:59,40.8403,-70.2114,Offshore Block Island,16.1,13.1,18.4,313,1018.3,36.0,Swordfish,98.6,56.2,kept,Live Squid,Great day offshore
+session-005,2024-05-19,08:27,14:20,40.9259,-70.3433,Offshore Block Island,18.6,13.1,11.2,295,1020.5,47.8,Yellowfin Tuna,39.9,21.2,released,Live Mackerel,Great day offshore
+session-005,2024-05-19,08:27,14:20,40.9259,-70.3433,Offshore Block Island,18.6,13.1,11.2,295,1020.5,47.8,Bigeye Tuna,51.2,19.6,released,Live Squid,Great day offshore
+session-005,2024-05-19,08:27,14:20,40.9259,-70.3433,Offshore Block Island,18.6,13.1,11.2,295,1020.5,47.8,Bluefin Tuna,57.9,37.7,kept,Live Squid,Great day offshore
+session-005,2024-05-19,08:27,14:20,40.9259,-70.3433,Offshore Block Island,18.6,13.1,11.2,295,1020.5,47.8,Blue Marlin,93.4,46.7,released,Live Ballyhoo,Great day offshore
+session-005,2024-05-19,08:27,14:20,40.9259,-70.3433,Offshore Block Island,18.6,13.1,11.2,295,1020.5,47.8,Yellowfin Tuna,40.6,21.9,kept,Live Mackerel,Great day offshore
+session-006,2024-05-20,10:05,19:41,40.7928,-70.1635,Offshore Block Island,17.7,10.5,7.8,187,1008.0,55.4,Swordfish,71.0,40.6,kept,Live Squid,Great day offshore
+session-006,2024-05-20,10:05,19:41,40.7928,-70.1635,Offshore Block Island,17.7,10.5,7.8,187,1008.0,55.4,Bigeye Tuna,39.9,12.3,released,Live Squid,Great day offshore
+session-006,2024-05-20,10:05,19:41,40.7928,-70.1635,Offshore Block Island,17.7,10.5,7.8,187,1008.0,55.4,Swordfish,78.7,41.3,kept,Live Squid,Great day offshore
+session-007,2024-05-26,16:23,23:11,40.7456,-70.1703,Offshore Block Island,20.9,10.7,10.9,164,1024.4,39.8,White Marlin,60.2,31.3,released,Live Mackerel,Great day offshore
+session-007,2024-05-26,16:23,23:11,40.7456,-70.1703,Offshore Block Island,20.9,10.7,10.9,164,1024.4,39.8,Yellowfin Tuna,38.2,13.9,released,Live Squid,Great day offshore
+session-007,2024-05-26,16:23,23:11,40.7456,-70.1703,Offshore Block Island,20.9,10.7,10.9,164,1024.4,39.8,Swordfish,109.5,40.0,released,Live Squid,Great day offshore
+session-007,2024-05-26,16:23,23:11,40.7456,-70.1703,Offshore Block Island,20.9,10.7,10.9,164,1024.4,39.8,Yellowfin Tuna,41.8,22.9,kept,Live Squid,Great day offshore
+session-007,2024-05-26,16:23,23:11,40.7456,-70.1703,Offshore Block Island,20.9,10.7,10.9,164,1024.4,39.8,Blue Marlin,113.9,50.7,kept,Live Squid,Great day offshore
+session-008,2024-05-27,13:18,20:29,40.9866,-70.2622,Offshore Block Island,16.3,10.7,17.7,347,1017.1,44.6,Bigeye Tuna,50.8,14.0,released,Live Squid,Great day offshore
+session-008,2024-05-27,13:18,20:29,40.9866,-70.2622,Offshore Block Island,16.3,10.7,17.7,347,1017.1,44.6,Swordfish,75.2,40.8,kept,Live Mackerel,Great day offshore
+session-008,2024-05-27,13:18,20:29,40.9866,-70.2622,Offshore Block Island,16.3,10.7,17.7,347,1017.1,44.6,Yellowfin Tuna,32.0,22.1,kept,Live Squid,Great day offshore
+session-008,2024-05-27,13:18,20:29,40.9866,-70.2622,Offshore Block Island,16.3,10.7,17.7,347,1017.1,44.6,White Marlin,63.2,38.1,released,Live Mackerel,Great day offshore
+session-009,2024-06-02,11:02,20:27,40.8028,-70.2338,Offshore Block Island,23.5,16.1,13.6,301,1022.6,66.8,Bigeye Tuna,42.8,18.6,released,Live Mackerel,Great day offshore
+session-009,2024-06-02,11:02,20:27,40.8028,-70.2338,Offshore Block Island,23.5,16.1,13.6,301,1022.6,66.8,White Marlin,78.9,30.0,released,Live Mackerel,Great day offshore
+session-009,2024-06-02,11:02,20:27,40.8028,-70.2338,Offshore Block Island,23.5,16.1,13.6,301,1022.6,66.8,Yellowfin Tuna,34.1,12.6,kept,Live Squid,Great day offshore
+session-009,2024-06-02,11:02,20:27,40.8028,-70.2338,Offshore Block Island,23.5,16.1,13.6,301,1022.6,66.8,Yellowfin Tuna,50.0,20.6,released,Live Squid,Great day offshore
+session-009,2024-06-02,11:02,20:27,40.8028,-70.2338,Offshore Block Island,23.5,16.1,13.6,301,1022.6,66.8,White Marlin,84.7,35.5,released,Live Mackerel,Great day offshore
+session-010,2024-06-03,14:51,21:06,40.8430,-70.1799,Offshore Block Island,23.9,14.8,12.4,274,1018.5,57.9,White Marlin,66.8,36.4,released,Live Squid,Great day offshore
+session-010,2024-06-03,14:51,21:06,40.8430,-70.1799,Offshore Block Island,23.9,14.8,12.4,274,1018.5,57.9,Bluefin Tuna,49.1,34.1,released,Live Ballyhoo,Great day offshore
+session-010,2024-06-03,14:51,21:06,40.8430,-70.1799,Offshore Block Island,23.9,14.8,12.4,274,1018.5,57.9,Bigeye Tuna,37.5,13.2,released,Live Ballyhoo,Great day offshore
+session-010,2024-06-03,14:51,21:06,40.8430,-70.1799,Offshore Block Island,23.9,14.8,12.4,274,1018.5,57.9,Blue Marlin,97.9,44.8,kept,Live Ballyhoo,Great day offshore
+session-010,2024-06-03,14:51,21:06,40.8430,-70.1799,Offshore Block Island,23.9,14.8,12.4,274,1018.5,57.9,Swordfish,81.1,46.2,released,Live Mackerel,Great day offshore
+session-011,2024-06-09,15:30,23:58,40.7296,-70.2041,Offshore Block Island,23.9,15.6,19.6,105,1024.8,43.9,White Marlin,87.9,32.9,released,Live Mackerel,Great day offshore
+session-011,2024-06-09,15:30,23:58,40.7296,-70.2041,Offshore Block Island,23.9,15.6,19.6,105,1024.8,43.9,Bigeye Tuna,48.9,19.8,released,Live Ballyhoo,Great day offshore
+session-011,2024-06-09,15:30,23:58,40.7296,-70.2041,Offshore Block Island,23.9,15.6,19.6,105,1024.8,43.9,Bluefin Tuna,43.5,20.4,kept,Live Squid,Great day offshore
+session-012,2024-06-10,07:26,15:07,40.8846,-70.2240,Offshore Block Island,24.7,15.4,11.0,235,1007.1,58.1,Bluefin Tuna,39.1,33.7,released,Live Ballyhoo,Great day offshore
+session-012,2024-06-10,07:26,15:07,40.8846,-70.2240,Offshore Block Island,24.7,15.4,11.0,235,1007.1,58.1,Bigeye Tuna,39.8,15.5,kept,Live Ballyhoo,Great day offshore
+session-013,2024-06-16,15:42,23:36,40.7972,-70.3327,Offshore Block Island,27.7,16.1,19.6,175,1005.0,38.9,Bluefin Tuna,56.4,39.7,kept,Live Squid,Great day offshore
+session-013,2024-06-16,15:42,23:36,40.7972,-70.3327,Offshore Block Island,27.7,16.1,19.6,175,1005.0,38.9,Blue Marlin,84.1,49.0,released,Live Mackerel,Great day offshore
+session-014,2024-06-17,16:42,22:05,40.7969,-70.1362,Offshore Block Island,27.0,17.1,18.5,322,1019.4,58.4,Blue Marlin,89.6,77.3,kept,Live Ballyhoo,Great day offshore
+session-014,2024-06-17,16:42,22:05,40.7969,-70.1362,Offshore Block Island,27.0,17.1,18.5,322,1019.4,58.4,Swordfish,107.5,36.1,kept,Live Squid,Great day offshore
+session-014,2024-06-17,16:42,22:05,40.7969,-70.1362,Offshore Block Island,27.0,17.1,18.5,322,1019.4,58.4,Swordfish,96.5,36.0,released,Live Squid,Great day offshore
+session-014,2024-06-17,16:42,22:05,40.7969,-70.1362,Offshore Block Island,27.0,17.1,18.5,322,1019.4,58.4,Blue Marlin,87.5,52.8,released,Live Mackerel,Great day offshore
+session-015,2024-06-23,07:18,14:20,40.7018,-70.2531,Offshore Block Island,25.7,16.8,16.8,177,1010.3,60.6,White Marlin,69.7,25.4,released,Live Ballyhoo,Great day offshore
+session-015,2024-06-23,07:18,14:20,40.7018,-70.2531,Offshore Block Island,25.7,16.8,16.8,177,1010.3,60.6,Blue Marlin,85.5,43.6,released,Live Squid,Great day offshore
+session-015,2024-06-23,07:18,14:20,40.7018,-70.2531,Offshore Block Island,25.7,16.8,16.8,177,1010.3,60.6,White Marlin,87.7,36.4,released,Live Ballyhoo,Great day offshore
+session-015,2024-06-23,07:18,14:20,40.7018,-70.2531,Offshore Block Island,25.7,16.8,16.8,177,1010.3,60.6,Yellowfin Tuna,32.7,17.3,released,Live Squid,Great day offshore
+session-015,2024-06-23,07:18,14:20,40.7018,-70.2531,Offshore Block Island,25.7,16.8,16.8,177,1010.3,60.6,Swordfish,77.4,40.2,released,Live Ballyhoo,Great day offshore
+session-016,2024-06-24,14:27,23:20,40.7891,-70.2460,Offshore Block Island,27.3,16.4,18.4,259,1018.2,44.8,Yellowfin Tuna,49.5,10.2,kept,Live Ballyhoo,Great day offshore
+session-016,2024-06-24,14:27,23:20,40.7891,-70.2460,Offshore Block Island,27.3,16.4,18.4,259,1018.2,44.8,Blue Marlin,82.3,42.5,kept,Live Mackerel,Great day offshore
+session-016,2024-06-24,14:27,23:20,40.7891,-70.2460,Offshore Block Island,27.3,16.4,18.4,259,1018.2,44.8,Bigeye Tuna,35.5,17.0,kept,Live Ballyhoo,Great day offshore
+session-016,2024-06-24,14:27,23:20,40.7891,-70.2460,Offshore Block Island,27.3,16.4,18.4,259,1018.2,44.8,Bluefin Tuna,53.5,28.0,kept,Live Squid,Great day offshore
+session-016,2024-06-24,14:27,23:20,40.7891,-70.2460,Offshore Block Island,27.3,16.4,18.4,259,1018.2,44.8,Bigeye Tuna,48.1,28.6,released,Live Ballyhoo,Great day offshore
+session-017,2024-06-30,13:11,20:51,40.8126,-70.3015,Offshore Block Island,25.8,14.8,16.5,260,1023.8,35.3,Swordfish,74.3,51.3,kept,Live Ballyhoo,Great day offshore
+session-017,2024-06-30,13:11,20:51,40.8126,-70.3015,Offshore Block Island,25.8,14.8,16.5,260,1023.8,35.3,Blue Marlin,80.8,40.5,kept,Live Ballyhoo,Great day offshore
+session-018,2024-07-01,17:12,23:25,40.7283,-70.2191,Offshore Block Island,25.0,15.4,6.9,184,1022.7,52.7,Blue Marlin,100.9,51.1,released,Live Mackerel,Great day offshore
+session-018,2024-07-01,17:12,23:25,40.7283,-70.2191,Offshore Block Island,25.0,15.4,6.9,184,1022.7,52.7,White Marlin,82.3,31.1,kept,Live Ballyhoo,Great day offshore
+session-018,2024-07-01,17:12,23:25,40.7283,-70.2191,Offshore Block Island,25.0,15.4,6.9,184,1022.7,52.7,Bigeye Tuna,35.7,19.3,released,Live Ballyhoo,Great day offshore
+session-019,2024-07-07,07:22,13:12,40.7640,-70.1904,Offshore Block Island,25.8,15.5,17.3,154,1012.1,59.9,Yellowfin Tuna,42.5,23.7,kept,Live Ballyhoo,Great day offshore
+session-019,2024-07-07,07:22,13:12,40.7640,-70.1904,Offshore Block Island,25.8,15.5,17.3,154,1012.1,59.9,White Marlin,76.5,33.6,released,Live Mackerel,Great day offshore
+session-020,2024-07-08,17:47,23:16,40.7768,-70.3503,Offshore Block Island,25.0,14.6,18.1,148,1022.8,46.4,Swordfish,79.5,35.1,released,Live Mackerel,Great day offshore
+session-020,2024-07-08,17:47,23:16,40.7768,-70.3503,Offshore Block Island,25.0,14.6,18.1,148,1022.8,46.4,Bigeye Tuna,50.1,21.1,released,Live Ballyhoo,Great day offshore
+session-020,2024-07-08,17:47,23:16,40.7768,-70.3503,Offshore Block Island,25.0,14.6,18.1,148,1022.8,46.4,Yellowfin Tuna,46.0,19.6,kept,Live Ballyhoo,Great day offshore
+session-021,2024-07-14,17:18,23:49,40.8456,-70.1488,Offshore Block Island,26.3,17.1,13.3,286,1013.9,45.9,Yellowfin Tuna,31.8,17.2,kept,Live Ballyhoo,Great day offshore
+session-021,2024-07-14,17:18,23:49,40.8456,-70.1488,Offshore Block Island,26.3,17.1,13.3,286,1013.9,45.9,Yellowfin Tuna,49.6,23.7,released,Live Squid,Great day offshore
+session-021,2024-07-14,17:18,23:49,40.8456,-70.1488,Offshore Block Island,26.3,17.1,13.3,286,1013.9,45.9,Yellowfin Tuna,44.4,18.4,released,Live Mackerel,Great day offshore
+session-021,2024-07-14,17:18,23:49,40.8456,-70.1488,Offshore Block Island,26.3,17.1,13.3,286,1013.9,45.9,Swordfish,93.6,66.3,released,Live Squid,Great day offshore
+session-021,2024-07-14,17:18,23:49,40.8456,-70.1488,Offshore Block Island,26.3,17.1,13.3,286,1013.9,45.9,Bluefin Tuna,41.6,35.7,kept,Live Ballyhoo,Great day offshore
+session-022,2024-07-15,12:57,18:12,40.9468,-70.3704,Offshore Block Island,28.8,15.9,9.5,308,1021.8,49.3,Blue Marlin,98.0,40.8,released,Live Mackerel,Great day offshore
+session-022,2024-07-15,12:57,18:12,40.9468,-70.3704,Offshore Block Island,28.8,15.9,9.5,308,1021.8,49.3,Bluefin Tuna,56.8,35.5,released,Live Ballyhoo,Great day offshore
+session-022,2024-07-15,12:57,18:12,40.9468,-70.3704,Offshore Block Island,28.8,15.9,9.5,308,1021.8,49.3,Bigeye Tuna,35.4,12.3,released,Live Squid,Great day offshore
+session-022,2024-07-15,12:57,18:12,40.9468,-70.3704,Offshore Block Island,28.8,15.9,9.5,308,1021.8,49.3,Yellowfin Tuna,35.8,23.3,released,Live Squid,Great day offshore
+session-023,2024-07-21,10:57,17:17,40.7410,-70.1120,Offshore Block Island,26.7,16.3,7.1,57,1012.3,56.4,Bigeye Tuna,51.6,20.0,released,Live Squid,Great day offshore
+session-023,2024-07-21,10:57,17:17,40.7410,-70.1120,Offshore Block Island,26.7,16.3,7.1,57,1012.3,56.4,Blue Marlin,104.7,45.2,kept,Live Squid,Great day offshore
+session-023,2024-07-21,10:57,17:17,40.7410,-70.1120,Offshore Block Island,26.7,16.3,7.1,57,1012.3,56.4,White Marlin,87.2,38.3,released,Live Ballyhoo,Great day offshore
+session-023,2024-07-21,10:57,17:17,40.7410,-70.1120,Offshore Block Island,26.7,16.3,7.1,57,1012.3,56.4,Bluefin Tuna,39.8,26.7,kept,Live Mackerel,Great day offshore
+session-023,2024-07-21,10:57,17:17,40.7410,-70.1120,Offshore Block Island,26.7,16.3,7.1,57,1012.3,56.4,Blue Marlin,103.5,77.6,kept,Live Squid,Great day offshore
+session-024,2024-07-22,08:44,17:42,40.8771,-70.3668,Offshore Block Island,26.9,17.4,13.2,150,1005.0,68.4,Blue Marlin,92.8,61.7,kept,Live Ballyhoo,Great day offshore
+session-024,2024-07-22,08:44,17:42,40.8771,-70.3668,Offshore Block Island,26.9,17.4,13.2,150,1005.0,68.4,Blue Marlin,99.2,78.5,kept,Live Squid,Great day offshore
+session-024,2024-07-22,08:44,17:42,40.8771,-70.3668,Offshore Block Island,26.9,17.4,13.2,150,1005.0,68.4,Blue Marlin,117.0,63.4,released,Live Mackerel,Great day offshore
+session-025,2024-07-28,13:33,21:05,40.7772,-70.2172,Offshore Block Island,27.0,16.0,19.3,262,1023.8,35.2,Bigeye Tuna,44.0,22.1,released,Live Ballyhoo,Great day offshore
+session-025,2024-07-28,13:33,21:05,40.7772,-70.2172,Offshore Block Island,27.0,16.0,19.3,262,1023.8,35.2,Blue Marlin,109.8,70.5,kept,Live Ballyhoo,Great day offshore
+session-026,2024-07-29,12:48,18:30,40.7002,-70.1851,Offshore Block Island,27.6,15.6,13.2,172,1012.4,48.0,White Marlin,67.9,34.6,released,Live Squid,Great day offshore
+session-026,2024-07-29,12:48,18:30,40.7002,-70.1851,Offshore Block Island,27.6,15.6,13.2,172,1012.4,48.0,White Marlin,86.8,34.9,kept,Live Ballyhoo,Great day offshore
+session-026,2024-07-29,12:48,18:30,40.7002,-70.1851,Offshore Block Island,27.6,15.6,13.2,172,1012.4,48.0,Yellowfin Tuna,30.8,13.7,released,Live Mackerel,Great day offshore
+session-027,2024-08-04,09:52,17:48,40.8494,-70.3978,Offshore Block Island,25.8,19.6,16.0,28,1016.7,35.4,Bigeye Tuna,37.5,23.7,kept,Live Ballyhoo,Great day offshore
+session-027,2024-08-04,09:52,17:48,40.8494,-70.3978,Offshore Block Island,25.8,19.6,16.0,28,1016.7,35.4,Blue Marlin,111.8,42.9,kept,Live Squid,Great day offshore
+session-027,2024-08-04,09:52,17:48,40.8494,-70.3978,Offshore Block Island,25.8,19.6,16.0,28,1016.7,35.4,White Marlin,85.5,29.3,kept,Live Squid,Great day offshore
+session-027,2024-08-04,09:52,17:48,40.8494,-70.3978,Offshore Block Island,25.8,19.6,16.0,28,1016.7,35.4,Swordfish,84.8,57.2,released,Live Squid,Great day offshore
+session-028,2024-08-05,17:30,23:50,40.9532,-70.2422,Offshore Block Island,27.2,18.3,7.1,233,1006.5,56.5,Blue Marlin,81.5,48.0,kept,Live Squid,Great day offshore
+session-028,2024-08-05,17:30,23:50,40.9532,-70.2422,Offshore Block Island,27.2,18.3,7.1,233,1006.5,56.5,Swordfish,85.5,57.7,released,Live Ballyhoo,Great day offshore
+session-028,2024-08-05,17:30,23:50,40.9532,-70.2422,Offshore Block Island,27.2,18.3,7.1,233,1006.5,56.5,Bluefin Tuna,43.1,26.8,released,Live Ballyhoo,Great day offshore
+session-029,2024-08-11,13:38,22:27,40.7455,-70.2811,Offshore Block Island,27.3,18.6,16.3,249,1020.1,44.8,Bluefin Tuna,54.9,22.9,kept,Live Squid,Great day offshore
+session-029,2024-08-11,13:38,22:27,40.7455,-70.2811,Offshore Block Island,27.3,18.6,16.3,249,1020.1,44.8,Bigeye Tuna,47.5,19.6,released,Live Squid,Great day offshore
+session-030,2024-08-12,17:45,23:25,40.8320,-70.1606,Offshore Block Island,25.5,19.6,7.0,179,1019.7,46.0,Blue Marlin,85.4,62.0,released,Live Ballyhoo,Great day offshore
+session-030,2024-08-12,17:45,23:25,40.8320,-70.1606,Offshore Block Island,25.5,19.6,7.0,179,1019.7,46.0,Yellowfin Tuna,35.6,20.5,released,Live Mackerel,Great day offshore
+session-030,2024-08-12,17:45,23:25,40.8320,-70.1606,Offshore Block Island,25.5,19.6,7.0,179,1019.7,46.0,Yellowfin Tuna,41.2,10.3,kept,Live Squid,Great day offshore
+session-030,2024-08-12,17:45,23:25,40.8320,-70.1606,Offshore Block Island,25.5,19.6,7.0,179,1019.7,46.0,Swordfish,87.3,55.5,kept,Live Squid,Great day offshore
+session-030,2024-08-12,17:45,23:25,40.8320,-70.1606,Offshore Block Island,25.5,19.6,7.0,179,1019.7,46.0,Bluefin Tuna,42.8,37.2,released,Live Squid,Great day offshore
+session-031,2024-08-18,15:17,22:51,40.9688,-70.3969,Offshore Block Island,25.7,20.1,9.9,128,1007.1,60.2,Blue Marlin,107.8,75.0,kept,Live Squid,Great day offshore
+session-031,2024-08-18,15:17,22:51,40.9688,-70.3969,Offshore Block Island,25.7,20.1,9.9,128,1007.1,60.2,Bluefin Tuna,56.6,26.7,released,Live Mackerel,Great day offshore
+session-032,2024-08-19,09:25,17:54,40.8870,-70.1065,Offshore Block Island,25.5,19.4,19.9,357,1013.8,63.1,Yellowfin Tuna,38.4,21.6,released,Live Squid,Great day offshore
+session-032,2024-08-19,09:25,17:54,40.8870,-70.1065,Offshore Block Island,25.5,19.4,19.9,357,1013.8,63.1,Bigeye Tuna,54.9,17.8,released,Live Squid,Great day offshore
+session-032,2024-08-19,09:25,17:54,40.8870,-70.1065,Offshore Block Island,25.5,19.4,19.9,357,1013.8,63.1,Blue Marlin,84.4,56.1,kept,Live Ballyhoo,Great day offshore
+session-032,2024-08-19,09:25,17:54,40.8870,-70.1065,Offshore Block Island,25.5,19.4,19.9,357,1013.8,63.1,Swordfish,81.7,59.6,kept,Live Mackerel,Great day offshore
+session-033,2024-08-25,08:55,16:51,40.7210,-70.3541,Offshore Block Island,29.0,19.9,5.0,342,1023.9,46.6,Bluefin Tuna,37.0,21.3,released,Live Squid,Great day offshore
+session-033,2024-08-25,08:55,16:51,40.7210,-70.3541,Offshore Block Island,29.0,19.9,5.0,342,1023.9,46.6,Bluefin Tuna,55.1,19.6,kept,Live Squid,Great day offshore
+session-033,2024-08-25,08:55,16:51,40.7210,-70.3541,Offshore Block Island,29.0,19.9,5.0,342,1023.9,46.6,Swordfish,99.0,52.2,released,Live Ballyhoo,Great day offshore
+session-033,2024-08-25,08:55,16:51,40.7210,-70.3541,Offshore Block Island,29.0,19.9,5.0,342,1023.9,46.6,Yellowfin Tuna,37.0,16.0,released,Live Mackerel,Great day offshore
+session-033,2024-08-25,08:55,16:51,40.7210,-70.3541,Offshore Block Island,29.0,19.9,5.0,342,1023.9,46.6,Bluefin Tuna,54.4,23.8,released,Live Ballyhoo,Great day offshore
+session-034,2024-08-26,13:23,21:32,40.9104,-70.3047,Offshore Block Island,27.9,20.2,13.9,328,1022.0,56.2,White Marlin,80.3,27.5,released,Live Mackerel,Great day offshore
+session-034,2024-08-26,13:23,21:32,40.9104,-70.3047,Offshore Block Island,27.9,20.2,13.9,328,1022.0,56.2,Bigeye Tuna,35.6,12.7,kept,Live Mackerel,Great day offshore
+session-034,2024-08-26,13:23,21:32,40.9104,-70.3047,Offshore Block Island,27.9,20.2,13.9,328,1022.0,56.2,White Marlin,85.1,26.1,kept,Live Mackerel,Great day offshore
+session-034,2024-08-26,13:23,21:32,40.9104,-70.3047,Offshore Block Island,27.9,20.2,13.9,328,1022.0,56.2,Bluefin Tuna,54.6,20.4,released,Live Mackerel,Great day offshore
+session-035,2024-09-01,10:28,18:41,40.7076,-70.3778,Offshore Block Island,28.2,18.5,12.4,93,1024.2,67.4,Swordfish,105.4,40.7,kept,Live Squid,Great day offshore
+session-035,2024-09-01,10:28,18:41,40.7076,-70.3778,Offshore Block Island,28.2,18.5,12.4,93,1024.2,67.4,Blue Marlin,80.1,69.5,kept,Live Ballyhoo,Great day offshore
+session-035,2024-09-01,10:28,18:41,40.7076,-70.3778,Offshore Block Island,28.2,18.5,12.4,93,1024.2,67.4,Swordfish,92.7,52.1,released,Live Ballyhoo,Great day offshore
+session-035,2024-09-01,10:28,18:41,40.7076,-70.3778,Offshore Block Island,28.2,18.5,12.4,93,1024.2,67.4,Bigeye Tuna,54.0,22.2,kept,Live Ballyhoo,Great day offshore
+session-035,2024-09-01,10:28,18:41,40.7076,-70.3778,Offshore Block Island,28.2,18.5,12.4,93,1024.2,67.4,Yellowfin Tuna,42.2,12.8,kept,Live Squid,Great day offshore
+session-036,2024-09-02,07:07,15:39,40.9362,-70.3649,Offshore Block Island,25.5,22.7,17.0,220,1021.7,46.9,Yellowfin Tuna,37.1,11.0,kept,Live Squid,Great day offshore
+session-036,2024-09-02,07:07,15:39,40.9362,-70.3649,Offshore Block Island,25.5,22.7,17.0,220,1021.7,46.9,Yellowfin Tuna,39.5,19.7,kept,Live Ballyhoo,Great day offshore
+session-036,2024-09-02,07:07,15:39,40.9362,-70.3649,Offshore Block Island,25.5,22.7,17.0,220,1021.7,46.9,Blue Marlin,92.3,78.1,kept,Live Ballyhoo,Great day offshore
+session-037,2024-09-08,15:52,22:05,40.7999,-70.2431,Offshore Block Island,29.3,23.4,18.6,186,1005.7,67.9,Blue Marlin,89.6,59.4,released,Live Mackerel,Great day offshore
+session-037,2024-09-08,15:52,22:05,40.7999,-70.2431,Offshore Block Island,29.3,23.4,18.6,186,1005.7,67.9,Swordfish,73.3,50.0,kept,Live Squid,Great day offshore
+session-037,2024-09-08,15:52,22:05,40.7999,-70.2431,Offshore Block Island,29.3,23.4,18.6,186,1005.7,67.9,Bluefin Tuna,58.3,31.2,released,Live Mackerel,Great day offshore
+session-037,2024-09-08,15:52,22:05,40.7999,-70.2431,Offshore Block Island,29.3,23.4,18.6,186,1005.7,67.9,Blue Marlin,97.3,71.5,kept,Live Ballyhoo,Great day offshore
+session-038,2024-09-09,09:44,15:20,40.8808,-70.1870,Offshore Block Island,25.1,20.7,19.2,103,1023.9,40.7,Blue Marlin,102.1,55.5,kept,Live Squid,Great day offshore
+session-038,2024-09-09,09:44,15:20,40.8808,-70.1870,Offshore Block Island,25.1,20.7,19.2,103,1023.9,40.7,Yellowfin Tuna,40.4,14.4,kept,Live Mackerel,Great day offshore
+session-039,2024-09-15,10:30,17:46,40.9258,-70.2675,Offshore Block Island,28.5,21.6,13.2,213,1008.9,62.5,Blue Marlin,94.0,74.8,released,Live Squid,Great day offshore
+session-039,2024-09-15,10:30,17:46,40.9258,-70.2675,Offshore Block Island,28.5,21.6,13.2,213,1008.9,62.5,Swordfish,92.4,66.5,released,Live Squid,Great day offshore
+session-039,2024-09-15,10:30,17:46,40.9258,-70.2675,Offshore Block Island,28.5,21.6,13.2,213,1008.9,62.5,Blue Marlin,96.3,61.9,released,Live Ballyhoo,Great day offshore
+session-040,2024-09-16,13:42,20:26,40.9445,-70.2866,Offshore Block Island,27.5,21.1,18.8,190,1013.5,36.5,Swordfish,92.5,58.9,kept,Live Mackerel,Great day offshore
+session-040,2024-09-16,13:42,20:26,40.9445,-70.2866,Offshore Block Island,27.5,21.1,18.8,190,1013.5,36.5,Yellowfin Tuna,47.3,11.8,kept,Live Squid,Great day offshore
+session-040,2024-09-16,13:42,20:26,40.9445,-70.2866,Offshore Block Island,27.5,21.1,18.8,190,1013.5,36.5,Bluefin Tuna,54.7,38.6,kept,Live Mackerel,Great day offshore
+session-040,2024-09-16,13:42,20:26,40.9445,-70.2866,Offshore Block Island,27.5,21.1,18.8,190,1013.5,36.5,Yellowfin Tuna,31.8,22.4,released,Live Squid,Great day offshore
+session-041,2024-09-22,13:16,22:31,40.8836,-70.1006,Offshore Block Island,28.3,21.1,13.5,190,1009.8,43.6,Bigeye Tuna,38.7,28.0,released,Live Squid,Great day offshore
+session-041,2024-09-22,13:16,22:31,40.8836,-70.1006,Offshore Block Island,28.3,21.1,13.5,190,1009.8,43.6,Swordfish,109.0,62.2,kept,Live Mackerel,Great day offshore
+session-041,2024-09-22,13:16,22:31,40.8836,-70.1006,Offshore Block Island,28.3,21.1,13.5,190,1009.8,43.6,White Marlin,69.2,48.9,released,Live Mackerel,Great day offshore
+session-042,2024-09-23,17:29,23:46,40.9014,-70.2938,Offshore Block Island,30.3,22.8,8.1,195,1010.4,64.8,Blue Marlin,93.4,56.8,kept,Live Squid,Great day offshore
+session-042,2024-09-23,17:29,23:46,40.9014,-70.2938,Offshore Block Island,30.3,22.8,8.1,195,1010.4,64.8,Blue Marlin,97.6,56.2,released,Live Ballyhoo,Great day offshore
+session-043,2024-09-29,10:30,18:23,40.9002,-70.1517,Offshore Block Island,27.8,23.2,15.5,90,1015.6,60.8,Blue Marlin,105.9,55.5,kept,Live Squid,Great day offshore
+session-043,2024-09-29,10:30,18:23,40.9002,-70.1517,Offshore Block Island,27.8,23.2,15.5,90,1015.6,60.8,Blue Marlin,86.5,53.5,kept,Live Squid,Great day offshore
+session-043,2024-09-29,10:30,18:23,40.9002,-70.1517,Offshore Block Island,27.8,23.2,15.5,90,1015.6,60.8,Bigeye Tuna,51.7,14.8,kept,Live Mackerel,Great day offshore
+session-043,2024-09-29,10:30,18:23,40.9002,-70.1517,Offshore Block Island,27.8,23.2,15.5,90,1015.6,60.8,White Marlin,60.5,36.0,kept,Live Mackerel,Great day offshore
+session-043,2024-09-29,10:30,18:23,40.9002,-70.1517,Offshore Block Island,27.8,23.2,15.5,90,1015.6,60.8,Swordfish,86.5,53.6,released,Live Squid,Great day offshore
+session-044,2024-09-30,07:01,16:48,40.9486,-70.2253,Offshore Block Island,28.8,22.6,7.5,135,1016.3,45.1,Bluefin Tuna,43.9,30.5,released,Live Ballyhoo,Great day offshore
+session-044,2024-09-30,07:01,16:48,40.9486,-70.2253,Offshore Block Island,28.8,22.6,7.5,135,1016.3,45.1,Swordfish,74.2,63.9,kept,Live Squid,Great day offshore
+session-044,2024-09-30,07:01,16:48,40.9486,-70.2253,Offshore Block Island,28.8,22.6,7.5,135,1016.3,45.1,White Marlin,60.5,34.1,released,Live Ballyhoo,Great day offshore
+session-045,2024-10-06,16:17,23:41,40.9860,-70.3331,Offshore Block Island,25.5,20.3,19.5,100,1013.7,69.3,Bigeye Tuna,47.2,26.2,released,Live Mackerel,Great day offshore
+session-045,2024-10-06,16:17,23:41,40.9860,-70.3331,Offshore Block Island,25.5,20.3,19.5,100,1013.7,69.3,Blue Marlin,99.8,45.5,kept,Live Squid,Great day offshore
+session-046,2024-10-07,09:33,17:27,40.8336,-70.2124,Offshore Block Island,22.0,18.9,7.4,353,1020.0,60.1,Blue Marlin,90.4,40.7,kept,Live Ballyhoo,Great day offshore
+session-046,2024-10-07,09:33,17:27,40.8336,-70.2124,Offshore Block Island,22.0,18.9,7.4,353,1020.0,60.1,Bigeye Tuna,43.0,19.7,released,Live Squid,Great day offshore
+session-047,2024-10-13,15:04,22:08,40.8727,-70.3261,Offshore Block Island,23.5,20.2,10.3,250,1010.5,51.9,Yellowfin Tuna,31.6,15.7,kept,Live Ballyhoo,Great day offshore
+session-047,2024-10-13,15:04,22:08,40.8727,-70.3261,Offshore Block Island,23.5,20.2,10.3,250,1010.5,51.9,Yellowfin Tuna,34.6,21.3,released,Live Mackerel,Great day offshore
+session-047,2024-10-13,15:04,22:08,40.8727,-70.3261,Offshore Block Island,23.5,20.2,10.3,250,1010.5,51.9,Blue Marlin,84.3,59.7,released,Live Ballyhoo,Great day offshore
+session-047,2024-10-13,15:04,22:08,40.8727,-70.3261,Offshore Block Island,23.5,20.2,10.3,250,1010.5,51.9,Swordfish,85.6,61.0,kept,Live Mackerel,Great day offshore
+session-047,2024-10-13,15:04,22:08,40.8727,-70.3261,Offshore Block Island,23.5,20.2,10.3,250,1010.5,51.9,Swordfish,70.6,39.0,kept,Live Mackerel,Great day offshore
+session-048,2024-10-14,10:26,18:12,40.8034,-70.2807,Offshore Block Island,23.5,19.6,5.3,40,1020.9,50.2,Bigeye Tuna,54.5,25.4,released,Live Mackerel,Great day offshore
+session-048,2024-10-14,10:26,18:12,40.8034,-70.2807,Offshore Block Island,23.5,19.6,5.3,40,1020.9,50.2,Bigeye Tuna,54.5,23.4,released,Live Ballyhoo,Great day offshore
+session-049,2024-10-20,12:16,21:29,40.8249,-70.1081,Offshore Block Island,26.3,21.4,7.1,245,1013.2,62.2,Bluefin Tuna,44.8,19.6,released,Live Ballyhoo,Great day offshore
+session-049,2024-10-20,12:16,21:29,40.8249,-70.1081,Offshore Block Island,26.3,21.4,7.1,245,1013.2,62.2,Bigeye Tuna,35.8,27.8,kept,Live Squid,Great day offshore
+session-049,2024-10-20,12:16,21:29,40.8249,-70.1081,Offshore Block Island,26.3,21.4,7.1,245,1013.2,62.2,Bluefin Tuna,46.7,34.6,released,Live Mackerel,Great day offshore
+session-049,2024-10-20,12:16,21:29,40.8249,-70.1081,Offshore Block Island,26.3,21.4,7.1,245,1013.2,62.2,Bigeye Tuna,36.8,24.8,kept,Live Squid,Great day offshore
+session-050,2024-10-21,07:21,14:21,40.8578,-70.1979,Offshore Block Island,24.7,21.3,5.4,320,1016.2,48.2,Yellowfin Tuna,42.5,15.5,released,Live Mackerel,Great day offshore
+session-050,2024-10-21,07:21,14:21,40.8578,-70.1979,Offshore Block Island,24.7,21.3,5.4,320,1016.2,48.2,White Marlin,77.1,47.7,released,Live Mackerel,Great day offshore
+session-050,2024-10-21,07:21,14:21,40.8578,-70.1979,Offshore Block Island,24.7,21.3,5.4,320,1016.2,48.2,Swordfish,81.3,52.7,kept,Live Ballyhoo,Great day offshore
+session-051,2024-10-27,12:06,20:20,40.7098,-70.1372,Offshore Block Island,25.0,20.6,17.9,81,1022.2,50.9,Blue Marlin,105.4,47.9,released,Live Squid,Great day offshore
+session-051,2024-10-27,12:06,20:20,40.7098,-70.1372,Offshore Block Island,25.0,20.6,17.9,81,1022.2,50.9,Bluefin Tuna,39.9,25.4,kept,Live Mackerel,Great day offshore
+session-052,2024-10-28,10:37,19:54,40.8103,-70.1609,Offshore Block Island,23.8,21.0,8.9,90,1013.0,41.4,White Marlin,74.1,44.5,released,Live Squid,Great day offshore
+session-052,2024-10-28,10:37,19:54,40.8103,-70.1609,Offshore Block Island,23.8,21.0,8.9,90,1013.0,41.4,Blue Marlin,96.9,41.5,released,Live Squid,Great day offshore
+session-053,2024-11-03,16:49,22:14,40.7981,-70.1963,Offshore Block Island,16.8,14.0,18.3,178,1017.8,61.9,Bluefin Tuna,38.1,30.1,released,Live Squid,Great day offshore
+session-053,2024-11-03,16:49,22:14,40.7981,-70.1963,Offshore Block Island,16.8,14.0,18.3,178,1017.8,61.9,White Marlin,84.2,35.0,released,Live Mackerel,Great day offshore
+session-053,2024-11-03,16:49,22:14,40.7981,-70.1963,Offshore Block Island,16.8,14.0,18.3,178,1017.8,61.9,Bluefin Tuna,35.0,15.4,kept,Live Ballyhoo,Great day offshore
+session-053,2024-11-03,16:49,22:14,40.7981,-70.1963,Offshore Block Island,16.8,14.0,18.3,178,1017.8,61.9,Blue Marlin,100.3,78.7,kept,Live Squid,Great day offshore
+session-053,2024-11-03,16:49,22:14,40.7981,-70.1963,Offshore Block Island,16.8,14.0,18.3,178,1017.8,61.9,Bigeye Tuna,39.1,17.5,kept,Live Squid,Great day offshore
+session-054,2024-11-04,10:07,19:06,40.8517,-70.3222,Offshore Block Island,16.5,12.5,9.7,333,1007.9,57.0,Blue Marlin,95.8,53.3,kept,Live Ballyhoo,Great day offshore
+session-054,2024-11-04,10:07,19:06,40.8517,-70.3222,Offshore Block Island,16.5,12.5,9.7,333,1007.9,57.0,Swordfish,70.1,55.3,kept,Live Ballyhoo,Great day offshore
+session-054,2024-11-04,10:07,19:06,40.8517,-70.3222,Offshore Block Island,16.5,12.5,9.7,333,1007.9,57.0,White Marlin,86.0,47.6,kept,Live Mackerel,Great day offshore
+session-054,2024-11-04,10:07,19:06,40.8517,-70.3222,Offshore Block Island,16.5,12.5,9.7,333,1007.9,57.0,Yellowfin Tuna,40.8,13.6,kept,Live Mackerel,Great day offshore
+session-054,2024-11-04,10:07,19:06,40.8517,-70.3222,Offshore Block Island,16.5,12.5,9.7,333,1007.9,57.0,Blue Marlin,87.2,75.9,released,Live Mackerel,Great day offshore
+session-055,2024-11-10,11:57,17:57,40.9304,-70.3332,Offshore Block Island,14.5,14.8,14.8,321,1020.4,40.3,Bigeye Tuna,39.0,23.5,released,Live Ballyhoo,Great day offshore
+session-055,2024-11-10,11:57,17:57,40.9304,-70.3332,Offshore Block Island,14.5,14.8,14.8,321,1020.4,40.3,White Marlin,83.4,41.3,kept,Live Squid,Great day offshore
+session-055,2024-11-10,11:57,17:57,40.9304,-70.3332,Offshore Block Island,14.5,14.8,14.8,321,1020.4,40.3,Swordfish,108.4,60.2,kept,Live Mackerel,Great day offshore
+session-055,2024-11-10,11:57,17:57,40.9304,-70.3332,Offshore Block Island,14.5,14.8,14.8,321,1020.4,40.3,Bluefin Tuna,48.4,17.8,kept,Live Ballyhoo,Great day offshore
+session-056,2024-11-11,08:02,16:51,40.8401,-70.3681,Offshore Block Island,13.1,12.5,19.7,352,1021.4,36.2,Swordfish,85.4,38.8,kept,Live Ballyhoo,Great day offshore
+session-056,2024-11-11,08:02,16:51,40.8401,-70.3681,Offshore Block Island,13.1,12.5,19.7,352,1021.4,36.2,Blue Marlin,111.0,64.5,kept,Live Mackerel,Great day offshore
+session-056,2024-11-11,08:02,16:51,40.8401,-70.3681,Offshore Block Island,13.1,12.5,19.7,352,1021.4,36.2,Yellowfin Tuna,47.1,12.3,released,Live Ballyhoo,Great day offshore
+session-057,2024-11-17,12:24,18:39,40.8183,-70.2027,Offshore Block Island,13.4,12.7,10.7,324,1008.5,51.2,Swordfish,92.7,39.2,released,Live Ballyhoo,Great day offshore
+session-057,2024-11-17,12:24,18:39,40.8183,-70.2027,Offshore Block Island,13.4,12.7,10.7,324,1008.5,51.2,Bluefin Tuna,52.7,19.9,released,Live Squid,Great day offshore
+session-057,2024-11-17,12:24,18:39,40.8183,-70.2027,Offshore Block Island,13.4,12.7,10.7,324,1008.5,51.2,Bluefin Tuna,58.5,18.3,kept,Live Squid,Great day offshore
+session-057,2024-11-17,12:24,18:39,40.8183,-70.2027,Offshore Block Island,13.4,12.7,10.7,324,1008.5,51.2,Yellowfin Tuna,30.9,24.4,released,Live Mackerel,Great day offshore
+session-058,2024-11-18,17:27,23:03,40.8988,-70.1521,Offshore Block Island,17.6,12.7,5.7,158,1014.0,43.0,Blue Marlin,92.1,41.8,released,Live Squid,Great day offshore
+session-058,2024-11-18,17:27,23:03,40.8988,-70.1521,Offshore Block Island,17.6,12.7,5.7,158,1014.0,43.0,Swordfish,81.5,56.7,released,Live Mackerel,Great day offshore
+session-059,2024-11-24,12:05,21:52,40.8504,-70.2905,Offshore Block Island,16.2,13.1,10.8,186,1021.1,45.9,White Marlin,71.3,35.0,kept,Live Mackerel,Great day offshore
+session-059,2024-11-24,12:05,21:52,40.8504,-70.2905,Offshore Block Island,16.2,13.1,10.8,186,1021.1,45.9,Bigeye Tuna,50.3,15.5,kept,Live Ballyhoo,Great day offshore
+session-059,2024-11-24,12:05,21:52,40.8504,-70.2905,Offshore Block Island,16.2,13.1,10.8,186,1021.1,45.9,Blue Marlin,98.8,41.5,kept,Live Mackerel,Great day offshore
+session-059,2024-11-24,12:05,21:52,40.8504,-70.2905,Offshore Block Island,16.2,13.1,10.8,186,1021.1,45.9,Yellowfin Tuna,41.0,22.1,kept,Live Ballyhoo,Great day offshore
+session-059,2024-11-24,12:05,21:52,40.8504,-70.2905,Offshore Block Island,16.2,13.1,10.8,186,1021.1,45.9,Bigeye Tuna,41.2,12.3,released,Live Squid,Great day offshore
+session-060,2024-11-25,11:09,17:13,40.8935,-70.1371,Offshore Block Island,16.0,15.0,9.9,240,1021.2,49.9,Blue Marlin,89.8,46.6,kept,Live Mackerel,Great day offshore
+session-060,2024-11-25,11:09,17:13,40.8935,-70.1371,Offshore Block Island,16.0,15.0,9.9,240,1021.2,49.9,White Marlin,77.7,27.5,kept,Live Squid,Great day offshore
