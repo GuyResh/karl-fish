@@ -1,17 +1,17 @@
 {
-  "productName": "Carl Fish",
+  "productName": "Karl Fish",
   "version": "0.1.0",
-  "identifier": "com.carlfish.app",
+  "identifier": "com.karlfish.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:4000",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "Carl Fish - Fishing Log",
+        "title": "Karl Fish - Fishing Log",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
