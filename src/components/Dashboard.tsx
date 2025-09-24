@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
   const [isSpeciesModalOpen, setIsSpeciesModalOpen] = useState(false);
   const [isLiveMapOpen, setIsLiveMapOpen] = useState(false);
   
-  console.log('Dashboard: isLiveMapOpen state:', isLiveMapOpen);
+  // console.log('Dashboard: isLiveMapOpen state:', isLiveMapOpen);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isGpsConnected, setIsGpsConnected] = useState(false);
 
@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
           <div 
             className="location-display"
             onClick={() => {
-              console.log('Location display clicked, opening live map');
+              // console.log('Location display clicked, opening live map');
               setIsLiveMapOpen(true);
             }}
             style={{ 

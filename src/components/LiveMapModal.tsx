@@ -14,7 +14,7 @@ const LiveMapModal: React.FC<LiveMapModalProps> = ({ isOpen, onClose }) => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [useAltMap, setUseAltMap] = useState(false);
 
-  console.log('LiveMapModal rendered, isOpen:', isOpen);
+  // console.log('LiveMapModal rendered, isOpen:', isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
