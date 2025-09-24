@@ -1,5 +1,5 @@
 [package]
-name = "carl-fish"
+name = "karl-fish"
 version = "0.1.0"
 description = "A fishing log application"
 authors = ["you"]

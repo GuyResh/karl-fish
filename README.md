@@ -1,6 +1,6 @@
-# Carl Fish - Fishing Log Application
+# Karl Fish - Fishing Log Application
 
-![Carl Fish Logo](CarlFish.png)
+![Karl Fish Logo](KarlFish.png)
 
 A comprehensive React-based fishing log application that can be deployed as a web app or desktop application using Tauri. Features integration with Furuno multi-function displays for automatic data collection.
 
@@ -48,7 +48,7 @@ A comprehensive React-based fishing log application that can be deployed as a we
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd carl-fish
+cd karl-fish
 
 # Install dependencies
 npm install
@@ -80,7 +80,7 @@ npm run tauri:build
 3. Enable NMEA 0183 output on the Furuno device
 
 ### 2. Application Configuration
-1. Open Carl Fish application
+1. Open Karl Fish application
 2. Go to Settings → Furuno Integration
 3. Enter the Furuno device IP address (default port: 10110)
 4. Test the connection to verify data flow
