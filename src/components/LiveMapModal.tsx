@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Navigation, X, MapPin, RefreshCw } from 'lucide-react';
-import Modal from './Modal';
 import { furunoService } from '../services/furunoService';
 import { FishingDataService } from '../database';
 
