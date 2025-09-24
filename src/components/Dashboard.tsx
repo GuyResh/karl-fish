@@ -134,7 +134,15 @@ const Dashboard: React.FC = () => {
                               <>
                                 {new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 {` (`}
-                                {`${Math.round((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / (1000 * 60))}m`}
+                                <span className="duration">
+                                  {(() => {
+                                    const ms = new Date(session.endTime).getTime() - new Date(session.startTime).getTime();
+                                    const totalMinutes = Math.round(ms / (1000 * 60));
+                                    const h = Math.floor(totalMinutes / 60);
+                                    const m = totalMinutes % 60;
+                                    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+                                  })()}
+                                </span>
                                 {`)`}
                               </>
                             )
