@@ -35,7 +35,7 @@ export class LocationService {
         `${this.NOMINATIM_BASE_URL}?format=json&lat=${location.latitude}&lon=${location.longitude}&zoom=15&addressdetails=1&extratags=1`,
         {
           headers: {
-            'User-Agent': 'CarlFish/1.0'
+            'User-Agent': 'KarlFish/1.0'
           }
         }
       );
@@ -255,7 +255,7 @@ export class LocationService {
         `${this.NOMINATIM_BASE_URL}?format=json&lat=${location.latitude}&lon=${location.longitude}&zoom=5&addressdetails=1`,
         {
           headers: {
-            'User-Agent': 'CarlFish/1.0'
+            'User-Agent': 'KarlFish/1.0'
           }
         }
       );
