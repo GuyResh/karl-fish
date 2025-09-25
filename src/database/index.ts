@@ -158,6 +158,10 @@ export class FishingDataService {
     await db.settings.put({ ...settings, id: 'main' } as any);
   }
 
+  static async saveSettings(settings: AppSettings): Promise<void> {
+    await db.settings.put({ ...settings, id: 'main' } as any);
+  }
+
   // NMEA data management
   static async addNMEAData(data: NMEAData): Promise<void> {
     const nmeaDataWithId = {

@@ -14,6 +14,40 @@ import './App.css';
 import { importFishingCSV } from './utils/csvImporter';
 import ConfirmModal from './components/ConfirmModal';
 
+// Migration function to handle old settings structure
+function migrateSettings(settings: any): AppSettings {
+  // If settings already have nmea2000, return as-is
+  if (settings.nmea2000) {
+    return settings;
+  }
+
+  // Migrate from old furuno structure
+  const migratedSettings: AppSettings = {
+    units: settings.units || {
+      temperature: 'fahrenheit',
+      distance: 'imperial',
+      weight: 'imperial',
+      pressure: 'inHg'
+    },
+    nmea2000: {
+      enabled: settings.furuno?.enabled || false,
+      ipAddress: settings.furuno?.ipAddress || '',
+      port: settings.furuno?.port || 2000,
+      autoConnect: settings.furuno?.autoConnect || false
+    },
+    export: settings.export || {
+      defaultFormat: 'csv',
+      autoBackup: false,
+      backupInterval: 7
+    }
+  };
+
+  // Save migrated settings
+  FishingDataService.saveSettings(migratedSettings);
+  
+  return migratedSettings;
+}
+
 function App() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,8 +59,10 @@ function App() {
       try {
         const appSettings = await FishingDataService.getSettings();
         if (appSettings) {
-          setSettings(appSettings);
-          UnitConverter.setSettings(appSettings);
+          // Migrate old settings structure if needed
+          const migratedSettings = migrateSettings(appSettings);
+          setSettings(migratedSettings);
+          UnitConverter.setSettings(migratedSettings);
         } else {
           // Create default settings
           const defaultSettings: AppSettings = {

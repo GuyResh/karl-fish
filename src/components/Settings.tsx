@@ -59,6 +59,22 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
     }
   };
 
+  // Safety check for settings structure
+  if (!localSettings.nmea2000) {
+    return (
+      <div className="settings">
+        <div className="card">
+          <div className="card-header">
+            <h1 className="card-title">Settings</h1>
+          </div>
+          <div className="settings-content">
+            <p>Loading settings...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="settings">
       <div className="card">
@@ -128,23 +144,20 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
             </div>
           </div>
 
-          {/* Furuno Settings */}
+          {/* NMEA 2000 Settings */}
           <div className="settings-section">
             <h3>
               <Wifi size={16} />
-              Furuno Integration
-            </h3>
-            
-            <div className="form-group">
-              <label className="checkbox-label">
+              NMEA 2000 Integration
+              <label className="form-label" style={{ marginLeft: '16px', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '16px' }}>
                 <input
                   type="checkbox"
                   checked={localSettings.nmea2000.enabled}
                   onChange={(e) => handleInputChange('nmea2000', 'enabled', e.target.checked)}
                 />
-                Enable NMEA 2000 integration
+                Enable
               </label>
-            </div>
+            </h3>
 
             {localSettings.nmea2000.enabled && (
               <>
