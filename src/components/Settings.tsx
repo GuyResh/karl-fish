@@ -157,6 +157,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 />
                 Enable
               </label>
+              <label className="form-label" style={{ marginLeft: '24px', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '16px' }}>
+                <input
+                  type="checkbox"
+                  checked={localSettings.nmea2000.autoConnect}
+                  onChange={(e) => handleInputChange('nmea2000', 'autoConnect', e.target.checked)}
+                />
+                Auto-connect on startup
+              </label>
             </h3>
 
             {localSettings.nmea2000.enabled && (
@@ -183,17 +191,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                    checked={localSettings.nmea2000.autoConnect}
-                    onChange={(e) => handleInputChange('nmea2000', 'autoConnect', e.target.checked)}
-                    />
-                    Auto-connect on startup
-                  </label>
-                </div>
-
                 <div className="connection-test">
                   <button 
                     onClick={toggleTestMode}
@@ -213,25 +210,33 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 <div className="nmea2000-info">
                   <h4>NMEA 2000 Gateway Setup Instructions:</h4>
                   <ol>
-                    <li>Connect the YDWG-02 gateway to your NMEA 2000 network</li>
-                    <li>Ensure the gateway is powered and connected to Wi-Fi</li>
-                    <li>Configure the gateway IP address and port (default: 192.168.4.1:2000)</li>
+                    <li>Connect the YDWG-02 gateway to your NMEA 2000 network backbone</li>
+                    <li>Power on the gateway and connect to its WiFi network "YDWG-02"</li>
+                    <li>Access the web interface at <code>http://192.168.4.1</code></li>
+                    <li>Configure data servers:
+                      <ul>
+                        <li>Enable <strong>TCP server</strong> on port 2000</li>
+                        <li>Select <strong>RAW protocol</strong> (not NMEA 0183)</li>
+                        <li>Configure data filters as needed</li>
+                      </ul>
+                    </li>
+                    <li>Enter gateway IP (192.168.4.1) and port (2000) above</li>
                     <li>Test the connection using the button above</li>
                   </ol>
                   
-                  <h4>Supported NMEA 2000 Data:</h4>
+                  <h4>Supported NMEA 2000 PGNs (via RAW protocol):</h4>
                   <ul>
                     <li><strong>PGN 129025</strong> - Position, Rapid Update (GPS coordinates)</li>
                     <li><strong>PGN 130306</strong> - Wind Data (speed, direction)</li>
                     <li><strong>PGN 128267</strong> - Water Depth</li>
                     <li><strong>PGN 127250</strong> - Vessel Heading</li>
-                    <li><strong>PGN 127488</strong> - Engine Parameters</li>
+                    <li><strong>PGN 127488</strong> - Engine Parameters (RPM, temperature, pressure)</li>
                     <li><strong>PGN 130310</strong> - Environmental Parameters (temperature, pressure)</li>
-                    <li><strong>SDMDA/YMDA</strong> - Meteorological Composite</li>
-                    <li><strong>SDMWV/YMWV</strong> - Wind Speed and Direction</li>
-                    <li><strong>SDVHW/YVHW</strong> - Water Speed and Heading</li>
-                    <li><strong>SDVWR/YVWR</strong> - Relative Wind Speed and Angle</li>
+                    <li><strong>PGN 127258</strong> - Engine RPM</li>
+                    <li><strong>PGN 127505</strong> - Fluid Level (fuel, water, etc.)</li>
                   </ul>
+                  {/* <h4>Why RAW Protocol?</h4>
+                  <p>RAW protocol provides complete access to all NMEA 2000 data from your marine electronics network, including engine data, detailed environmental conditions, and real-time updates. This gives Karl Fish access to the full range of data available on your vessel.</p> */}
                 </div>
               </>
             )}

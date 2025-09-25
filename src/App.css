@@ -523,6 +523,40 @@ body {
   }
 }
 
+/* List Styles */
+ol, ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+ul {
+  list-style-type: disc;
+}
+
+li {
+  margin: 0.25rem 0;
+  line-height: 1.4;
+}
+
+/* Nested lists */
+ul ul, ol ol, ul ol, ol ul {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+}
+
+/* Code elements in lists */
+li code {
+  background: #f1f3f4;
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+}
+
 /* Additional Component Styles */
 .search-container {
   margin-top: 1rem;
@@ -694,7 +728,7 @@ body {
 
 /* Session Form Styles */
 .session-form {
-  max-width: 1000px;
+  max-width: 100%;
   margin: 0 auto;
   width: 100%;
 }
@@ -754,7 +788,7 @@ body {
 
 /* Settings Styles */
 .settings {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -767,7 +801,7 @@ body {
 .settings-section {
   border: 1px solid #eee;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
 }
 
 .settings-section h3 {
@@ -793,7 +827,8 @@ body {
 }
 
 .connection-test {
-  margin-top: 1rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -843,7 +878,7 @@ body {
 
 /* Export Styles */
 .export {
-  max-width: 1000px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
