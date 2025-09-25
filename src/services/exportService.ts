@@ -1,6 +1,7 @@
 import { FishingSession, ExportOptions } from '../types';
 import { FishingDataService } from '../database';
 import { format } from 'date-fns';
+import { UnitConverter } from '../utils/unitConverter';
 
 export class ExportService {
   static async exportToCSV(options: ExportOptions): Promise<string> {
@@ -10,6 +11,10 @@ export class ExportService {
       throw new Error('No sessions found for export');
     }
 
+    // Get user settings for unit conversion and set them in UnitConverter
+    const settings = await FishingDataService.getSettings();
+    UnitConverter.setSettings(settings);
+
     const headers = [
       'Session ID',
       'Date',
@@ -18,17 +23,19 @@ export class ExportService {
       'Latitude',
       'Longitude',
       'Location Description',
-      'Air Temperature (°C)',
-      'Water Temperature (°C)',
+      `Air Temperature (${UnitConverter.getTemperatureUnit()})`,
+      `Water Temperature (${UnitConverter.getTemperatureUnit()})`,
       'Wind Speed (kts)',
       'Wind Direction (°)',
       'Pressure (hPa)',
-      'Water Depth (m)',
+      `Water Depth (${UnitConverter.getDepthUnit()})`,
       'Fish Species',
-      'Fish Length (cm)',
-      'Fish Weight (kg)',
+      `Fish Length (${UnitConverter.getLengthUnit()})`,
+      `Fish Weight (${UnitConverter.getWeightUnit()})`,
       'Fish Condition',
-      'Bait/Lure',
+      'Technique',
+      'Bait',
+      'Lure',
       'Notes'
     ];
 
@@ -105,6 +112,18 @@ export class ExportService {
       return str;
     };
 
+    // Convert units for display
+    const airTemp = session.weather.temperature ? 
+      UnitConverter.convertTemperature(session.weather.temperature) : '';
+    const waterTemp = session.water.temperature ? 
+      UnitConverter.convertTemperature(session.water.temperature) : '';
+    const waterDepth = session.water.depth ? 
+      UnitConverter.convertDepth(session.water.depth) : '';
+    const fishLength = catch_?.length ? 
+      UnitConverter.convertLength(catch_.length) : '';
+    const fishWeight = catch_?.weight ? 
+      UnitConverter.convertWeight(catch_.weight) : '';
+
     return [
       session.id,
       format(session.date, 'yyyy-MM-dd'),
@@ -113,17 +132,19 @@ export class ExportService {
       session.location.latitude,
       session.location.longitude,
       session.location.description || '',
-      session.weather.temperature || '',
-      session.water.temperature || '',
+      airTemp,
+      waterTemp,
       session.weather.windSpeed || '',
       session.weather.windDirection || '',
       session.weather.pressure || '',
-      session.water.depth || '',
+      waterDepth,
       catch_?.species?.replace('Custom:', '') || '',
-      catch_?.length || '',
-      catch_?.weight || '',
+      fishLength,
+      fishWeight,
       catch_?.condition || '',
-      catch_?.bait || catch_?.lure || '',
+      catch_?.technique || '',
+      catch_?.bait || '',
+      catch_?.lure || '',
       catch_?.notes || session.notes || ''
     ].map(escapeCSV).join(',');
   }
