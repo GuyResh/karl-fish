@@ -203,4 +203,33 @@ export class UnitConverter {
     }
     return Math.round((displayVisibility / 1.15078) * 10) / 10; // Convert from miles to nautical miles
   }
+
+  // Depth conversions
+  static convertDepth(meters: number): number {
+    if (!this.settings || this.settings.units.distance === 'metric') {
+      return Math.round(meters * 10) / 10;
+    }
+    return Math.round((meters * 3.28084) * 10) / 10; // Convert to feet
+  }
+
+  static getDepthUnit(): string {
+    if (!this.settings || this.settings.units.distance === 'metric') {
+      return 'm';
+    }
+    return 'ft';
+  }
+
+  static getDepthLabel(): string {
+    if (!this.settings || this.settings.units.distance === 'metric') {
+      return 'Depth (m)';
+    }
+    return 'Depth (ft)';
+  }
+
+  static convertToStorageDepth(displayDepth: number): number {
+    if (!this.settings || this.settings.units.distance === 'metric') {
+      return Math.round(displayDepth * 10) / 10;
+    }
+    return Math.round((displayDepth / 3.28084) * 10) / 10; // Convert from feet to meters
+  }
 }

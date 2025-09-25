@@ -74,6 +74,15 @@ export interface NMEAData {
   windDirection?: number;
   pressure?: number;
   rawSentence: string;
+  sessionId?: string; // Link to current fishing session
+  
+  // NMEA 2000 specific fields
+  waterDepth?: number; // Water depth from PGN 128267
+  temperature?: number; // Environmental temperature from PGN 130310
+  engineTemperature?: number; // Engine temperature from PGN 127488
+  enginePressure?: number; // Engine pressure from PGN 127488
+  engineRpm?: number; // Engine RPM from PGN 127258
+  fuelLevel?: number; // Fuel level from PGN 127505
 }
 
 export interface ExportOptions {

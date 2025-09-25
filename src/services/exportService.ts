@@ -71,18 +71,15 @@ export class ExportService {
       filename = `fishing-log-${format(new Date(), 'yyyy-MM-dd')}.json`;
     }
 
-    const subject = options.emailSubject || `Fishing Log Export ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`;
-    const body = `Please find attached the fishing log export.\n\nTotal sessions: ${(await this.getSessionsForExport(options)).length}\nExport date: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`;
+    // First, download the file so user can attach it manually
+    await this.downloadFile(content, filename, mimeType);
 
-    // Create mailto link
-    const mailtoUrl = this.createMailtoUrl(
-      options.emailRecipients,
-      subject,
-      body,
-      content,
-      filename,
-      mimeType
-    );
+    // Then open email client with basic info
+    const subject = options.emailSubject || `Fishing Log Transfer ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`;
+    const body = `Hi,\n\nI've attached my fishing log export (${filename}) to this email.\n\nTotal sessions: ${(await this.getSessionsForExport(options)).length}\nExport date: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}\n\nPlease let me know if you have any questions!\n\nBest regards`;
+
+    // Create simple mailto link (without complex parameters that might be blocked)
+    const mailtoUrl = this.createSimpleMailtoUrl(options.emailRecipients, subject, body);
 
     // Open email client
     window.open(mailtoUrl, '_blank');
@@ -131,25 +128,32 @@ export class ExportService {
     ].map(escapeCSV).join(',');
   }
 
-  private static createMailtoUrl(
+  private static createSimpleMailtoUrl(
     recipients: string[],
     subject: string,
-    body: string,
-    _attachmentContent: string,
-    _filename: string,
-    _mimeType: string
+    body: string
   ): string {
-    const params = new URLSearchParams({
-      to: recipients.join(','),
-      subject: subject,
-      body: body
-    });
+    // Create a simple mailto URL that works reliably across all email clients
+    const params = new URLSearchParams();
+    
+    // Add recipients
+    if (recipients.length > 0) {
+      params.append('to', recipients.join(','));
+    }
+    
+    // Add subject (URL encode to handle special characters)
+    if (subject) {
+      params.append('subject', subject);
+    }
+    
+    // Add body (URL encode to handle special characters and line breaks)
+    if (body) {
+      params.append('body', body);
+    }
 
-    // Note: Most email clients don't support attachments via mailto
-    // This is a limitation of the mailto protocol
-    // For production, you'd want to use a proper email service
     return `mailto:?${params.toString()}`;
   }
+
 
   static async downloadFile(content: string, filename: string, mimeType: string): Promise<void> {
     const blob = new Blob([content], { type: mimeType });

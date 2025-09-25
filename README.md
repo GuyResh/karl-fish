@@ -200,7 +200,7 @@ src/
 - **TypeScript** - Type safety
 - **Dexie** - IndexedDB wrapper
 - **Tauri** - Desktop app framework
-- **@canboat/canboatjs** - NMEA 2000 PGN parsing
+- **Custom NMEA 2000 Parser** - Browser-compatible NMEA 2000 PGN parsing
 - **Lucide React** - Icons
 - **Date-fns** - Date utilities
 

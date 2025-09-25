@@ -57,7 +57,8 @@ const SessionForm: React.FC = () => {
           },
           water: {
             ...loadedSession.water,
-            temperature: loadedSession.water?.temperature ? UnitConverter.convertTemperature(loadedSession.water.temperature) : loadedSession.water?.temperature
+            temperature: loadedSession.water?.temperature ? UnitConverter.convertTemperature(loadedSession.water.temperature) : loadedSession.water?.temperature,
+            depth: loadedSession.water?.depth ? UnitConverter.convertDepth(loadedSession.water.depth) : loadedSession.water?.depth
           }
         };
         setSession(convertedSession);
@@ -252,7 +253,8 @@ const SessionForm: React.FC = () => {
         },
         water: {
           ...session.water,
-          temperature: session.water?.temperature ? UnitConverter.convertToStorageTemperature(session.water.temperature) : session.water?.temperature
+          temperature: session.water?.temperature ? UnitConverter.convertToStorageTemperature(session.water.temperature) : session.water?.temperature,
+          depth: session.water?.depth ? UnitConverter.convertToStorageDepth(session.water.depth) : session.water?.depth
         }
       };
       
@@ -314,7 +316,8 @@ const SessionForm: React.FC = () => {
         },
         water: {
           ...updatedSession.water,
-          temperature: updatedSession.water?.temperature ? UnitConverter.convertToStorageTemperature(updatedSession.water.temperature) : updatedSession.water?.temperature
+          temperature: updatedSession.water?.temperature ? UnitConverter.convertToStorageTemperature(updatedSession.water.temperature) : updatedSession.water?.temperature,
+          depth: updatedSession.water?.depth ? UnitConverter.convertToStorageDepth(updatedSession.water.depth) : updatedSession.water?.depth
         }
       };
       
@@ -749,13 +752,13 @@ const SessionForm: React.FC = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Depth (m)</label>
+                <label className="form-label">{UnitConverter.getDepthLabel()}</label>
                 <input
                   type="number"
                   step="0.1"
                   className="form-input"
-                  value={session.water?.depth || ''}
-                  onChange={(e) => handleWaterChange('depth', parseFloat(e.target.value))}
+                  value={session.water?.depth ? UnitConverter.convertDepth(session.water.depth) : ''}
+                  onChange={(e) => handleWaterChange('depth', UnitConverter.convertToStorageDepth(parseFloat(e.target.value)))}
                 />
               </div>
               <div className="form-group">

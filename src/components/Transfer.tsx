@@ -54,7 +54,7 @@ const Transfer: React.FC = () => {
         setExportStatus('Transfer completed successfully!');
       } else {
         await ExportService.exportToEmail(options);
-        setExportStatus('Email transfer initiated!');
+        setExportStatus('File downloaded and email client opened! Please attach the downloaded file to your email.');
       }
     } catch (error) {
       console.error('Transfer error:', error);
@@ -449,10 +449,10 @@ const Transfer: React.FC = () => {
               <div className="info-item">
                 <h4>Email Transfer</h4>
                 <ul>
-                  <li>Opens your default email client</li>
-                  <li>Attaches the transfer file automatically</li>
+                  <li>Downloads the transfer file to your computer</li>
+                  <li>Opens your default email client with pre-filled content</li>
+                  <li>You manually attach the downloaded file</li>
                   <li>Perfect for sharing with fishing partners</li>
-                  <li>Note: Requires email client configuration</li>
                 </ul>
               </div>
               

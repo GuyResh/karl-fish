@@ -29,6 +29,8 @@ const Dashboard: React.FC = () => {
   // console.log('Dashboard: isLiveMapOpen state:', isLiveMapOpen);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isGpsConnected, setIsGpsConnected] = useState(false);
+  const [currentHeading, setCurrentHeading] = useState<number | null>(null);
+  const [currentDepth, setCurrentDepth] = useState<number | null>(null);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -59,26 +61,69 @@ const Dashboard: React.FC = () => {
       if (status.connected) {
         // Get the latest NMEA data from the database
         try {
-          const latestNmeaData = await FishingDataService.getLatestNMEAData();
-          if (latestNmeaData && latestNmeaData.latitude && latestNmeaData.longitude) {
-            console.log('Dashboard: Using NMEA coordinates:', latestNmeaData.latitude.toFixed(6), latestNmeaData.longitude.toFixed(6));
-            setCurrentLocation({
-              lat: latestNmeaData.latitude,
-              lng: latestNmeaData.longitude
-            });
+          const allNmeaData = await FishingDataService.getAllNMEAData();
+          
+          if (allNmeaData.length > 0) {
+            // Find the most recent data for each field
+            const latestLocation = allNmeaData
+              .filter(data => data.latitude && data.longitude)
+              .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
+            
+            const latestHeading = allNmeaData
+              .filter(data => data.heading !== undefined)
+              .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
+            
+            const latestDepth = allNmeaData
+              .filter(data => data.waterDepth !== undefined)
+              .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
+            
+            // Update location
+            if (latestLocation) {
+              console.log('Dashboard: Using NMEA coordinates:', latestLocation.latitude!.toFixed(6), latestLocation.longitude!.toFixed(6));
+              setCurrentLocation({
+                lat: latestLocation.latitude!,
+                lng: latestLocation.longitude!
+              });
+            } else {
+              setCurrentLocation({
+                lat: 41.0, // Offshore fishing area (40+ miles east of Block Island)
+                lng: -70.8
+              });
+            }
+            
+            // Update heading
+            if (latestHeading) {
+              setCurrentHeading(latestHeading.heading!);
+              console.log('Dashboard: Using heading:', latestHeading.heading);
+            } else {
+              setCurrentHeading(null);
+            }
+            
+            // Update depth
+            if (latestDepth) {
+              setCurrentDepth(latestDepth.waterDepth!);
+              console.log('Dashboard: Using depth:', latestDepth.waterDepth);
+            } else {
+              setCurrentDepth(null);
+            }
           } else {
-            // Fallback to sample location if no NMEA data yet
             setCurrentLocation({
               lat: 41.0, // Offshore fishing area (40+ miles east of Block Island)
               lng: -70.8
             });
+            setCurrentHeading(null);
+            setCurrentDepth(null);
           }
         } catch (error) {
           console.error('Error getting latest NMEA data:', error);
           setCurrentLocation(null);
+          setCurrentHeading(null);
+          setCurrentDepth(null);
         }
       } else {
         setCurrentLocation(null);
+        setCurrentHeading(null);
+        setCurrentDepth(null);
       }
     };
 
@@ -137,15 +182,22 @@ const Dashboard: React.FC = () => {
                 color: isGpsConnected ? '#0ea5e9' : '#fca5a5' 
               }} 
             />
-            <div style={{ fontSize: '14px', fontWeight: '500' }}>
+            <div style={{ fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px' }}>
               {currentLocation ? (
                 <>
                   <div style={{ color: isGpsConnected ? '#0ea5e9' : '#fca5a5' }}>
                     {currentLocation.lat.toFixed(4)}°N, {Math.abs(currentLocation.lng).toFixed(4)}°W
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
-                    {isGpsConnected ? 'GPS Connected' : 'GPS Disconnected'}
-                  </div>
+                  {currentHeading !== null && (
+                    <div style={{ color: isGpsConnected ? '#0ea5e9' : '#fca5a5', fontSize: '12px' }}>
+                      HDG: {Math.round(currentHeading)}°
+                    </div>
+                  )}
+                  {currentDepth !== null && (
+                    <div style={{ color: isGpsConnected ? '#0ea5e9' : '#fca5a5', fontSize: '12px' }}>
+                      DEP: {UnitConverter.convertDepth(currentDepth).toFixed(1)}{UnitConverter.getDepthUnit()}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div style={{ color: '#fca5a5' }}>
