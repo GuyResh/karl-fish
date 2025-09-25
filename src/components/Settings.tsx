@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Wifi, TestTube } from 'lucide-react';
 import { AppSettings } from '../types';
 import { nmea2000Service } from '../services/nmea2000Service';
+import { testDataService } from '../services/testDataService';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -12,6 +13,22 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [isSaving, setIsSaving] = useState(false);
   const [isTestModeActive, setIsTestModeActive] = useState(false);
+
+  // Monitor test mode state to keep button in sync
+  useEffect(() => {
+    const updateTestModeState = () => {
+      const isRunning = testDataService.isSimulationRunning();
+      setIsTestModeActive(isRunning);
+    };
+
+    // Check initial state
+    updateTestModeState();
+
+    // Check every second to stay in sync
+    const interval = setInterval(updateTestModeState, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Note: Test mode should persist across the app session, not be cleaned up on component unmount
 
