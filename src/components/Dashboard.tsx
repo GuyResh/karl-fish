@@ -4,7 +4,7 @@ import { Fish, Clock, MapPin, Thermometer, Wind, Trash2, Navigation } from 'luci
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
-import { furunoService } from '../services/furunoService';
+import { nmea2000Service } from '../services/nmea2000Service';
 import ConfirmModal from './ConfirmModal';
 import SpeciesModal from './SpeciesModal';
 import LiveMapModal from './LiveMapModal';
@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
   // Monitor GPS connection and location updates
   useEffect(() => {
     const updateGpsStatus = async () => {
-      const status = furunoService.getConnectionStatus();
+        const status = nmea2000Service.getConnectionStatus();
       setIsGpsConnected(status.connected);
       
       if (status.connected) {

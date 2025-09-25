@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Save, Wifi, TestTube } from 'lucide-react';
 import { AppSettings } from '../types';
-import { furunoService } from '../services/furunoService';
+import { nmea2000Service } from '../services/nmea2000Service';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -39,14 +39,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
   const toggleTestMode = async () => {
     if (isTestModeActive) {
       // Stop test mode
-      furunoService.disconnect();
+      nmea2000Service.disconnect();
       setIsTestModeActive(false);
     } else {
       // Start test mode
       try {
-        const success = await furunoService.connect(
-          localSettings.furuno.ipAddress || 'test',
-          localSettings.furuno.port || 10110,
+        const success = await nmea2000Service.connect(
+          localSettings.nmea2000.ipAddress || 'test',
+          localSettings.nmea2000.port || 2000,
           true // Enable test mode
         );
         
@@ -139,14 +139,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
               <label className="checkbox-label">
                 <input
                   type="checkbox"
-                  checked={localSettings.furuno.enabled}
-                  onChange={(e) => handleInputChange('furuno', 'enabled', e.target.checked)}
+                  checked={localSettings.nmea2000.enabled}
+                  onChange={(e) => handleInputChange('nmea2000', 'enabled', e.target.checked)}
                 />
-                Enable Furuno integration
+                Enable NMEA 2000 integration
               </label>
             </div>
 
-            {localSettings.furuno.enabled && (
+            {localSettings.nmea2000.enabled && (
               <>
                 <div className="form-row">
                   <div className="form-group">
@@ -154,9 +154,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                     <input
                       type="text"
                       className="form-input"
-                      value={localSettings.furuno.ipAddress || ''}
-                      onChange={(e) => handleInputChange('furuno', 'ipAddress', e.target.value)}
-                      placeholder="192.168.1.100"
+                      value={localSettings.nmea2000.ipAddress || ''}
+                      onChange={(e) => handleInputChange('nmea2000', 'ipAddress', e.target.value)}
+                      placeholder="192.168.4.1"
                     />
                   </div>
                   <div className="form-group">
@@ -164,8 +164,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                     <input
                       type="number"
                       className="form-input"
-                      value={localSettings.furuno.port || 10110}
-                      onChange={(e) => handleInputChange('furuno', 'port', parseInt(e.target.value))}
+                      value={localSettings.nmea2000.port || 2000}
+                      onChange={(e) => handleInputChange('nmea2000', 'port', parseInt(e.target.value))}
                     />
                   </div>
                 </div>
@@ -174,8 +174,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
-                      checked={localSettings.furuno.autoConnect}
-                      onChange={(e) => handleInputChange('furuno', 'autoConnect', e.target.checked)}
+                    checked={localSettings.nmea2000.autoConnect}
+                    onChange={(e) => handleInputChange('nmea2000', 'autoConnect', e.target.checked)}
                     />
                     Auto-connect on startup
                   </label>
@@ -197,22 +197,23 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                   </button>
                 </div>
 
-                <div className="furuno-info">
-                  <h4>Furuno Setup Instructions:</h4>
+                <div className="nmea2000-info">
+                  <h4>NMEA 2000 Gateway Setup Instructions:</h4>
                   <ol>
-                    <li>Ensure your Furuno unit is connected to the same network as this device</li>
-                    <li>Enable NMEA 0183 output on the Furuno device</li>
-                    <li>Configure the device to output data via TCP/IP on the specified port (default: 10110)</li>
-                    <li>Find the device's IP address in the Furuno network settings</li>
-                    <li>Enter the IP address and port above, then test the connection</li>
+                    <li>Connect the YDWG-02 gateway to your NMEA 2000 network</li>
+                    <li>Ensure the gateway is powered and connected to Wi-Fi</li>
+                    <li>Configure the gateway IP address and port (default: 192.168.4.1:2000)</li>
+                    <li>Test the connection using the button above</li>
                   </ol>
                   
-                  <h4>Supported NMEA Sentences:</h4>
+                  <h4>Supported NMEA 2000 Data:</h4>
                   <ul>
-                    <li><strong>GPGGA</strong> - GPS Fix Data (position, altitude)</li>
-                    <li><strong>GPRMC</strong> - Recommended Minimum (position, speed, heading)</li>
-                    <li><strong>SDDBT/YDBT</strong> - Depth Below Transducer</li>
-                    <li><strong>SDMTW/YMTW</strong> - Water Temperature</li>
+                    <li><strong>PGN 129025</strong> - Position, Rapid Update (GPS coordinates)</li>
+                    <li><strong>PGN 130306</strong> - Wind Data (speed, direction)</li>
+                    <li><strong>PGN 128267</strong> - Water Depth</li>
+                    <li><strong>PGN 127250</strong> - Vessel Heading</li>
+                    <li><strong>PGN 127488</strong> - Engine Parameters</li>
+                    <li><strong>PGN 130310</strong> - Environmental Parameters (temperature, pressure)</li>
                     <li><strong>SDMDA/YMDA</strong> - Meteorological Composite</li>
                     <li><strong>SDMWV/YMWV</strong> - Wind Speed and Direction</li>
                     <li><strong>SDVHW/YVHW</strong> - Water Speed and Heading</li>

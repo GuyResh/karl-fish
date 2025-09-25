@@ -2,7 +2,7 @@
 
 ![Karl Fish Logo](KarlFish.png)
 
-A comprehensive React-based fishing log application that can be deployed as a web app or desktop/tablet application using Tauri. Features integration with Furuno multi-function displays for automatic data collection.
+A comprehensive React-based fishing log application that can be deployed as a web app or desktop/tablet application using Tauri. Features integration with NMEA 2000 marine electronics networks for automatic data collection from all connected devices.
 
 ## Features
 
@@ -12,18 +12,18 @@ A comprehensive React-based fishing log application that can be deployed as a we
 - **Environmental Data**: Track weather conditions, water temperature, depth, and clarity
 - **Location Services**: GPS integration for accurate position logging
 
-### 📡 Furuno Integration
-- **NMEA 0183/2000 Support**: Automatic data collection from Furuno unit via WiFi
-- **Real-time Data**: Live updates of position, depth, water temperature, and weather
-- **Supported NMEA Sentences**:
-  - GPGGA - GPS Fix Data
-  - GPRMC - Recommended Minimum
-  - SDDBT/YDBT - Depth Below Transducer
-  - SDMTW/YMTW - Water Temperature
-  - SDMDA/YMDA - Meteorological Composite
-  - SDMWV/YMWV - Wind Speed and Direction
-  - SDVHW/YVHW - Water Speed and Heading
-  - SDVWR/YVWR - Relative Wind Speed and Angle
+### 📡 NMEA 2000 Integration
+- **NMEA 2000 Network Support**: Automatic data collection from all connected marine electronics via N2K gateway
+- **Real-time Data**: Live updates of position, depth, water temperature, weather, and engine data
+- **Supported NMEA 2000 PGNs**:
+  - PGN 129025 - Position, Rapid Update (GPS coordinates)
+  - PGN 130306 - Wind Data (speed, direction)
+  - PGN 128267 - Water Depth
+  - PGN 127250 - Vessel Heading
+  - PGN 127488 - Engine Parameters
+  - PGN 130310 - Environmental Parameters (temperature, pressure)
+  - PGN 127258 - Engine RPM
+  - PGN 127505 - Fluid Level (fuel, water, etc.)
 
 ### 💾 Data Management
 - **Local Storage**: IndexedDB for offline data storage
@@ -72,27 +72,29 @@ npm run tauri:dev
 npm run tauri:build
 ```
 
-## Furuno Setup
+## NMEA 2000 Setup
 
-### 1. Network Configuration
-1. Connect your Furuno unit to the same network as your device
-2. Note the device's IP address from the Furuno network settings
-3. Enable NMEA 0183 output on the Furuno device
+### 1. Gateway Configuration
+1. Install a YDWG-02 or similar NMEA 2000 Wi-Fi gateway on your N2K network
+2. Connect the gateway to your vessel's NMEA 2000 backbone
+3. Power on the gateway and connect to its Wi-Fi network
+4. Note the gateway's IP address (typically 192.168.4.1)
 
 ### 2. Application Configuration
 1. Open Karl Fish application
-2. Go to Settings → Furuno Integration
-3. Enter the Furuno device IP address (default port: 10110)
+2. Go to Settings → NMEA 2000 Integration
+3. Enter the gateway IP address (default port: 2000)
 4. Test the connection to verify data flow
 5. Enable auto-connect for automatic data collection
 
 ### 3. Supported Data
-The application automatically collects:
-- GPS position and speed
-- Water depth and temperature
-- Air temperature and pressure
-- Wind speed and direction
-- Heading and course data
+The application automatically collects from all connected N2K devices:
+- GPS position and speed (from GPS/Chartplotters)
+- Water depth and temperature (from depth sounders)
+- Air temperature and pressure (from weather stations)
+- Wind speed and direction (from wind sensors)
+- Engine data (RPM, fuel flow, temperature from engine sensors)
+- Heading and course data (from compass/autopilot)
 
 ## Usage
 
@@ -103,14 +105,15 @@ The application automatically collects:
 4. Log fish catches with details
 5. Save the session
 
-### Furuno Data Integration
-1. Ensure Furuno device is connected and configured
+### NMEA 2000 Data Integration
+1. Ensure NMEA 2000 gateway is connected and configured
 2. Start a new fishing session
-3. The app will automatically populate:
-   - GPS coordinates
-   - Water depth and temperature
-   - Weather conditions
-   - Wind data
+3. The app will automatically populate from all connected devices:
+   - GPS coordinates (from GPS/Chartplotter)
+   - Water depth and temperature (from depth sounder)
+   - Weather conditions (from weather station)
+   - Wind data (from wind sensor)
+   - Engine parameters (from engine sensors)
 
 ### Data Export
 1. Go to the Export page
@@ -152,16 +155,16 @@ interface FishCatch {
 
 ## API Reference
 
-### Furuno Service
+### NMEA 2000 Service
 ```typescript
-// Connect to Furuno device
-await furunoService.connect('192.168.1.100', 10110);
+// Connect to NMEA 2000 gateway
+await nmea2000Service.connect('192.168.4.1', 2000);
 
 // Check connection status
-const status = furunoService.getConnectionStatus();
+const status = nmea2000Service.getConnectionStatus();
 
 // Disconnect
-furunoService.disconnect();
+nmea2000Service.disconnect();
 ```
 
 ### Data Service
@@ -197,6 +200,7 @@ src/
 - **TypeScript** - Type safety
 - **Dexie** - IndexedDB wrapper
 - **Tauri** - Desktop app framework
+- **@canboat/canboatjs** - NMEA 2000 PGN parsing
 - **Lucide React** - Icons
 - **Date-fns** - Date utilities
 
@@ -225,6 +229,6 @@ For issues and questions:
 - [ ] Advanced analytics and charts
 - [ ] Cloud synchronization
 - [ ] Mobile app version
-- [ ] Additional marine electronics support
+- [ ] Additional NMEA 2000 device support
 - [ ] Fishing spot recommendations
 - [ ] Weather forecast integration

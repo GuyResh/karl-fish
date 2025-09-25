@@ -36,10 +36,10 @@ function App() {
               weight: 'imperial',
               pressure: 'inHg'
             },
-            furuno: {
+            nmea2000: {
               enabled: false,
               ipAddress: '',
-              port: 10110,
+              port: 2000,
               autoConnect: false
             },
             export: {

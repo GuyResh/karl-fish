@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Fish, Settings, BarChart3, Plus, Download, Wifi, WifiOff } from 'lucide-react';
 import { AppSettings } from '../types';
-import { furunoService } from '../services/furunoService';
+import { nmea2000Service } from '../services/nmea2000Service';
 
 interface HeaderProps {
   settings: AppSettings | null;
@@ -19,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
 
   useEffect(() => {
     const updateConnectionStatus = () => {
-      const status = furunoService.getConnectionStatus();
+        const status = nmea2000Service.getConnectionStatus();
       setIsConnected(status.connected);
     };
 
@@ -32,25 +32,25 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleFurunoToggle = async () => {
+  const handleNMEA2000Toggle = async () => {
     if (isConnecting) return;
 
     setIsConnecting(true);
     try {
       if (isConnected) {
-        furunoService.disconnect();
+        nmea2000Service.disconnect();
         setIsConnected(false);
       } else {
-        if (settings?.furuno.enabled && settings.furuno.ipAddress) {
-          const success = await furunoService.connect(
-            settings.furuno.ipAddress,
-            settings.furuno.port || 10110
+        if (settings?.nmea2000.enabled && settings.nmea2000.ipAddress) {
+          const success = await nmea2000Service.connect(
+            settings.nmea2000.ipAddress,
+            settings.nmea2000.port || 2000
           );
           setIsConnected(success);
         }
       }
     } catch (error) {
-      console.error('Error toggling Furuno connection:', error);
+      console.error('Error toggling NMEA 2000 connection:', error);
       setIsConnected(false);
     } finally {
       setIsConnecting(false);
@@ -104,8 +104,8 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
 
         <div 
           className="furuno-status"
-          title={isConnected ? "Furuno Connected" : "Furuno Disconnected"}
-          onClick={handleFurunoToggle}
+          title={isConnected ? "NMEA 2000 Connected" : "NMEA 2000 Disconnected"}
+          onClick={handleNMEA2000Toggle}
           style={{ 
             cursor: 'pointer', 
             display: 'flex', 

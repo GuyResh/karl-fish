@@ -94,7 +94,7 @@ export interface AppSettings {
     weight: 'metric' | 'imperial';
     pressure: 'hpa' | 'inHg';
   };
-  furuno: {
+  nmea2000: {
     enabled: boolean;
     ipAddress?: string;
     port?: number;

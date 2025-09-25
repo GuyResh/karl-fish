@@ -263,4 +263,20 @@ export class FishingDataService {
       )
       .toArray();
   }
+
+  // NMEA data methods
+  static async saveNMEAData(data: NMEAData): Promise<void> {
+    await db.nmeaData.add(data);
+  }
+
+  static async getAllNMEAData(): Promise<NMEAData[]> {
+    return await db.nmeaData.toArray();
+  }
+
+  static async getNMEADataByDateRange(startDate: Date, endDate: Date): Promise<NMEAData[]> {
+    return await db.nmeaData
+      .where('timestamp')
+      .between(startDate, endDate)
+      .toArray();
+  }
 }

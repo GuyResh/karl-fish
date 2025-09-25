@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigation, X, MapPin, RefreshCw } from 'lucide-react';
-import { furunoService } from '../services/furunoService';
+import { nmea2000Service } from '../services/nmea2000Service';
 import { FishingDataService } from '../database';
 
 interface LiveMapModalProps {
@@ -20,7 +20,7 @@ const LiveMapModal: React.FC<LiveMapModalProps> = ({ isOpen, onClose }) => {
     if (!isOpen) return;
 
     // Check connection status
-    const status = furunoService.getConnectionStatus();
+        const status = nmea2000Service.getConnectionStatus();
     setIsConnected(status.connected);
 
     // Set up location update listener
