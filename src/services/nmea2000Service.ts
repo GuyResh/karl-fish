@@ -1,4 +1,3 @@
-import { NMEAParser } from '../utils/nmeaParser';
 import { FishingDataService } from '../database';
 import { NMEAData } from '../types';
 import { testDataService } from './testDataService';
@@ -12,7 +11,9 @@ export class NMEA2000Service {
   private reconnectInterval: number = 5000;
   private currentSessionId: string | null = null;
 
-  private constructor() {}
+  private constructor() {
+    // Simple NMEA 2000 parser for browser environment
+  }
 
   static getInstance(): NMEA2000Service {
     if (!NMEA2000Service.instance) {
@@ -108,13 +109,233 @@ export class NMEA2000Service {
 
   private handleNMEAData(rawData: string): void {
     try {
-      // Parse NMEA 2000 data (this will need to be enhanced for PGN parsing)
-      const nmeaData = NMEAParser.parse(rawData);
-      if (nmeaData) {
-        this.saveNMEAData(nmeaData);
+      console.log('[NMEA2000] Received raw data:', rawData);
+      
+      // Parse NMEA 2000 PGN data (expecting JSON format from test data)
+      let parsedPgn: any;
+      
+      try {
+        // Try to parse as JSON first (from our test data)
+        parsedPgn = JSON.parse(rawData);
+      } catch (jsonError) {
+        // If not JSON, try to parse as Actisense format
+        parsedPgn = this.parseActisenseFormat(rawData);
+      }
+      
+      if (parsedPgn && parsedPgn.pgn) {
+        console.log('[NMEA2000] Parsed PGN:', parsedPgn);
+        
+        // Convert PGN to NMEAData format
+        const nmeaData = this.convertPgnToNmeaData(parsedPgn);
+        
+        if (nmeaData) {
+          this.saveNMEAData(nmeaData);
+        }
+      } else {
+        console.log('[NMEA2000] Failed to parse PGN data');
       }
     } catch (error) {
-      console.error('Error parsing NMEA 2000 data:', error);
+      console.error('[NMEA2000] Error parsing NMEA 2000 data:', error);
+    }
+  }
+
+  private parseActisenseFormat(data: string): any | null {
+    try {
+      // Parse Actisense format: "timestamp,prio,pgn,src,dst,len,data..."
+      // Example: "2017-03-13T01:00:00.146Z,2,127245,204,255,8,fc,f8,ff,7f,ff,7f,ff,ff"
+      const parts = data.split(',');
+      
+      if (parts.length < 7) {
+        console.log('[NMEA2000] Invalid Actisense format');
+        return null;
+      }
+      
+      const timestamp = parts[0];
+      const priority = parseInt(parts[1]);
+      const pgn = parseInt(parts[2]);
+      const source = parseInt(parts[3]);
+      const destination = parseInt(parts[4]);
+      const length = parseInt(parts[5]);
+      const dataBytes = parts.slice(6, 6 + length);
+      
+      // Convert hex data to numbers
+      const dataArray = dataBytes.map((byte: string) => parseInt(byte, 16));
+      
+      // Basic PGN parsing based on PGN number
+      const fields: any = {};
+      
+      switch (pgn) {
+        case 129025: // Position, Rapid Update
+          if (dataArray.length >= 8) {
+            // Parse latitude (4 bytes, signed, 1e-7 degrees)
+            const latRaw = (dataArray[0] | (dataArray[1] << 8) | (dataArray[2] << 16) | (dataArray[3] << 24));
+            fields.Latitude = latRaw / 1e7;
+            
+            // Parse longitude (4 bytes, signed, 1e-7 degrees)
+            const lonRaw = (dataArray[4] | (dataArray[5] << 8) | (dataArray[6] << 16) | (dataArray[7] << 24));
+            fields.Longitude = lonRaw / 1e7;
+          }
+          break;
+          
+        case 130306: // Wind Data
+          if (dataArray.length >= 4) {
+            // Parse wind speed (2 bytes, unsigned, 0.01 m/s)
+            fields.WindSpeed = ((dataArray[0] | (dataArray[1] << 8)) / 100) * 1.94384; // Convert m/s to knots
+            // Parse wind angle (2 bytes, unsigned, 0.0001 radians)
+            fields.WindAngle = ((dataArray[2] | (dataArray[3] << 8)) / 10000) * (180 / Math.PI); // Convert radians to degrees
+          }
+          break;
+          
+        case 128267: // Water Depth
+          if (dataArray.length >= 4) {
+            // Parse depth (4 bytes, unsigned, 0.01 m)
+            fields.Depth = ((dataArray[0] | (dataArray[1] << 8) | (dataArray[2] << 16) | (dataArray[3] << 24)) / 100);
+          }
+          break;
+          
+        case 127250: // Vessel Heading
+          if (dataArray.length >= 2) {
+            // Parse heading (2 bytes, unsigned, 0.0001 radians)
+            fields.Heading = ((dataArray[0] | (dataArray[1] << 8)) / 10000) * (180 / Math.PI);
+          }
+          break;
+          
+        case 130310: // Environmental Parameters
+          if (dataArray.length >= 4) {
+            // Parse temperature (2 bytes, signed, 0.01°C)
+            fields.Temperature = ((dataArray[0] | (dataArray[1] << 8)) / 100);
+            // Parse pressure (2 bytes, unsigned, 1 Pa)
+            fields.Pressure = (dataArray[2] | (dataArray[3] << 8)) / 100; // Convert Pa to hPa
+          }
+          break;
+          
+        case 127258: // Engine RPM
+          if (dataArray.length >= 2) {
+            // Parse RPM (2 bytes, unsigned, 0.25 RPM)
+            fields.EngineRPM = (dataArray[0] | (dataArray[1] << 8)) / 4;
+          }
+          break;
+          
+        default:
+          console.log(`[NMEA2000] Unhandled PGN ${pgn} in Actisense format`);
+          return null;
+      }
+      
+      return {
+        pgn: pgn,
+        fields: fields,
+        timestamp: timestamp,
+        priority: priority,
+        source: source,
+        destination: destination
+      };
+      
+    } catch (error) {
+      console.error('[NMEA2000] Error parsing Actisense format:', error);
+      return null;
+    }
+  }
+
+  private convertPgnToNmeaData(parsedPgn: any): NMEAData | null {
+    try {
+      const pgn = parsedPgn.pgn;
+      const fields = parsedPgn.fields || {};
+      
+      // Create base NMEAData structure
+      const nmeaData: NMEAData = {
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+        rawSentence: JSON.stringify(parsedPgn), // Store raw PGN data
+        sessionId: this.currentSessionId || undefined
+      };
+
+      // Map specific PGNs to NMEAData fields
+      switch (pgn) {
+        case 129025: // Position, Rapid Update
+          if (fields.Latitude !== undefined && fields.Longitude !== undefined) {
+            nmeaData.latitude = fields.Latitude;
+            nmeaData.longitude = fields.Longitude;
+            console.log('[NMEA2000] GPS Position:', fields.Latitude, fields.Longitude);
+          }
+          break;
+
+        case 130306: // Wind Data
+          if (fields.WindSpeed !== undefined) {
+            nmeaData.windSpeed = fields.WindSpeed;
+            console.log('[NMEA2000] Wind Speed:', fields.WindSpeed);
+          }
+          if (fields.WindAngle !== undefined) {
+            nmeaData.windDirection = fields.WindAngle;
+            console.log('[NMEA2000] Wind Direction:', fields.WindAngle);
+          }
+          break;
+
+        case 128267: // Water Depth
+          if (fields.Depth !== undefined) {
+            nmeaData.waterDepth = fields.Depth;
+            console.log('[NMEA2000] Water Depth:', fields.Depth);
+          }
+          break;
+
+        case 127250: // Vessel Heading
+          if (fields.Heading !== undefined) {
+            nmeaData.heading = fields.Heading;
+            console.log('[NMEA2000] Vessel Heading:', fields.Heading);
+          }
+          break;
+
+        case 127488: // Engine Parameters
+          if (fields.EngineTemperature !== undefined) {
+            nmeaData.engineTemperature = fields.EngineTemperature;
+            console.log('[NMEA2000] Engine Temperature:', fields.EngineTemperature);
+          }
+          if (fields.EnginePressure !== undefined) {
+            nmeaData.enginePressure = fields.EnginePressure;
+            console.log('[NMEA2000] Engine Pressure:', fields.EnginePressure);
+          }
+          break;
+
+        case 130310: // Environmental Parameters
+          if (fields.Temperature !== undefined) {
+            nmeaData.temperature = fields.Temperature;
+            console.log('[NMEA2000] Environmental Temperature:', fields.Temperature);
+          }
+          if (fields.Pressure !== undefined) {
+            nmeaData.pressure = fields.Pressure;
+            console.log('[NMEA2000] Environmental Pressure:', fields.Pressure);
+          }
+          break;
+
+        case 127258: // Engine RPM
+          if (fields.EngineRPM !== undefined) {
+            nmeaData.engineRpm = fields.EngineRPM;
+            console.log('[NMEA2000] Engine RPM:', fields.EngineRPM);
+          }
+          break;
+
+        case 127505: // Fluid Level
+          if (fields.FuelLevel !== undefined) {
+            nmeaData.fuelLevel = fields.FuelLevel;
+            console.log('[NMEA2000] Fuel Level:', fields.FuelLevel);
+          }
+          break;
+
+        default:
+          console.log(`[NMEA2000] Unhandled PGN ${pgn}:`, fields);
+          return null; // Don't save unhandled PGNs
+      }
+
+      // Only return data if we have at least one meaningful field
+      if (nmeaData.latitude || nmeaData.windSpeed || nmeaData.waterDepth || 
+          nmeaData.heading || nmeaData.temperature || nmeaData.engineRpm || 
+          nmeaData.fuelLevel) {
+        return nmeaData;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('[NMEA2000] Error converting PGN to NMEAData:', error);
+      return null;
     }
   }
 

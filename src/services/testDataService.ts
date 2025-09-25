@@ -5,6 +5,16 @@ export class TestDataService {
   private isRunning = false;
   private intervalId: number | null = null;
   private onDataCallback: ((data: NMEAData) => void) | null = null;
+  
+  // State variables for realistic incremental changes
+  private currentLat = 41.0;
+  private currentLon = -70.8;
+  private currentHeading = 180; // Start heading south
+  private currentDepth = 25; // Start at 25 meters
+  private currentWindSpeed = 12;
+  private currentWindDirection = 180;
+  private currentAirTemp = 22;
+  private currentPressure = 1015;
 
   private constructor() {}
 
@@ -20,13 +30,16 @@ export class TestDataService {
     this.onDataCallback = callback;
     this.isRunning = true;
     
+    // Reset state to initial values
+    this.resetState();
+    
     // Generate initial data
     this.generateTestData();
     
-    // Generate new data every 5 seconds
+    // Generate new data every 2 seconds for more realistic updates
     this.intervalId = setInterval(() => {
       this.generateTestData();
-    }, 5000);
+    }, 2000);
     console.log('TestDataService: Simulation started, interval ID:', this.intervalId);
   }
 
@@ -45,128 +58,202 @@ export class TestDataService {
 
     const now = new Date();
     
-    // Simulate realistic fishing data - 40+ miles east of Block Island
-    // Block Island is at 41.1724°N, 71.5581°W
-    // Moving 40+ miles east puts us around 41.0°N, 70.8°W (offshore fishing area)
-    const baseLat = 41.0 + (Math.random() - 0.5) * 0.02; // Offshore fishing area
-    const baseLon = -70.8 + (Math.random() - 0.5) * 0.02;
+    // Simulate realistic incremental changes for marine data
     
-    console.log('TestDataService: Generating GPS coordinates:', baseLat.toFixed(6), baseLon.toFixed(6));
+    // GPS Position - small random drift (vessel movement)
+    this.currentLat += (Math.random() - 0.5) * 0.0001; // ~10m drift
+    this.currentLon += (Math.random() - 0.5) * 0.0001;
     
-    // Generate GPS data (GPGGA)
-    const ggaData: NMEAData = {
-      id: crypto.randomUUID(),
-      timestamp: now,
-      latitude: baseLat,
-      longitude: baseLon,
-      rawSentence: this.generateGGASentence(baseLat, baseLon, now)
-    };
-    this.onDataCallback(ggaData);
+    console.log('TestDataService: Generating GPS coordinates:', this.currentLat.toFixed(6), this.currentLon.toFixed(6));
+    
+    // Generate NMEA 2000 PGN data
+    // PGN 129025 - Position, Rapid Update
+    const positionPgn = this.generatePositionPgn(this.currentLat, this.currentLon, now);
+    this.onDataCallback(positionPgn);
 
-    // Generate depth data (SDDBT)
-    const depth = 15 + Math.random() * 30; // 15-45 meters
-    const dbtData: NMEAData = {
-      id: crypto.randomUUID(),
-      timestamp: now,
-      depth: depth,
-      rawSentence: this.generateDBTSentence(depth)
-    };
-    this.onDataCallback(dbtData);
+    // PGN 130306 - Wind Data - gradual changes
+    this.currentWindSpeed += (Math.random() - 0.5) * 0.5; // ±0.25 knots per update
+    this.currentWindSpeed = Math.max(5, Math.min(25, this.currentWindSpeed)); // Clamp 5-25 knots
+    this.currentWindDirection += (Math.random() - 0.5) * 2; // ±1 degree per update
+    this.currentWindDirection = ((this.currentWindDirection % 360) + 360) % 360; // Normalize 0-360
+    
+    const windPgn = this.generateWindPgn(this.currentWindSpeed, this.currentWindDirection, now);
+    this.onDataCallback(windPgn);
 
-    // Generate water temperature (SDMTW)
-    const waterTemp = 18 + Math.random() * 8; // 18-26°C
-    const mtwData: NMEAData = {
-      id: crypto.randomUUID(),
-      timestamp: now,
-      waterTemperature: waterTemp,
-      rawSentence: this.generateMTWSentence(waterTemp)
-    };
-    this.onDataCallback(mtwData);
+    // PGN 128267 - Water Depth - gradual changes (±3 meters max)
+    this.currentDepth += (Math.random() - 0.5) * 6; // ±3 meters per update
+    this.currentDepth = Math.max(10, Math.min(50, this.currentDepth)); // Clamp 10-50 meters
+    
+    const depthPgn = this.generateDepthPgn(this.currentDepth, now);
+    this.onDataCallback(depthPgn);
 
-    // Generate wind data (SDMWV)
-    const windSpeed = 5 + Math.random() * 15; // 5-20 knots
-    const windDirection = Math.random() * 360;
-    const mwvData: NMEAData = {
-      id: crypto.randomUUID(),
-      timestamp: now,
-      windSpeed: windSpeed,
-      windDirection: windDirection,
-      rawSentence: this.generateMWVSentence(windDirection, windSpeed)
-    };
-    this.onDataCallback(mwvData);
+    // PGN 130310 - Environmental Parameters - very gradual changes
+    this.currentAirTemp += (Math.random() - 0.5) * 0.2; // ±0.1°C per update
+    this.currentAirTemp = Math.max(15, Math.min(30, this.currentAirTemp)); // Clamp 15-30°C
+    this.currentPressure += (Math.random() - 0.5) * 0.5; // ±0.25 hPa per update
+    this.currentPressure = Math.max(1000, Math.min(1040, this.currentPressure)); // Clamp 1000-1040 hPa
+    
+    const envPgn = this.generateEnvironmentalPgn(this.currentAirTemp, this.currentPressure, now);
+    this.onDataCallback(envPgn);
 
-    // Generate meteorological data (SDMDA)
-    const airTemp = 20 + Math.random() * 10; // 20-30°C
-    const pressure = 1010 + Math.random() * 20; // 1010-1030 hPa
-    const mdaData: NMEAData = {
-      id: crypto.randomUUID(),
-      timestamp: now,
-      airTemperature: airTemp,
-      waterTemperature: waterTemp,
-      pressure: pressure,
-      windSpeed: windSpeed,
-      windDirection: windDirection,
-      rawSentence: this.generateMDASentence(pressure, airTemp, waterTemp, windSpeed, windDirection)
-    };
-    this.onDataCallback(mdaData);
-  }
+    // PGN 127250 - Vessel Heading - very small changes (±2 degrees max)
+    this.currentHeading += (Math.random() - 0.5) * 4; // ±2 degrees per update
+    this.currentHeading = ((this.currentHeading % 360) + 360) % 360; // Normalize 0-360
+    
+    const headingPgn = this.generateHeadingPgn(this.currentHeading, now);
+    this.onDataCallback(headingPgn);
 
-  private generateGGASentence(lat: number, lon: number, time: Date): string {
-    const timeStr = time.toTimeString().slice(0, 8).replace(/:/g, '');
-    const ns = lat >= 0 ? 'N' : 'S';
-    const ew = lon >= 0 ? 'E' : 'W';
-    const latStr = this.formatLatitude(Math.abs(lat));
-    const lonStr = this.formatLongitude(Math.abs(lon));
-    const core = `$GPGGA,${timeStr},${latStr},${ns},${lonStr},${ew},1,08,1.0,545.4,M,46.9,M,,`;
-    return this.appendChecksum(core);
-  }
-
-  private generateDBTSentence(depth: number): string {
-    const feet = depth * 3.28084;
-    const fathoms = depth * 0.546807;
-    const core = `$SDDBT,${feet.toFixed(1)},f,${depth.toFixed(1)},M,${fathoms.toFixed(1)},F`;
-    return this.appendChecksum(core);
-  }
-
-  private generateMTWSentence(temp: number): string {
-    const core = `$SDMTW,${temp.toFixed(1)},C`;
-    return this.appendChecksum(core);
-  }
-
-  private generateMWVSentence(direction: number, speed: number): string {
-    const core = `$SDMWV,${direction.toFixed(1)},T,${speed.toFixed(1)},N,A`;
-    return this.appendChecksum(core);
-  }
-
-  private generateMDASentence(pressure: number, airTemp: number, waterTemp: number, windSpeed: number, windDirection: number): string {
-    const core = `$SDMDA,${pressure.toFixed(1)},I,${airTemp.toFixed(1)},C,${waterTemp.toFixed(1)},C,,,,,,,,,${windSpeed.toFixed(1)},N,${windDirection.toFixed(1)},M`;
-    return this.appendChecksum(core);
-  }
-
-  private formatLatitude(lat: number): string {
-    const degrees = Math.floor(Math.abs(lat));
-    const minutes = (Math.abs(lat) - degrees) * 60;
-    return `${degrees.toString().padStart(2, '0')}${minutes.toFixed(4)}`;
-  }
-
-  private formatLongitude(lon: number): string {
-    const degrees = Math.floor(Math.abs(lon));
-    const minutes = (Math.abs(lon) - degrees) * 60;
-    return `${degrees.toString().padStart(3, '0')}${minutes.toFixed(4)}`;
-  }
-
-  private appendChecksum(sentenceWithDollarNoChecksum: string): string {
-    // Compute XOR of all chars between $ and * (we don't have * yet)
-    let checksum = 0;
-    for (let i = 1; i < sentenceWithDollarNoChecksum.length; i++) {
-      checksum ^= sentenceWithDollarNoChecksum.charCodeAt(i);
+    // PGN 127258 - Engine RPM (occasionally) - gradual changes
+    if (Math.random() < 0.3) { // 30% chance
+      const rpm = 1200 + Math.random() * 800; // 1200-2000 RPM
+      const enginePgn = this.generateEnginePgn(rpm, now);
+      this.onDataCallback(enginePgn);
     }
-    const hex = checksum.toString(16).toUpperCase().padStart(2, '0');
-    return `${sentenceWithDollarNoChecksum}*${hex}`;
   }
+
+
+
+
+
+
 
   isSimulationRunning(): boolean {
     return this.isRunning;
+  }
+
+  private resetState(): void {
+    // Reset to initial values for realistic simulation
+    this.currentLat = 41.0;
+    this.currentLon = -70.8;
+    this.currentHeading = 180; // Start heading south
+    this.currentDepth = 25; // Start at 25 meters
+    this.currentWindSpeed = 12;
+    this.currentWindDirection = 180;
+    this.currentAirTemp = 22;
+    this.currentPressure = 1015;
+  }
+
+  // NMEA 2000 PGN generation methods
+  private generatePositionPgn(lat: number, lon: number, time: Date): NMEAData {
+    // PGN 129025 - Position, Rapid Update
+    const pgnData = {
+      pgn: 129025,
+      fields: {
+        Latitude: lat,
+        Longitude: lon,
+        PositionAccuracy: 1, // GPS fix
+        Timestamp: time.toISOString()
+      }
+    };
+
+    return {
+      id: crypto.randomUUID(),
+      timestamp: time,
+      latitude: lat,
+      longitude: lon,
+      rawSentence: JSON.stringify(pgnData)
+    };
+  }
+
+  private generateWindPgn(windSpeed: number, windDirection: number, time: Date): NMEAData {
+    // PGN 130306 - Wind Data
+    const pgnData = {
+      pgn: 130306,
+      fields: {
+        WindSpeed: windSpeed,
+        WindAngle: windDirection,
+        Reference: 0, // Apparent wind
+        Timestamp: time.toISOString()
+      }
+    };
+
+    return {
+      id: crypto.randomUUID(),
+      timestamp: time,
+      windSpeed: windSpeed,
+      windDirection: windDirection,
+      rawSentence: JSON.stringify(pgnData)
+    };
+  }
+
+  private generateDepthPgn(depth: number, time: Date): NMEAData {
+    // PGN 128267 - Water Depth
+    const pgnData = {
+      pgn: 128267,
+      fields: {
+        Depth: depth,
+        Offset: 0, // Transducer offset
+        Range: 0, // Max range
+        Timestamp: time.toISOString()
+      }
+    };
+
+    return {
+      id: crypto.randomUUID(),
+      timestamp: time,
+      waterDepth: depth,
+      rawSentence: JSON.stringify(pgnData)
+    };
+  }
+
+  private generateEnvironmentalPgn(temperature: number, pressure: number, time: Date): NMEAData {
+    // PGN 130310 - Environmental Parameters
+    const pgnData = {
+      pgn: 130310,
+      fields: {
+        Temperature: temperature,
+        Pressure: pressure,
+        Humidity: 60 + Math.random() * 20, // 60-80% humidity
+        Timestamp: time.toISOString()
+      }
+    };
+
+    return {
+      id: crypto.randomUUID(),
+      timestamp: time,
+      temperature: temperature,
+      pressure: pressure,
+      rawSentence: JSON.stringify(pgnData)
+    };
+  }
+
+  private generateHeadingPgn(heading: number, time: Date): NMEAData {
+    // PGN 127250 - Vessel Heading
+    const pgnData = {
+      pgn: 127250,
+      fields: {
+        Heading: heading,
+        Deviation: 0, // Magnetic deviation
+        Variation: 0, // Magnetic variation
+        Timestamp: time.toISOString()
+      }
+    };
+
+    return {
+      id: crypto.randomUUID(),
+      timestamp: time,
+      heading: heading,
+      rawSentence: JSON.stringify(pgnData)
+    };
+  }
+
+  private generateEnginePgn(rpm: number, time: Date): NMEAData {
+    // PGN 127258 - Engine RPM
+    const pgnData = {
+      pgn: 127258,
+      fields: {
+        EngineRPM: rpm,
+        EngineInstance: 0, // Primary engine
+        Timestamp: time.toISOString()
+      }
+    };
+
+    return {
+      id: crypto.randomUUID(),
+      timestamp: time,
+      engineRpm: rpm,
+      rawSentence: JSON.stringify(pgnData)
+    };
   }
 }
 
