@@ -273,19 +273,19 @@ const Dashboard: React.FC = () => {
                 <Link key={session.id} to={`/sessions/${session.id}`} className="session-item session-item-clickable">
                   <div className="session-header">
                     <div className="session-date">
-                      {new Date(session.date).toLocaleDateString()}
+                      {session.date.toLocaleDateString()}
                       {/* time moved next to date */}
                       <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={14} />
-                        {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         {` - `}
                         {session.endTime
                           ? (
                               <>
-                                {new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {session.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 <span className="duration">
                                   {(() => {
-                                    const ms = new Date(session.endTime).getTime() - new Date(session.startTime).getTime();
+                                    const ms = session.endTime.getTime() - session.startTime.getTime();
                                     const totalMinutes = Math.round(ms / (1000 * 60));
                                     const h = Math.floor(totalMinutes / 60);
                                     const m = totalMinutes % 60;

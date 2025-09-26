@@ -58,6 +58,7 @@ export interface FishingSession {
   equipment?: string[];
   fishingMethod?: string;
   success?: boolean;
+  shared?: boolean;
 }
 
 export interface NMEAData {

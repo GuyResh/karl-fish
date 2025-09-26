@@ -4,9 +4,13 @@ import { FishingDataService } from './database';
 import { AppSettings } from './types';
 import { UnitConverter } from './utils/unitConverter';
 import Header from './components/Header';
-import { AuthProvider } from './contexts/AuthContext';
+import AuthModal from './components/AuthModal';
+import PasswordResetPage from './components/PasswordResetPage';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { DataSyncService } from './services/dataSyncService';
+import { OfflineService } from './services/offlineService';
 import './App.css';
-import { importFishingCSV } from './utils/csvImporter';
+import { generateTwoYearsOfData } from './services/sampleDataGenerator';
 import ConfirmModal from './components/ConfirmModal';
 
 // Lazy load components for better code splitting
@@ -17,9 +21,6 @@ const CatchesList = lazy(() => import('./components/CatchesList'));
 const Settings = lazy(() => import('./components/Settings'));
 const Transfer = lazy(() => import('./components/Transfer'));
 const Share = lazy(() => import('./components/Share'));
-const Register = lazy(() => import('./components/Register'));
-const Login = lazy(() => import('./components/Login'));
-const Friends = lazy(() => import('./components/Friends'));
 
 // Migration function to handle old settings structure
 function migrateSettings(settings: any): AppSettings {
@@ -60,23 +61,25 @@ function migrateSettings(settings: any): AppSettings {
   return migratedSettings;
 }
 
-function App() {
+// AppContent component that handles authentication logic
+function AppContent() {
+  const { user, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sampleOpen, setSampleOpen] = useState(false);
-  const [sampleCsv, setSampleCsv] = useState<string | null>(null);
+  const [sampleData, setSampleData] = useState<any[] | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const appSettings = await FishingDataService.getSettings();
         if (appSettings) {
-          // Migrate old settings structure if needed
           const migratedSettings = migrateSettings(appSettings);
           setSettings(migratedSettings);
           UnitConverter.setSettings(migratedSettings);
         } else {
-          // Create default settings
           const defaultSettings: AppSettings = {
             angler: {
               login: '',
@@ -109,25 +112,48 @@ function App() {
         console.error('Error loading settings:', error);
       } finally {
         setIsLoading(false);
-        try {
-          const sessions = await FishingDataService.getAllSessions();
-          if (!sessions || sessions.length === 0) {
-            const url = `${import.meta.env.BASE_URL}data/karl-fish-log-2024.csv`;
-            const res = await fetch(url, { cache: 'no-store' });
-            if (res.ok) {
-              const csv = await res.text();
-              setSampleCsv(csv);
-              setSampleOpen(true);
-            }
-          }
-        } catch (e) {
-          console.error('Sample data load check failed:', e);
-        }
       }
     };
 
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    const checkOfflineMode = async () => {
+      const offline = await OfflineService.isOfflineMode();
+      setIsOfflineMode(offline);
+    };
+    checkOfflineMode();
+  }, []);
+
+  useEffect(() => {
+    const loadSampleData = async () => {
+      if (!user && !isOfflineMode) return;
+      
+      try {
+        const sessions = await FishingDataService.getAllSessions();
+        if (!sessions || sessions.length === 0) {
+          // Generate 2 years of random weekend data
+          const generatedData = await generateTwoYearsOfData();
+          setSampleData(generatedData);
+          setSampleOpen(true);
+        }
+      } catch (e) {
+        console.error('Sample data load check failed:', e);
+      }
+    };
+
+    loadSampleData();
+  }, [user, isOfflineMode]);
+
+  useEffect(() => {
+    const syncData = async () => {
+      if (user && !isOfflineMode) {
+        await DataSyncService.syncAllData();
+      }
+    };
+    syncData();
+  }, [user, isOfflineMode]);
 
   const updateSettings = async (newSettings: AppSettings) => {
     try {
@@ -139,7 +165,20 @@ function App() {
     }
   };
 
-  if (isLoading) {
+  const handleOfflineMode = async () => {
+    await DataSyncService.enableOfflineMode();
+    setIsOfflineMode(true);
+  };
+
+  const handleShowAuthModal = () => {
+    setShowAuthModal(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    setShowAuthModal(false);
+  };
+
+  if (isLoading || authLoading) {
     return (
       <div className="app-loading">
         <div className="loading-spinner"></div>
@@ -148,56 +187,99 @@ function App() {
     );
   }
 
-  return (
-    <AuthProvider>
-      <Router basename={import.meta.env.BASE_URL} future={{ v7_relativeSplatPath: true }}>
-        <div className="app">
-          <Header settings={settings} />
-          <main className="main-content">
-            <Suspense fallback={
-              <div className="app-loading">
-                <div className="loading-spinner"></div>
-                <p>Loading page...</p>
-              </div>
-            }>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/sessions" element={<SessionList />} />
-                <Route path="/sessions/new" element={<SessionForm />} />
-                <Route path="/sessions/:id" element={<SessionForm />} />
-                <Route path="/catches" element={<CatchesList />} />
-                <Route path="/transfer" element={<Transfer />} />
-                <Route path="/share" element={<Share />} />
-                <Route path="/friends" element={<Friends />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/login" element={<Login />} />
-                <Route 
-                  path="/settings" 
-                  element={
-                    <Settings 
-                      settings={settings!} 
-                      onUpdate={updateSettings} 
-                    />
-                  } 
-                />
-              </Routes>
-            </Suspense>
-          </main>
+  // Show auth modal if not logged in and not in offline mode
+  if (!user && !isOfflineMode) {
+    return (
+      <div className="app">
+        <Header settings={settings} onShowAuth={handleShowAuthModal} />
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={handleCloseAuthModal}
+          onOfflineMode={handleOfflineMode}
+        />
         <ConfirmModal
           isOpen={sampleOpen}
           onClose={() => setSampleOpen(false)}
-          title="Load Sample Data?"
-          message={"No data found. Load 2024 sample data?"}
-          confirmLabel="Load"
+          title="Generate Sample Data?"
+          message={"No data found - generate 2 years of random catches?"}
+          confirmLabel="Generate"
           onConfirm={async () => {
-            if (sampleCsv) {
-              await importFishingCSV(sampleCsv);
+            if (sampleData) {
+              // Save all generated sessions to the database
+              for (const session of sampleData) {
+                await FishingDataService.createSession(session);
+              }
               setSampleOpen(false);
               window.location.reload();
             }
           }}
         />
-        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      <Header settings={settings} onShowAuth={handleShowAuthModal} />
+      <main className="main-content">
+        <Suspense fallback={
+          <div className="app-loading">
+            <div className="loading-spinner"></div>
+            <p>Loading page...</p>
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/sessions" element={<SessionList />} />
+            <Route path="/sessions/new" element={<SessionForm />} />
+            <Route path="/sessions/:id" element={<SessionForm />} />
+            <Route path="/catches" element={<CatchesList />} />
+            <Route path="/transfer" element={<Transfer />} />
+            <Route path="/share" element={<Share />} />
+            <Route path="/reset-password" element={<PasswordResetPage />} />
+            <Route 
+              path="/settings" 
+              element={
+                <Settings 
+                  settings={settings!} 
+                  onUpdate={updateSettings} 
+                />
+              } 
+            />
+          </Routes>
+        </Suspense>
+      </main>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={handleCloseAuthModal}
+        onOfflineMode={handleOfflineMode}
+      />
+      <ConfirmModal
+        isOpen={sampleOpen}
+        onClose={() => setSampleOpen(false)}
+        title="Generate Sample Data?"
+        message={"No data found - generate 2 years of random catches?"}
+        confirmLabel="Generate"
+        onConfirm={async () => {
+          if (sampleData) {
+            // Save all generated sessions to the database
+            for (const session of sampleData) {
+              await FishingDataService.createSession(session);
+            }
+            setSampleOpen(false);
+            window.location.reload();
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router basename={import.meta.env.BASE_URL} future={{ v7_relativeSplatPath: true }}>
+        <AppContent />
       </Router>
     </AuthProvider>
   );

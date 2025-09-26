@@ -67,12 +67,12 @@ const CatchesList: React.FC = () => {
 
       switch (sortField) {
         case 'date':
-          aValue = new Date(a.session.date).getTime();
-          bValue = new Date(b.session.date).getTime();
+          aValue = a.session.date.getTime();
+          bValue = b.session.date.getTime();
           break;
         case 'time':
-          aValue = new Date(a.session.startTime).getTime();
-          bValue = new Date(b.session.startTime).getTime();
+          aValue = a.session.startTime.getTime();
+          bValue = b.session.startTime.getTime();
           break;
         case 'location':
           aValue = a.session.location.description || `${a.session.location.latitude}, ${a.session.location.longitude}`;
@@ -119,11 +119,11 @@ const CatchesList: React.FC = () => {
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString();
+    return date.toLocaleDateString();
   };
 
   const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatLocation = (session: FishingSession) => {

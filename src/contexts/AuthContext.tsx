@@ -40,8 +40,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(currentUser);
         
         if (currentUser) {
-          const currentProfile = await AuthService.getCurrentProfile();
-          setProfile(currentProfile);
+          try {
+            const currentProfile = await AuthService.getCurrentProfile();
+            setProfile(currentProfile);
+          } catch (error) {
+            console.error('Error getting profile:', error);
+            setProfile(null);
+          }
         }
       } catch (error) {
         console.error('Error getting initial session:', error);

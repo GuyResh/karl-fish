@@ -4,8 +4,10 @@ import { ExportService } from '../services/exportService';
 import { ExportOptions, FishCatch } from '../types';
 import { format } from 'date-fns';
 import { FishingDataService } from '../database';
+import { useAuth } from '../contexts/AuthContext';
 
 const Transfer: React.FC = () => {
+  const { user } = useAuth();
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     format: 'csv',
     includePhotos: false
@@ -85,17 +87,15 @@ const Transfer: React.FC = () => {
   };
 
   const handleShare = async () => {
+    if (!user) {
+      setExportStatus('Please sign in to share data');
+      return;
+    }
+
     setIsExporting(true);
     setExportStatus('');
 
     try {
-      // Get login credentials from settings
-      const settings = await FishingDataService.getSettings();
-      if (!settings?.angler?.login || !settings?.angler?.password) {
-        setExportStatus('Please configure your login credentials in Settings first');
-        return;
-      }
-
       // Get sessions to share
       const sessions = await FishingDataService.getAllSessions();
       if (sessions.length === 0) {
@@ -119,17 +119,100 @@ const Transfer: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      setExportStatus('Please select a CSV file');
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const expectedExtension = exportOptions.format;
+    
+    if (fileExtension !== expectedExtension) {
+      setExportStatus(`Please select a ${expectedExtension.toUpperCase()} file`);
       return;
     }
 
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const csvContent = e.target?.result as string;
-      await importCSVData(csvContent);
+      const fileContent = e.target?.result as string;
+      if (exportOptions.format === 'csv') {
+        await importCSVData(fileContent);
+      } else {
+        await importJSONData(fileContent);
+      }
     };
     reader.readAsText(file);
+  };
+
+  const importJSONData = async (jsonContent: string) => {
+    setIsUploading(true);
+    setExportStatus('');
+
+    try {
+      const data = JSON.parse(jsonContent);
+      
+      // Validate JSON structure
+      if (!Array.isArray(data) || data.length === 0) {
+        setExportStatus('JSON file appears to be empty or invalid format');
+        return;
+      }
+
+      let importedSessions = 0;
+      let duplicateSessions = 0;
+      let errorCount = 0;
+
+      // Process each session
+      for (const sessionData of data) {
+        try {
+          // Validate required fields
+          if (!sessionData.date || !sessionData.catches) {
+            errorCount++;
+            continue;
+          }
+
+          // Check for existing session with same date and location
+          const existingSessions = await FishingDataService.getAllSessions();
+          const isDuplicate = existingSessions.some(session => 
+            session.date.toDateString() === new Date(sessionData.date).toDateString() &&
+            Math.abs(session.location.latitude - (sessionData.location?.latitude || 0)) < 0.001 &&
+            Math.abs(session.location.longitude - (sessionData.location?.longitude || 0)) < 0.001
+          );
+
+          if (isDuplicate) {
+            duplicateSessions++;
+            continue;
+          }
+
+          // Convert date strings to Date objects
+          const processedSession = {
+            ...sessionData,
+            date: new Date(sessionData.date),
+            startTime: sessionData.startTime ? new Date(sessionData.startTime) : undefined,
+            endTime: sessionData.endTime ? new Date(sessionData.endTime) : undefined,
+            catches: sessionData.catches.map((catch_: any) => ({
+              ...catch_,
+              id: catch_.id || crypto.randomUUID()
+            }))
+          };
+
+          await FishingDataService.createSession(processedSession);
+          importedSessions++;
+
+        } catch (error) {
+          console.error(`Error processing session:`, error);
+          errorCount++;
+        }
+      }
+
+      setExportStatus(
+        `Import completed! Sessions imported: ${importedSessions}, Duplicates skipped: ${duplicateSessions}, Errors: ${errorCount}`
+      );
+
+    } catch (error) {
+      console.error('JSON import error:', error);
+      setExportStatus(`Import failed: ${error}`);
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const importCSVData = async (csvContent: string) => {
@@ -404,7 +487,7 @@ const Transfer: React.FC = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv"
+              accept={exportOptions.format === 'csv' ? '.csv' : '.json'}
               onChange={handleFileUpload}
               style={{ display: 'none' }}
             />
@@ -415,7 +498,7 @@ const Transfer: React.FC = () => {
               className="btn btn-success"
             >
               <Upload size={16} />
-              {isUploading ? 'Uploading...' : 'Upload CSV'}
+              {isUploading ? 'Uploading...' : `Upload ${exportOptions.format.toUpperCase()}`}
             </button>
 
             <button
@@ -424,7 +507,7 @@ const Transfer: React.FC = () => {
               className="btn btn-primary"
             >
               <Download size={16} />
-              {isExporting ? 'Transferring...' : 'Download'}
+              {isExporting ? 'Transferring...' : `Download ${exportOptions.format.toUpperCase()}`}
             </button>
 
             <button

@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Fish, Settings, BarChart3, Download, Wifi, WifiOff, Share2, Users } from 'lucide-react';
+import { Fish, Settings, BarChart3, Download, Wifi, WifiOff, Share2, LogIn, LogOut } from 'lucide-react';
 import { AppSettings } from '../types';
 import { nmea2000Service } from '../services/nmea2000Service';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HeaderProps {
   settings: AppSettings | null;
+  onShowAuth?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ settings }) => {
+const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
   const location = useLocation();
+  const { user, profile, signOut } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -94,13 +97,6 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
             Share
           </Link>
           <Link 
-            to="/friends" 
-            className={isActive('/friends') ? 'active' : ''}
-          >
-            <Users size={16} />
-            Friends
-          </Link>
-          <Link 
             to="/settings" 
             className={isActive('/settings') ? 'active' : ''}
           >
@@ -109,25 +105,51 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
           </Link>
         </nav>
 
-        <div 
-          className="furuno-status"
-          title={isConnected ? "NMEA 2000 Connected" : "NMEA 2000 Disconnected"}
-          onClick={handleNMEA2000Toggle}
-          style={{ 
-            cursor: 'pointer', 
-            display: 'flex', 
-            alignItems: 'center',
-            padding: '8px',
-            borderRadius: '4px',
-            transition: 'background-color 0.2s'
-          }}
-        >
-          {isConnecting ? (
-            <WifiOff size={16} className="pulse" />
-          ) : isConnected ? (
-            <Wifi size={16} style={{ color: '#10b981' }} />
+        <div className="header-actions">
+          <div 
+            className="furuno-status"
+            title={isConnected ? "NMEA 2000 Connected" : "NMEA 2000 Disconnected"}
+            onClick={handleNMEA2000Toggle}
+            style={{ 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center',
+              padding: '8px',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            {isConnecting ? (
+              <WifiOff size={16} className="pulse" />
+            ) : isConnected ? (
+              <Wifi size={16} style={{ color: '#10b981' }} />
+            ) : (
+              <WifiOff size={16} style={{ color: '#ef4444' }} />
+            )}
+          </div>
+
+          {user ? (
+            <div className="user-info">
+              <span className="user-name" style={{ color: 'white' }}>
+                {profile?.username || user.email}
+              </span>
+              <button
+                onClick={signOut}
+                className="btn btn-sm btn-primary"
+                title="Sign Out"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           ) : (
-            <WifiOff size={16} style={{ color: '#ef4444' }} />
+            <button
+              onClick={onShowAuth}
+              className="btn btn-sm btn-primary"
+              title="Sign In"
+            >
+              <LogIn size={16} />
+              Sign In
+            </button>
           )}
         </div>
       </div>

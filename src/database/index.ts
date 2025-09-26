@@ -1,5 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { FishingSession, FishCatch, AppSettings, NMEAData } from '../types';
+import { SyncTrackingService } from '../services/syncTrackingService';
 
 export class FishingDatabase extends Dexie {
   sessions!: Table<FishingSession>;
@@ -46,13 +47,24 @@ export class FishingDataService {
       await db.catches.add(catchWithSessionId);
     }
     
+    // Track local update
+    await SyncTrackingService.setLastLocalUpdate();
+    
     return id;
   }
 
   static async getSession(id: string): Promise<FishingSession | undefined> {
     const session = await db.sessions.get(id);
     if (session) {
-      session.catches = await db.catches.where('sessionId').equals(id).toArray();
+      // Convert date strings back to Date objects
+      const convertedSession = {
+        ...session,
+        date: new Date(session.date),
+        startTime: new Date(session.startTime),
+        endTime: session.endTime ? new Date(session.endTime) : undefined
+      };
+      convertedSession.catches = await db.catches.where('sessionId').equals(id).toArray();
+      return convertedSession;
     }
     return session;
   }
@@ -60,12 +72,48 @@ export class FishingDataService {
   static async getAllSessions(): Promise<FishingSession[]> {
     const sessions = await db.sessions.orderBy('date').reverse().toArray();
     
+    // Debug: Log the first session to see what we're getting
+    if (sessions.length > 0) {
+      console.log('Raw session data from DB:', {
+        date: sessions[0].date,
+        startTime: sessions[0].startTime,
+        endTime: sessions[0].endTime,
+        dateType: typeof sessions[0].date,
+        startTimeType: typeof sessions[0].startTime,
+        endTimeType: typeof sessions[0].endTime
+      });
+    }
+    
+    // Convert date strings back to Date objects
+    const convertedSessions = sessions.map(session => {
+      const converted = {
+        ...session,
+        date: new Date(session.date),
+        startTime: new Date(session.startTime),
+        endTime: session.endTime ? new Date(session.endTime) : undefined
+      };
+      
+      // Debug: Log the converted session
+      if (sessions.indexOf(session) === 0) {
+        console.log('Converted session data:', {
+          date: converted.date,
+          startTime: converted.startTime,
+          endTime: converted.endTime,
+          dateValid: !isNaN(converted.date.getTime()),
+          startTimeValid: !isNaN(converted.startTime.getTime()),
+          endTimeValid: converted.endTime ? !isNaN(converted.endTime.getTime()) : true
+        });
+      }
+      
+      return converted;
+    });
+    
     // Load catches for each session
-    for (const session of sessions) {
+    for (const session of convertedSessions) {
       session.catches = await db.catches.where('sessionId').equals(session.id).toArray();
     }
     
-    return sessions;
+    return convertedSessions;
   }
 
   static async updateSession(id: string, updates: Partial<FishingSession>): Promise<void> {
@@ -89,6 +137,9 @@ export class FishingDataService {
     } else {
       await db.sessions.update(id, updates);
     }
+    
+    // Track local update
+    await SyncTrackingService.setLastLocalUpdate();
   }
 
   static async deleteSession(id: string): Promise<void> {
@@ -96,6 +147,9 @@ export class FishingDataService {
       await db.catches.where('sessionId').equals(id).delete();
       await db.sessions.delete(id);
     });
+    
+    // Track local update
+    await SyncTrackingService.setLastLocalUpdate();
   }
 
   // Catch management
@@ -214,7 +268,14 @@ export class FishingDataService {
     
     const totalFishingTime = sessions.reduce((total, session) => {
       if (session.endTime) {
-        const duration = session.endTime.getTime() - session.startTime.getTime();
+        // Create proper datetime by combining date with time
+        const startDateTime = new Date(session.date);
+        startDateTime.setHours(session.startTime.getHours(), session.startTime.getMinutes(), session.startTime.getSeconds());
+        
+        const endDateTime = new Date(session.date);
+        endDateTime.setHours(session.endTime.getHours(), session.endTime.getMinutes(), session.endTime.getSeconds());
+        
+        const duration = endDateTime.getTime() - startDateTime.getTime();
         return total + (duration / (1000 * 60 * 60)); // Convert to hours
       }
       return total;

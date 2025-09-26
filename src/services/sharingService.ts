@@ -9,13 +9,13 @@ export class SharingService {
     privacyLevel: 'public' | 'friends' | 'private',
     specificFriendIds?: string[]
   ) {
-    const user = await AuthService.getCurrentUser();
-    if (!user) throw new Error('Not authenticated');
+    const profile = await AuthService.getCurrentProfile();
+    if (!profile) throw new Error('Not authenticated');
 
     const { data, error } = await supabase
       .from('shared_sessions')
       .insert({
-        user_id: user.id,
+        user_id: profile.id,
         session_data: session,
         privacy_level: privacyLevel
       })
@@ -33,8 +33,8 @@ export class SharingService {
   }
 
   static async getSharedSessions(): Promise<SharedSession[]> {
-    const user = await AuthService.getCurrentUser();
-    if (!user) throw new Error('Not authenticated');
+    const profile = await AuthService.getCurrentProfile();
+    if (!profile) throw new Error('Not authenticated');
 
     // Get user's friends
     const friends = await FriendService.getFriends();
@@ -55,8 +55,8 @@ export class SharingService {
   }
 
   static async getUserSessions(): Promise<SharedSession[]> {
-    const user = await AuthService.getCurrentUser();
-    if (!user) throw new Error('Not authenticated');
+    const profile = await AuthService.getCurrentProfile();
+    if (!profile) throw new Error('Not authenticated');
 
     const { data, error } = await supabase
       .from('shared_sessions')
@@ -64,7 +64,7 @@ export class SharingService {
         *,
         user:profiles(*)
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', profile.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

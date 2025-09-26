@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Share2, RefreshCw, Users, Clock, Settings, Eye, EyeOff } from 'lucide-react';
+import { RefreshCw, Users, Clock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SharingService } from '../services/sharingService';
-import { FriendService } from '../services/friendService';
+import { DataSyncService } from '../services/dataSyncService';
+import { OfflineService } from '../services/offlineService';
 import { Profile, SharedSession } from '../lib/supabase';
 import { FishingSession } from '../types';
 
 const Share: React.FC = () => {
   const { user } = useAuth();
   const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
-  const [mySessions, setMySessions] = useState<SharedSession[]>([]);
+  const [, setMySessions] = useState<SharedSession[]>([]);
   const [friends, setFriends] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -18,6 +19,8 @@ const Share: React.FC = () => {
   const [selectedSession, setSelectedSession] = useState<FishingSession | null>(null);
   const [privacyLevel, setPrivacyLevel] = useState<'public' | 'friends' | 'private'>('friends');
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
+  const [, setIsOfflineMode] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -30,15 +33,32 @@ const Share: React.FC = () => {
     setStatus('');
 
     try {
-      const [sharedData, myData, friendsData] = await Promise.all([
-        SharingService.getSharedSessions(),
-        SharingService.getUserSessions(),
-        FriendService.getFriends()
-      ]);
-      
-      setSharedSessions(sharedData);
-      setMySessions(myData);
-      setFriends(friendsData);
+      const offlineMode = await OfflineService.isOfflineMode();
+      setIsOfflineMode(offlineMode);
+
+      if (offlineMode) {
+        // Load offline data
+        const [sharedData, friendsData] = await Promise.all([
+          DataSyncService.getOfflineSharedSessions(),
+          DataSyncService.getOfflineFriendsData()
+        ]);
+        
+        setSharedSessions(sharedData);
+        setMySessions([]); // No my sessions in offline mode
+        setFriends(friendsData);
+        setStatus('Offline mode - showing cached data');
+      } else {
+        // Load online data
+        const [sharedData, myData, friendsData] = await Promise.all([
+          SharingService.getSharedSessions(),
+          SharingService.getUserSessions(),
+          DataSyncService.getOfflineFriendsData()
+        ]);
+        
+        setSharedSessions(sharedData);
+        setMySessions(myData);
+        setFriends(friendsData);
+      }
       
     } catch (error) {
       console.error('Error loading data:', error);
@@ -75,23 +95,7 @@ const Share: React.FC = () => {
     }
   };
 
-  const handleDeleteSession = async (sessionId: string) => {
-    if (window.confirm('Are you sure you want to delete this shared session?')) {
-      try {
-        await SharingService.deleteSharedSession(sessionId);
-        await loadData();
-        setStatus('Session deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting session:', error);
-        setStatus(`Error deleting session: ${error}`);
-      }
-    }
-  };
 
-  const handlePrivacyChange = (sessionId: string, newPrivacy: 'public' | 'friends' | 'private') => {
-    SharingService.updateSessionPrivacy(sessionId, newPrivacy);
-    loadData();
-  };
 
   const toggleFriendSelection = (friendId: string) => {
     setSelectedFriends(prev => 
@@ -105,6 +109,27 @@ const Share: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleSync = async () => {
+    if (!user) {
+      setStatus('Please sign in to sync data');
+      return;
+    }
+
+    setIsSyncing(true);
+    setStatus('');
+
+    try {
+      await DataSyncService.forceSync();
+      setStatus('Successfully synced session data');
+      await loadData(); // Reload data after sync
+    } catch (error) {
+      console.error('Error syncing data:', error);
+      setStatus('Failed to sync session data');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
 
   if (!user) {
     return (
@@ -112,7 +137,6 @@ const Share: React.FC = () => {
         <div className="card">
           <div className="card-header">
             <h1 className="card-title">
-              <Share2 size={24} />
               Share
             </h1>
           </div>
@@ -131,13 +155,20 @@ const Share: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">
-            <Share2 size={24} />
             Share
           </h1>
           <div className="header-actions">
             <button
+              onClick={handleSync}
+              disabled={isLoading || isSharing || isSyncing}
+              className="btn btn-primary"
+            >
+              <RefreshCw size={16} className={isSyncing ? 'spin' : ''} />
+              {isSyncing ? 'Syncing...' : 'Sync'}
+            </button>
+            <button
               onClick={loadData}
-              disabled={isLoading || isSharing}
+              disabled={isLoading || isSharing || isSyncing}
               className="btn btn-secondary"
             >
               <RefreshCw size={16} />
@@ -149,61 +180,11 @@ const Share: React.FC = () => {
         <div className="share-content">
           {/* Status */}
           {status && (
-            <div className={`share-status ${status.includes('Error') ? 'error' : 'success'}`}>
+            <div className={`share-status ${status.includes('Error') ? 'error' : 'info'}`}>
               {status}
             </div>
           )}
 
-          {/* My Shared Sessions */}
-          <div className="my-sessions">
-            <h3>
-              <Settings size={18} />
-              My Shared Sessions
-            </h3>
-            
-            {mySessions.length === 0 ? (
-              <div className="empty-state">
-                <p>No sessions shared yet. Share your first session below!</p>
-              </div>
-            ) : (
-              <div className="sessions-grid">
-                {mySessions.map((session) => (
-                  <div key={session.id} className="session-card my-session">
-                    <div className="session-header">
-                      <div className="session-info">
-                        <h4>{formatDate(session.created_at)}</h4>
-                        <div className="session-meta">
-                          <span className="privacy-level">
-                            {session.privacy_level === 'public' && <Eye size={14} />}
-                            {session.privacy_level === 'friends' && <Users size={14} />}
-                            {session.privacy_level === 'private' && <EyeOff size={14} />}
-                            {session.privacy_level.charAt(0).toUpperCase() + session.privacy_level.slice(1)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="session-actions">
-                        <select
-                          value={session.privacy_level}
-                          onChange={(e) => handlePrivacyChange(session.id, e.target.value as any)}
-                          className="privacy-select"
-                        >
-                          <option value="public">Public</option>
-                          <option value="friends">Friends Only</option>
-                          <option value="private">Private</option>
-                        </select>
-                        <button
-                          onClick={() => handleDeleteSession(session.id)}
-                          className="btn btn-danger btn-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Shared Sessions from Others */}
           <div className="shared-sessions">

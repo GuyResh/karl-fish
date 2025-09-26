@@ -1,5 +1,5 @@
 import { supabase, Profile } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { User, AuthError } from '@supabase/supabase-js';
 
 export class AuthService {
   static async signUp(email: string, password: string, username: string, initials: string) {
@@ -24,9 +24,18 @@ export class AuthService {
     return data;
   }
 
-  static async signIn(email: string, password: string) {
+  static async signIn(username: string, password: string) {
+    // Get the user's email by username using a database function
+    const { data: emailData, error: emailError } = await supabase
+      .rpc('get_user_email_by_username', { username_param: username });
+
+    if (emailError || !emailData) {
+      throw new Error('Invalid username or password');
+    }
+
+    // Now sign in with email and password
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: emailData,
       password
     });
 
@@ -98,5 +107,12 @@ export class AuthService {
     return supabase.auth.onAuthStateChange((_event, session) => {
       callback(session?.user ?? null);
     });
+  }
+
+  static async resetPassword(email: string): Promise<{ error: AuthError | null }> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, MapPin, Clock, Fish, Thermometer, Wind, Search, Plus } from 'lucide-react';
+import { Edit, Trash2, MapPin, Clock, Fish, Thermometer, Wind, Search, Plus, Share2 } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
@@ -49,6 +49,25 @@ const SessionList: React.FC = () => {
     }
   };
 
+  const handleShare = async (sessionId: string) => {
+    try {
+      // Toggle the shared status
+      const session = sessions.find(s => s.id === sessionId);
+      if (session) {
+        const updatedSession = { ...session, shared: !session.shared };
+        await FishingDataService.updateSession(sessionId, { shared: updatedSession.shared });
+        
+        // Update the local state
+        setSessions(sessions.map(s => 
+          s.id === sessionId ? { ...s, shared: updatedSession.shared } : s
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating session share status:', error);
+      alert('Error updating session share status');
+    }
+  };
+
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
@@ -64,15 +83,16 @@ const SessionList: React.FC = () => {
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString();
+    return date.toLocaleDateString();
   };
 
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formatTime = (time: Date) => {
+    return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const getDuration = (startTime: Date, endTime?: Date) => {
     if (!endTime) return 'In progress';
+    
     const duration = endTime.getTime() - startTime.getTime();
     const hours = Math.floor(duration / (1000 * 60 * 60));
     const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
@@ -138,15 +158,24 @@ const SessionList: React.FC = () => {
                   {formatDate(session.date)}
                 </div>
                 <div className="session-actions">
+                  <button 
+                    onClick={() => handleShare(session.id)}
+                    className={`btn btn-sm ${session.shared ? 'btn-info' : 'btn-outline-info'}`}
+                    title={session.shared ? 'Unshare' : 'Share'}
+                  >
+                    <Share2 size={14} />
+                  </button>
                   <Link 
                     to={`/sessions/${session.id}`}
                     className="btn btn-secondary btn-sm"
+                    title="Edit"
                   >
                     <Edit size={14} />
                   </Link>
                   <button 
                     onClick={() => handleDelete(session.id)}
                     className="btn btn-danger btn-sm"
+                    title="Delete"
                   >
                     <Trash2 size={14} />
                   </button>
