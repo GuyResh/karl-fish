@@ -34,5 +34,22 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {},
+  "mobile": {
+    "android": {
+      "packageName": "com.karlfish.app",
+      "minSdkVersion": 24,
+      "targetSdkVersion": 33,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
+    }
   }
 }
