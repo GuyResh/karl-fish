@@ -97,6 +97,11 @@ export interface ExportOptions {
 }
 
 export interface AppSettings {
+  angler: {
+    login?: string;
+    password?: string;
+    initials?: string;
+  };
   units: {
     temperature: 'celsius' | 'fahrenheit';
     distance: 'metric' | 'imperial';

@@ -10,19 +10,29 @@ import SessionList from './components/SessionList';
 import CatchesList from './components/CatchesList';
 import Settings from './components/Settings';
 import Transfer from './components/Transfer';
+import Share from './components/Share';
+import Register from './components/Register';
+import Login from './components/Login';
+import Friends from './components/Friends';
+import { AuthProvider } from './contexts/AuthContext';
 import './App.css';
 import { importFishingCSV } from './utils/csvImporter';
 import ConfirmModal from './components/ConfirmModal';
 
 // Migration function to handle old settings structure
 function migrateSettings(settings: any): AppSettings {
-  // If settings already have nmea2000, return as-is
-  if (settings.nmea2000) {
+  // If settings already have nmea2000 and angler, return as-is
+  if (settings.nmea2000 && settings.angler) {
     return settings;
   }
 
   // Migrate from old furuno structure
   const migratedSettings: AppSettings = {
+    angler: settings.angler || {
+      login: '',
+      password: '',
+      initials: ''
+    },
     units: settings.units || {
       temperature: 'fahrenheit',
       distance: 'imperial',
@@ -66,6 +76,11 @@ function App() {
         } else {
           // Create default settings
           const defaultSettings: AppSettings = {
+            angler: {
+              login: '',
+              password: '',
+              initials: ''
+            },
             units: {
               temperature: 'fahrenheit',
               distance: 'imperial',
@@ -132,28 +147,33 @@ function App() {
   }
 
   return (
-    <Router basename={import.meta.env.BASE_URL} future={{ v7_relativeSplatPath: true }}>
-      <div className="app">
-        <Header settings={settings} />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/sessions" element={<SessionList />} />
-            <Route path="/sessions/new" element={<SessionForm />} />
-            <Route path="/sessions/:id" element={<SessionForm />} />
-            <Route path="/catches" element={<CatchesList />} />
-            <Route path="/transfer" element={<Transfer />} />
-            <Route 
-              path="/settings" 
-              element={
-                <Settings 
-                  settings={settings!} 
-                  onUpdate={updateSettings} 
-                />
-              } 
-            />
-          </Routes>
-        </main>
+    <AuthProvider>
+      <Router basename={import.meta.env.BASE_URL} future={{ v7_relativeSplatPath: true }}>
+        <div className="app">
+          <Header settings={settings} />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/sessions" element={<SessionList />} />
+              <Route path="/sessions/new" element={<SessionForm />} />
+              <Route path="/sessions/:id" element={<SessionForm />} />
+              <Route path="/catches" element={<CatchesList />} />
+              <Route path="/transfer" element={<Transfer />} />
+              <Route path="/share" element={<Share />} />
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route 
+                path="/settings" 
+                element={
+                  <Settings 
+                    settings={settings!} 
+                    onUpdate={updateSettings} 
+                  />
+                } 
+              />
+            </Routes>
+          </main>
         <ConfirmModal
           isOpen={sampleOpen}
           onClose={() => setSampleOpen(false)}
@@ -168,8 +188,9 @@ function App() {
             }
           }}
         />
-      </div>
-    </Router>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
