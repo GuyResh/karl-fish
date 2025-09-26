@@ -228,7 +228,23 @@ CREATE TRIGGER on_friendship_accepted
   AFTER UPDATE ON friendships
   FOR EACH ROW EXECUTE FUNCTION public.create_friend_permissions();
 
--- Function to get user email by username
+-- Function to normalize username to lowercase
+CREATE OR REPLACE FUNCTION public.normalize_username()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.username = LOWER(NEW.username);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to normalize username on insert/update
+DROP TRIGGER IF EXISTS normalize_username_trigger ON profiles;
+CREATE TRIGGER normalize_username_trigger
+  BEFORE INSERT OR UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.normalize_username();
+
+-- Function to get user email by username (case-insensitive)
 CREATE OR REPLACE FUNCTION public.get_user_email_by_username(username_param TEXT)
 RETURNS TEXT AS $$
 DECLARE
@@ -237,7 +253,7 @@ BEGIN
   SELECT au.email INTO user_email
   FROM auth.users au
   JOIN profiles p ON au.id = p.id
-  WHERE p.username = username_param;
+  WHERE LOWER(p.username) = LOWER(username_param);
   
   RETURN user_email;
 END;
