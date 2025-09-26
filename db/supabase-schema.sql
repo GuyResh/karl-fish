@@ -165,3 +165,49 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_friendship_accepted
   AFTER UPDATE ON friendships
   FOR EACH ROW EXECUTE FUNCTION public.create_friend_permissions();
+
+-- Function to get user email by username
+CREATE OR REPLACE FUNCTION public.get_user_email_by_username(username_param TEXT)
+RETURNS TEXT AS $$
+DECLARE
+  user_email TEXT;
+BEGIN
+  SELECT au.email INTO user_email
+  FROM auth.users au
+  JOIN profiles p ON au.id = p.id
+  WHERE p.username = username_param;
+  
+  RETURN user_email;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get profile with email
+CREATE OR REPLACE FUNCTION public.get_profile_with_email(profile_id UUID)
+RETURNS TABLE (
+  id UUID,
+  username TEXT,
+  initials TEXT,
+  display_name TEXT,
+  email TEXT,
+  bio TEXT,
+  location TEXT,
+  created_at TIMESTAMP WITH TIME ZONE,
+  updated_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    p.id,
+    p.username,
+    p.initials,
+    p.display_name,
+    au.email,
+    p.bio,
+    p.location,
+    p.created_at,
+    p.updated_at
+  FROM profiles p
+  JOIN auth.users au ON p.id = au.id
+  WHERE p.id = profile_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
