@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, MapPin, Clock, Fish, Thermometer, Wind, Search } from 'lucide-react';
+import { Edit, Trash2, MapPin, Clock, Fish, Thermometer, Wind, Search, Plus } from 'lucide-react';
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
@@ -93,12 +93,10 @@ const SessionList: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">Fishing Sessions</h1>
-          {/* New Session button commented out - redundant with header navigation */}
-          {/* 
-          <Link to="/sessions/new" className="btn btn-primary">
-            New Session
+          <Link to="/sessions/new" className="btn btn-primary btn-compact">
+            <Plus size={14} />
+            New
           </Link>
-          */}
         </div>
         
         <div className="search-container">

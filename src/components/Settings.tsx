@@ -108,6 +108,44 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
         </div>
 
         <div className="settings-content">
+          {/* Angler Settings */}
+          <div className="settings-section" style={{ padding: '0.5rem 1rem' }}>
+            <h3>Angler</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: '500' }}>Login</span>
+              <input
+                type="text"
+                className="form-input"
+                value={localSettings.angler?.login || ''}
+                onChange={(e) => handleInputChange('angler', 'login', e.target.value)}
+                placeholder="Enter your login name"
+                style={{ width: '225px' }}
+              />
+              <span style={{ fontWeight: '500' }}>Password</span>
+              <input
+                type="password"
+                className="form-input"
+                value={localSettings.angler?.password || ''}
+                onChange={(e) => handleInputChange('angler', 'password', e.target.value)}
+                placeholder="Enter your password"
+                style={{ width: '225px' }}
+              />
+              <span style={{ fontWeight: '500' }}>Initials</span>
+              <input
+                type="text"
+                className="form-input"
+                value={localSettings.angler?.initials || ''}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                  handleInputChange('angler', 'initials', value);
+                }}
+                placeholder="ABC"
+                maxLength={3}
+                style={{ width: '60px' }}
+              />
+            </div>
+          </div>
+
           {/* Units Settings */}
           <div className="settings-section">
             <h3>Units</h3>

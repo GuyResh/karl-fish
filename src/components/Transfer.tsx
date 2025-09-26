@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Download, Mail, FileText, Filter, Upload } from 'lucide-react';
+import { Download, Mail, FileText, Filter, Upload, Share2 } from 'lucide-react';
 import { ExportService } from '../services/exportService';
 import { ExportOptions, FishCatch } from '../types';
 import { format } from 'date-fns';
@@ -79,6 +79,37 @@ const Transfer: React.FC = () => {
     } catch (error) {
       console.error('Stats report error:', error);
       setExportStatus(`Stats report failed: ${error}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleShare = async () => {
+    setIsExporting(true);
+    setExportStatus('');
+
+    try {
+      // Get login credentials from settings
+      const settings = await FishingDataService.getSettings();
+      if (!settings?.angler?.login || !settings?.angler?.password) {
+        setExportStatus('Please configure your login credentials in Settings first');
+        return;
+      }
+
+      // Get sessions to share
+      const sessions = await FishingDataService.getAllSessions();
+      if (sessions.length === 0) {
+        setExportStatus('No sessions to share');
+        return;
+      }
+
+      // TODO: Implement API call to share data
+      // This will be implemented when the API endpoint is ready
+      setExportStatus('Share functionality will be available when API endpoint is ready');
+      
+    } catch (error) {
+      console.error('Share error:', error);
+      setExportStatus(`Share failed: ${error}`);
     } finally {
       setIsExporting(false);
     }
@@ -402,7 +433,16 @@ const Transfer: React.FC = () => {
               className="btn btn-secondary"
             >
               <Mail size={16} />
-              {isExporting ? 'Sending...' : 'Email Transfer'}
+              {isExporting ? 'Sending...' : 'Email'}
+            </button>
+
+            <button
+              onClick={handleShare}
+              disabled={isExporting || isUploading}
+              className="btn btn-info"
+            >
+              <Share2 size={16} />
+              Share
             </button>
 
             <button
@@ -411,7 +451,7 @@ const Transfer: React.FC = () => {
               className="btn btn-warning"
             >
               <FileText size={16} />
-              {isExporting ? 'Generating...' : 'Generate Stats Report'}
+              {isExporting ? 'Generating...' : 'Stats Report'}
             </button>
           </div>
 

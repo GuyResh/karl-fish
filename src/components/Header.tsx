@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Fish, Settings, BarChart3, Plus, Download, Wifi, WifiOff } from 'lucide-react';
+import { Fish, Settings, BarChart3, Download, Wifi, WifiOff, Share2, Users } from 'lucide-react';
 import { AppSettings } from '../types';
 import { nmea2000Service } from '../services/nmea2000Service';
 
@@ -80,18 +80,25 @@ const Header: React.FC<HeaderProps> = ({ settings }) => {
             Sessions
           </Link>
           <Link 
-            to="/sessions/new" 
-            className={isActive('/sessions/new') ? 'active' : ''}
-          >
-            <Plus size={16} />
-            New Session
-          </Link>
-          <Link 
             to="/transfer" 
             className={isActive('/transfer') ? 'active' : ''}
           >
             <Download size={16} />
             Transfer
+          </Link>
+          <Link 
+            to="/share" 
+            className={isActive('/share') ? 'active' : ''}
+          >
+            <Share2 size={16} />
+            Share
+          </Link>
+          <Link 
+            to="/friends" 
+            className={isActive('/friends') ? 'active' : ''}
+          >
+            <Users size={16} />
+            Friends
           </Link>
           <Link 
             to="/settings" 
