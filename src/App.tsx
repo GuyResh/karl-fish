@@ -1,23 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { FishingDataService } from './database';
 import { AppSettings } from './types';
 import { UnitConverter } from './utils/unitConverter';
 import Header from './components/Header';
-import Dashboard from './components/Dashboard';
-import SessionForm from './components/SessionForm';
-import SessionList from './components/SessionList';
-import CatchesList from './components/CatchesList';
-import Settings from './components/Settings';
-import Transfer from './components/Transfer';
-import Share from './components/Share';
-import Register from './components/Register';
-import Login from './components/Login';
-import Friends from './components/Friends';
 import { AuthProvider } from './contexts/AuthContext';
 import './App.css';
 import { importFishingCSV } from './utils/csvImporter';
 import ConfirmModal from './components/ConfirmModal';
+
+// Lazy load components for better code splitting
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const SessionForm = lazy(() => import('./components/SessionForm'));
+const SessionList = lazy(() => import('./components/SessionList'));
+const CatchesList = lazy(() => import('./components/CatchesList'));
+const Settings = lazy(() => import('./components/Settings'));
+const Transfer = lazy(() => import('./components/Transfer'));
+const Share = lazy(() => import('./components/Share'));
+const Register = lazy(() => import('./components/Register'));
+const Login = lazy(() => import('./components/Login'));
+const Friends = lazy(() => import('./components/Friends'));
 
 // Migration function to handle old settings structure
 function migrateSettings(settings: any): AppSettings {
@@ -152,27 +154,34 @@ function App() {
         <div className="app">
           <Header settings={settings} />
           <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/sessions" element={<SessionList />} />
-              <Route path="/sessions/new" element={<SessionForm />} />
-              <Route path="/sessions/:id" element={<SessionForm />} />
-              <Route path="/catches" element={<CatchesList />} />
-              <Route path="/transfer" element={<Transfer />} />
-              <Route path="/share" element={<Share />} />
-              <Route path="/friends" element={<Friends />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              <Route 
-                path="/settings" 
-                element={
-                  <Settings 
-                    settings={settings!} 
-                    onUpdate={updateSettings} 
-                  />
-                } 
-              />
-            </Routes>
+            <Suspense fallback={
+              <div className="app-loading">
+                <div className="loading-spinner"></div>
+                <p>Loading page...</p>
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/sessions" element={<SessionList />} />
+                <Route path="/sessions/new" element={<SessionForm />} />
+                <Route path="/sessions/:id" element={<SessionForm />} />
+                <Route path="/catches" element={<CatchesList />} />
+                <Route path="/transfer" element={<Transfer />} />
+                <Route path="/share" element={<Share />} />
+                <Route path="/friends" element={<Friends />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route 
+                  path="/settings" 
+                  element={
+                    <Settings 
+                      settings={settings!} 
+                      onUpdate={updateSettings} 
+                    />
+                  } 
+                />
+              </Routes>
+            </Suspense>
           </main>
         <ConfirmModal
           isOpen={sampleOpen}

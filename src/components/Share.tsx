@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Share2, RefreshCw, Users, MapPin, Clock, Fish, Thermometer, Wind, Settings, Eye, EyeOff, UserCheck, Plus } from 'lucide-react';
+import { Share2, RefreshCw, Users, Clock, Settings, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SharingService } from '../services/sharingService';
 import { FriendService } from '../services/friendService';
 import { Profile, SharedSession } from '../lib/supabase';
-import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 
 const Share: React.FC = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
   const [mySessions, setMySessions] = useState<SharedSession[]>([]);
   const [friends, setFriends] = useState<Profile[]>([]);
@@ -49,10 +48,6 @@ const Share: React.FC = () => {
     }
   };
 
-  const handleShareSession = async (session: FishingSession) => {
-    setSelectedSession(session);
-    setShowShareModal(true);
-  };
 
   const handleConfirmShare = async () => {
     if (!selectedSession) return;
@@ -110,9 +105,6 @@ const Share: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
 
   if (!user) {
     return (
@@ -278,7 +270,7 @@ const Share: React.FC = () => {
                 
                 <div className="modal-content">
                   <div className="session-preview">
-                    <h4>{formatDate(selectedSession.date)} - {selectedSession.location.description}</h4>
+                    <h4>{formatDate(selectedSession.date.toString())} - {selectedSession.location.description}</h4>
                     <p>Catches: {selectedSession.catches.length}</p>
                   </div>
 

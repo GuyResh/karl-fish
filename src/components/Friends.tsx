@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Search, Check, X, UserX, Shield } from 'lucide-react';
+import { Users, UserPlus, Search, Check, X, UserX } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FriendService } from '../services/friendService';
 import { AuthService } from '../services/authService';
@@ -101,16 +101,6 @@ const Friends: React.FC = () => {
     }
   };
 
-  const handleBlockUser = async (userId: string) => {
-    if (window.confirm('Are you sure you want to block this user?')) {
-      try {
-        await FriendService.blockUser(userId);
-        await loadFriendsData();
-      } catch (error) {
-        console.error('Error blocking user:', error);
-      }
-    }
-  };
 
   if (isLoading) {
     return (

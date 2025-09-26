@@ -101,7 +101,7 @@ export class SharingService {
     return await FriendService.getFriends();
   }
 
-  private static async createSpecificFriendPermissions(sessionId: string, friendIds: string[]) {
+  private static async createSpecificFriendPermissions(_sessionId: string, friendIds: string[]) {
     // This would be implemented with a separate table for session-specific friend permissions
     // For now, we'll use the general friend permissions
     for (const friendId of friendIds) {

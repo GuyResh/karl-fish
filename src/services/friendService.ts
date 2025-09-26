@@ -90,6 +90,8 @@ export class FriendService {
     const { data, error } = await supabase
       .from('friendships')
       .select(`
+        requester_id,
+        addressee_id,
         requester:profiles!requester_id(*),
         addressee:profiles!addressee_id(*)
       `)
@@ -101,9 +103,9 @@ export class FriendService {
     const friends: Profile[] = [];
     data?.forEach(friendship => {
       if (friendship.requester_id === user.id) {
-        friends.push(friendship.addressee);
+        friends.push(friendship.addressee as unknown as Profile);
       } else {
-        friends.push(friendship.requester);
+        friends.push(friendship.requester as unknown as Profile);
       }
     });
 
