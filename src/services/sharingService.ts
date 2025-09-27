@@ -165,10 +165,11 @@ export class SharingService {
     }));
 
     // Use upsert to handle both inserts and updates
+    // Note: The unique index idx_sessions_user_session_id must exist in the database
     const { error } = await supabase
       .from('sessions')
       .upsert(sessionsToInsert, {
-        onConflict: 'user_id,session_data->id',
+        onConflict: 'user_id,(session_data->>id)',
         ignoreDuplicates: false
       });
 

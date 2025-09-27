@@ -86,6 +86,11 @@ CREATE INDEX IF NOT EXISTS idx_sessions_privacy ON sessions(privacy_level);
 CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_updated ON sessions(updated_at);
 
+-- Create unique index for upsert operations on sessions
+-- This allows ON CONFLICT to work with user_id and session_data->id
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_user_session_id 
+ON sessions(user_id, (session_data->>'id'));
+
 -- Create function to update updated_at timestamp - idempotent
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
