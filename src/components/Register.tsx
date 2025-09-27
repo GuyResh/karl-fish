@@ -21,7 +21,7 @@ const Register: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'name' ? value.trim() : value
+      [name]: name === 'name' ? value.trim().replace(/\s+/g, ' ') : value
     }));
   };
 

@@ -9,7 +9,7 @@ export class AuthService {
       options: {
         data: {
           username,
-          name: name.trim()
+          name: name.trim().replace(/\s+/g, ' ') // Trim and normalize spaces
         }
       }
     });
@@ -73,7 +73,7 @@ export class AuthService {
       .insert({
         id: userId,
         username,
-        name: name.trim()
+        name: name.trim().replace(/\s+/g, ' ') // Trim and normalize spaces
       });
 
     if (error) throw error;

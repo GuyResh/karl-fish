@@ -24,7 +24,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
 
   // Handle name change
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value.trim());
+    setName(e.target.value.trim().replace(/\s+/g, ' ')); // Trim and normalize spaces
   };
 
   const handleLogin = async (e: React.FormEvent) => {
