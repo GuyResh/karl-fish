@@ -232,3 +232,4 @@ For issues and questions:
 - [ ] Additional NMEA 2000 device support
 - [ ] Fishing spot recommendations
 - [ ] Weather forecast integration
+
