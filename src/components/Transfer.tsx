@@ -103,9 +103,10 @@ const Transfer: React.FC = () => {
         return;
       }
 
-      // TODO: Implement API call to share data
-      // This will be implemented when the API endpoint is ready
-      setExportStatus('Share functionality will be available when API endpoint is ready');
+      // Use the sharing service to sync data to Supabase
+      const { DataSyncService } = await import('../services/dataSyncService');
+      await DataSyncService.forceSync();
+      setExportStatus('Successfully synced session data to cloud!');
       
     } catch (error) {
       console.error('Share error:', error);
