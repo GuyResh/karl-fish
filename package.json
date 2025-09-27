@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:vercel": "tsc && vite build --mode production",
+    "build:github": "tsc && vite build --mode github-pages",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
