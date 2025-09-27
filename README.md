@@ -26,16 +26,27 @@ A comprehensive React-based fishing log application that can be deployed as a we
   - PGN 127505 - Fluid Level (fuel, water, etc.)
 
 ### 💾 Data Management
-- **Local Storage**: IndexedDB for offline data storage
+- **Local Storage**: IndexedDB for offline data storage with user-specific data isolation
 - **Data Export**: CSV and JSON export options
 - **Email Integration**: Send fishing logs via email
 - **Statistics**: Comprehensive fishing statistics and reports
 - **Search & Filter**: Find sessions by species, location, or notes
+- **Cloud Sync**: Supabase integration for data synchronization and sharing
+
+### 👥 Social Features
+- **User Authentication**: Secure user accounts with email verification
+- **Friend System**: Add friends and manage friend requests
+- **Session Sharing**: Share fishing sessions with friends or make them public
+- **Privacy Controls**: Control who can see your sessions (private, friends, public)
+- **Angler Discovery**: Find and connect with other anglers
+- **Real-time Updates**: Live updates when friends share new sessions
 
 ### 🖥️ Deployment Options
 - **Web Application**: Run in any modern browser
 - **Desktop App**: Native desktop application using Tauri
 - **Cross-platform**: Windows, macOS, and Linux support
+- **Cloud Deployment**: Deploy to Vercel or GitHub Pages
+- **Custom Domains**: Support for custom domain configuration
 
 ## Installation
 
@@ -43,6 +54,7 @@ A comprehensive React-based fishing log application that can be deployed as a we
 - Node.js 16+ 
 - Rust (for Tauri desktop builds)
 - Git
+- Supabase account (for cloud features)
 
 ### Web Application
 ```bash
@@ -53,11 +65,19 @@ cd karl-fish
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+
 # Start development server
 npm run dev
 
 # Build for production
 npm run build
+
+# Build for specific platforms
+npm run build:vercel    # For Vercel deployment
+npm run build:github    # For GitHub Pages deployment
 ```
 
 ### Desktop Application (Tauri)
@@ -71,6 +91,39 @@ npm run tauri:dev
 # Build desktop application
 npm run tauri:build
 ```
+
+## Environment Setup
+
+### Supabase Configuration
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to Settings → API to get your project URL and anon key
+3. Create a `.env.local` file in the project root:
+```bash
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+4. Run the database schema setup:
+   - Go to your Supabase project dashboard
+   - Navigate to SQL Editor
+   - Copy and paste the contents of `db/supabase-schema.sql`
+   - Execute the script to set up tables, functions, and policies
+
+### Deployment
+
+#### Vercel Deployment
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+3. Deploy automatically on every push to main branch
+4. Optionally add a custom domain in Vercel settings
+
+#### GitHub Pages Deployment
+1. Set up GitHub Actions secrets in your repository:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+2. Push to main branch to trigger automatic deployment
+3. Your app will be available at `https://yourusername.github.io/karl-fish/`
 
 ## NMEA 2000 Setup
 
@@ -120,6 +173,20 @@ The application automatically collects from all connected N2K devices:
 2. Choose format (CSV or JSON)
 3. Select date range (optional)
 4. Download or email the data
+
+### User Authentication & Social Features
+1. **Create Account**: Click "Sign In" → "Create Account"
+2. **Verify Email**: Check your email and click the confirmation link
+3. **Add Friends**: Go to Friends page → Search for other anglers → Send friend requests
+4. **Share Sessions**: Mark sessions as "shared" to make them visible to friends
+5. **View Shared Sessions**: Go to Share page to see friends' fishing sessions
+6. **Privacy Settings**: Control who can see your sessions (private, friends, public)
+
+### Cloud Synchronization
+1. **Automatic Sync**: Your data syncs to the cloud when you're online
+2. **Offline Mode**: Continue logging sessions when offline - data syncs when reconnected
+3. **User-Specific Data**: Each user's data is isolated and secure
+4. **Cross-Device Access**: Access your data from any device with the same account
 
 ## Data Structure
 
@@ -200,9 +267,13 @@ src/
 - **TypeScript** - Type safety
 - **Dexie** - IndexedDB wrapper
 - **Tauri** - Desktop app framework
+- **Supabase** - Backend-as-a-Service (authentication, database, real-time)
+- **PostgreSQL** - Cloud database with Row Level Security
 - **Custom NMEA 2000 Parser** - Browser-compatible NMEA 2000 PGN parsing
 - **Lucide React** - Icons
 - **Date-fns** - Date utilities
+- **Vite** - Build tool and development server
+- **Leaflet** - Interactive maps
 
 ## Contributing
 
@@ -225,11 +296,29 @@ For issues and questions:
 
 ## Roadmap
 
+### ✅ Completed Features
+- [x] User authentication and account management
+- [x] Cloud synchronization with Supabase
+- [x] Friend system and social features
+- [x] Session sharing with privacy controls
+- [x] Offline-first data storage
+- [x] Cross-platform deployment (Vercel, GitHub Pages)
+- [x] User-specific data isolation
+
+### 🚧 In Progress
+- [ ] Real-time notifications for friend activity
+- [ ] Advanced sharing filters and search
+- [ ] Session collaboration features
+
+### 📋 Planned Features
 - [ ] Photo integration for fish catches
 - [ ] Advanced analytics and charts
-- [ ] Cloud synchronization
-- [ ] Mobile app version
+- [ ] Mobile app version (React Native)
 - [ ] Additional NMEA 2000 device support
 - [ ] Fishing spot recommendations
 - [ ] Weather forecast integration
+- [ ] Live fishing session streaming
+- [ ] Tournament and competition features
+- [ ] Fishing gear and tackle management
+- [ ] Advanced mapping and GPS features
 
