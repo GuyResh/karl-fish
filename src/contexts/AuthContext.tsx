@@ -65,12 +65,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           const currentProfile = await AuthService.getCurrentProfile();
           setProfile(currentProfile);
+          // Set current user ID for database operations (normalized to lowercase)
+          if (currentProfile?.username) {
+            localStorage.setItem('currentUserId', currentProfile.username.toLowerCase());
+          }
         } catch (error) {
           console.error('Error getting profile:', error);
           setProfile(null);
         }
       } else {
         setProfile(null);
+        // Clear current user ID when logged out
+        localStorage.removeItem('currentUserId');
       }
       
       setLoading(false);

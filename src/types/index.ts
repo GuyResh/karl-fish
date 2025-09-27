@@ -33,6 +33,7 @@ export interface WaterConditions {
 
 export interface FishCatch {
   id: string;
+  userId?: string; // User who owns this catch
   sessionId?: string; // Link to parent session
   species: string;
   length: number; // Length in cm
@@ -47,6 +48,7 @@ export interface FishCatch {
 
 export interface FishingSession {
   id: string;
+  userId?: string; // User who owns this session
   date: Date;
   startTime: Date;
   endTime?: Date;
@@ -63,6 +65,7 @@ export interface FishingSession {
 
 export interface NMEAData {
   id?: string;
+  userId?: string; // User who owns this NMEA data
   timestamp: Date;
   latitude?: number;
   longitude?: number;

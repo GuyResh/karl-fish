@@ -10,11 +10,11 @@ export class FishingDatabase extends Dexie {
 
   constructor() {
     super('FishingDatabase');
-    this.version(1).stores({
-      sessions: 'id, date, startTime, endTime, location.latitude, location.longitude',
-      catches: 'id, species, length, weight, condition, sessionId',
-      settings: 'id',
-      nmeaData: 'id, timestamp, latitude, longitude'
+    this.version(2).stores({
+      sessions: 'id, userId, date, startTime, endTime, location.latitude, location.longitude',
+      catches: 'id, userId, species, length, weight, condition, sessionId',
+      settings: 'id, userId',
+      nmeaData: 'id, userId, timestamp, latitude, longitude'
     });
   }
 }
@@ -23,8 +23,21 @@ export const db = new FishingDatabase();
 
 // Database helper functions
 export class FishingDataService {
+  // Helper to get current user ID (normalized username)
+  private static getCurrentUserId(): string | null {
+    // This will be set by the auth context
+    const userId = localStorage.getItem('currentUserId');
+    return userId ? userId.toLowerCase() : null;
+  }
+
+  // Helper to get current user ID or default for offline mode
+  private static getCurrentUserIdOrDefault(): string {
+    const userId = this.getCurrentUserId();
+    return userId || 'offline-user'; // Default userId for offline mode
+  }
   // Session management
   static async createSession(session: Omit<FishingSession, 'id'>): Promise<string> {
+    const userId = this.getCurrentUserIdOrDefault();
     const id = crypto.randomUUID();
     const catches = session.catches || [];
     
@@ -32,6 +45,7 @@ export class FishingDataService {
     const newSession: FishingSession = {
       ...session,
       id,
+      userId,
       catches: []
     };
     
@@ -42,6 +56,7 @@ export class FishingDataService {
       const catchWithSessionId = {
         ...catch_,
         id: catch_.id || crypto.randomUUID(),
+        userId,
         sessionId: id
       };
       await db.catches.add(catchWithSessionId);
@@ -54,7 +69,18 @@ export class FishingDataService {
   }
 
   static async getSession(id: string): Promise<FishingSession | undefined> {
-    const session = await db.sessions.get(id);
+    const userId = this.getCurrentUserIdOrDefault();
+    
+    // Get session (with or without userId filter)
+    let session;
+    if (this.getCurrentUserId()) {
+      // Logged in user - only their session
+      session = await db.sessions.where('id').equals(id).and(s => s.userId === userId).first();
+    } else {
+      // Offline mode - get any session with this ID
+      session = await db.sessions.where('id').equals(id).first();
+    }
+    
     if (session) {
       // Convert date strings back to Date objects
       const convertedSession = {
@@ -63,54 +89,61 @@ export class FishingDataService {
         startTime: new Date(session.startTime),
         endTime: session.endTime ? new Date(session.endTime) : undefined
       };
-      convertedSession.catches = await db.catches.where('sessionId').equals(id).toArray();
+      
+      // Load catches
+      if (this.getCurrentUserId()) {
+        // Logged in user - only their catches
+        convertedSession.catches = await db.catches.where('sessionId').equals(id).and(c => c.userId === userId).toArray();
+      } else {
+        // Offline mode - get all catches for this session
+        convertedSession.catches = await db.catches.where('sessionId').equals(id).toArray();
+      }
+      
       return convertedSession;
     }
-    return session;
+    return undefined;
   }
 
   static async getAllSessions(): Promise<FishingSession[]> {
-    const sessions = await db.sessions.orderBy('date').reverse().toArray();
+    const userId = this.getCurrentUserIdOrDefault();
     
-    // Debug: Log the first session to see what we're getting
-    if (sessions.length > 0) {
-      console.log('Raw session data from DB:', {
-        date: sessions[0].date,
-        startTime: sessions[0].startTime,
-        endTime: sessions[0].endTime,
-        dateType: typeof sessions[0].date,
-        startTimeType: typeof sessions[0].startTime,
-        endTimeType: typeof sessions[0].endTime
-      });
+    // Get sessions for current user (or all if no user)
+    let sessions;
+    if (this.getCurrentUserId()) {
+      // Logged in user - only their data
+      sessions = await db.sessions
+        .where('userId')
+        .equals(userId)
+        .toArray();
+    } else {
+      // Offline mode - get all sessions (for backward compatibility)
+      sessions = await db.sessions.toArray();
     }
     
-    // Convert date strings back to Date objects
-    const convertedSessions = sessions.map(session => {
-      const converted = {
-        ...session,
-        date: new Date(session.date),
-        startTime: new Date(session.startTime),
-        endTime: session.endTime ? new Date(session.endTime) : undefined
-      };
-      
-      // Debug: Log the converted session
-      if (sessions.indexOf(session) === 0) {
-        console.log('Converted session data:', {
-          date: converted.date,
-          startTime: converted.startTime,
-          endTime: converted.endTime,
-          dateValid: !isNaN(converted.date.getTime()),
-          startTimeValid: !isNaN(converted.startTime.getTime()),
-          endTimeValid: converted.endTime ? !isNaN(converted.endTime.getTime()) : true
-        });
-      }
-      
-      return converted;
+    // Sort by date (most recent first)
+    const sortedSessions = sessions.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA; // Reverse order (newest first)
     });
+    
+    // Convert date strings back to Date objects
+    const convertedSessions = sortedSessions.map((session: FishingSession) => ({
+      ...session,
+      date: new Date(session.date),
+      startTime: new Date(session.startTime),
+      endTime: session.endTime ? new Date(session.endTime) : undefined
+    }));
     
     // Load catches for each session
     for (const session of convertedSessions) {
-      session.catches = await db.catches.where('sessionId').equals(session.id).toArray();
+      if (this.getCurrentUserId()) {
+        // Logged in user - only their catches
+        session.catches = await db.catches.where('sessionId').equals(session.id).and(c => c.userId === userId).toArray();
+      } else {
+        // Offline mode - get all catches for this session
+        session.catches = await db.catches.where('sessionId').equals(session.id).toArray();
+      }
     }
     
     return convertedSessions;
@@ -249,7 +282,17 @@ export class FishingDataService {
     totalFishingTime: number; // in hours
   }> {
     const sessions = await this.getAllSessions();
-    const allCatches = await db.catches.toArray();
+    
+    // Get catches based on user status
+    let allCatches;
+    if (this.getCurrentUserId()) {
+      // Logged in user - only their catches
+      const userId = this.getCurrentUserId()!;
+      allCatches = await db.catches.where('userId').equals(userId).toArray();
+    } else {
+      // Offline mode - get all catches
+      allCatches = await db.catches.toArray();
+    }
     
     const totalSessions = sessions.length;
     const totalCatches = allCatches.length;

@@ -93,7 +93,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
       setShowEmailConfirmation(true);
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      // Provide more specific error messages
+      if (err.message?.includes('username') || err.message?.includes('duplicate')) {
+        setError('Username already taken. Please choose a different username.');
+      } else if (err.message?.includes('email')) {
+        setError('Email already registered. Please use a different email or try signing in.');
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
