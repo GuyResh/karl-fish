@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Users, Clock, Eye, EyeOff } from 'lucide-react';
+import { RefreshCw, Users, Eye, EyeOff, UserPlus, MapPin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SharingService } from '../services/sharingService';
 import { DataSyncService } from '../services/dataSyncService';
@@ -21,12 +21,27 @@ const Share: React.FC = () => {
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [, setIsOfflineMode] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+  const [allSpecies, setAllSpecies] = useState<{[species: string]: number}>({});
+  const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       loadData();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (sharedSessions.length > 0) {
+      extractSpeciesCounts();
+      processSharedSessions();
+    }
+  }, [sharedSessions, selectedUsers, selectedSpecies]);
+
+  useEffect(() => {
+    processSharedSessions();
+  }, [selectedUsers, selectedSpecies, sharedSessions]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -105,6 +120,67 @@ const Share: React.FC = () => {
     );
   };
 
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const toggleSpeciesSelection = (species: string) => {
+    setSelectedSpecies(prev => 
+      prev.includes(species) 
+        ? prev.filter(s => s !== species)
+        : [...prev, species]
+    );
+  };
+
+  const processSharedSessions = () => {
+    const sessions = sharedSessions.filter(session => {
+      const userMatch = selectedUsers.length === 0 || selectedUsers.includes(session.user_id);
+      const speciesMatch = selectedSpecies.length === 0 || 
+        session.session_data.catches.some((catch_: any) => 
+          selectedSpecies.includes(catch_.species)
+        );
+      return userMatch && speciesMatch;
+    });
+
+    // Flatten all catches from filtered sessions
+    const allCatches: any[] = [];
+    sessions.forEach(session => {
+      if (session.session_data.catches) {
+        session.session_data.catches.forEach((catch_: any) => {
+          allCatches.push({
+            ...catch_,
+            sessionDate: session.session_data.date,
+            sessionStartTime: session.session_data.startTime,
+            userName: friends.find(f => f.id === session.user_id)?.username || 'Unknown',
+            location: session.session_data.location
+          });
+        });
+      }
+    });
+
+    // Sort by date (most recent first)
+    allCatches.sort((a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime());
+    
+    setFilteredSessions(allCatches);
+  };
+
+  const extractSpeciesCounts = () => {
+    const speciesCount: {[species: string]: number} = {};
+    sharedSessions.forEach(session => {
+      if (session.session_data.catches) {
+        session.session_data.catches.forEach((catch_: any) => {
+          const species = catch_.species || 'Unknown';
+          speciesCount[species] = (speciesCount[species] || 0) + 1;
+        });
+      }
+    });
+    setAllSpecies(speciesCount);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -155,7 +231,8 @@ const Share: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">
-            Share
+            <Users size={20} />
+            Shared Sessions from Friends
           </h1>
           <div className="header-actions">
             <button
@@ -185,54 +262,105 @@ const Share: React.FC = () => {
             </div>
           )}
 
+          {/* Two Panel Layout */}
+          <div className="share-panels">
+            {/* Left Panel - Users */}
+            <div className="users-panel">
+              <h3>Anglers</h3>
+              <div className="users-list">
+                {isLoading ? (
+                  <div className="loading">Loading anglers...</div>
+                ) : friends.length === 0 ? (
+                  <div className="no-data">No friends found</div>
+                ) : (
+                  friends.map(friend => (
+                    <div key={friend.id} className="user-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(friend.id)}
+                        onChange={() => toggleUserSelection(friend.id)}
+                        className="user-checkbox"
+                      />
+                      <span className="user-name">{friend.username}</span>
+                      <div className="friend-status">
+                        {selectedUsers.includes(friend.id) ? (
+                          <Users size={16} className="friend-icon" />
+                        ) : (
+                          <UserPlus size={16} className="invite-icon" />
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
 
-          {/* Shared Sessions from Others */}
-          <div className="shared-sessions">
-            <h3>
-              <Users size={18} />
-              Shared Sessions from Friends
-            </h3>
-            
-            {isLoading ? (
-              <div className="loading-spinner"></div>
-            ) : sharedSessions.length === 0 ? (
-              <div className="empty-state">
-                <p>No shared sessions available yet.</p>
-                <p>Add friends to see their shared sessions!</p>
+            {/* Right Panel - Species */}
+            <div className="species-panel">
+              <h3>Species</h3>
+              <div className="species-list">
+                {Object.entries(allSpecies).length === 0 ? (
+                  <div className="no-data">No species data</div>
+                ) : (
+                  Object.entries(allSpecies)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([species, count]) => (
+                      <div key={species} className="species-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedSpecies.includes(species)}
+                          onChange={() => toggleSpeciesSelection(species)}
+                          className="species-checkbox"
+                        />
+                        <span className="species-name">{species}</span>
+                        <span className="species-count">({count})</span>
+                      </div>
+                    ))
+                )}
               </div>
-            ) : (
-              <div className="sessions-grid">
-                {sharedSessions.map((session) => (
-                  <div key={session.id} className="session-card">
-                    <div className="session-header">
-                      <div className="session-info">
-                        <h4>{session.user?.display_name || session.user?.username}</h4>
-                        <div className="session-meta">
-                          <span className="date">
-                            <Clock size={14} />
-                            {formatDate(session.created_at)}
-                          </span>
-                          <span className="privacy-level">
-                            {session.privacy_level === 'public' && <Eye size={14} />}
-                            {session.privacy_level === 'friends' && <Users size={14} />}
-                            {session.privacy_level === 'private' && <EyeOff size={14} />}
-                            {session.privacy_level.charAt(0).toUpperCase() + session.privacy_level.slice(1)}
-                          </span>
-                        </div>
+            </div>
+          </div>
+
+          {/* Summary Panel */}
+          <div className="summary-panel">
+            <h3>Session Summary</h3>
+            <div className="summary-content">
+              <div className="summary-list">
+                {filteredSessions.length === 0 ? (
+                  <div className="no-data">No sessions match your filters</div>
+                ) : (
+                  filteredSessions.map((catch_, index) => (
+                    <div key={index} className="summary-item">
+                      <div className="summary-date">
+                        {new Date(catch_.sessionDate).toLocaleDateString()}
+                      </div>
+                      <div className="summary-time">
+                        {new Date(catch_.sessionStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <div className="summary-user">{catch_.userName}</div>
+                      <div className="summary-location">
+                        <MapPin size={14} />
+                        {catch_.location?.description || 'Unknown'}
+                      </div>
+                      <div className="summary-species">{catch_.species}</div>
+                      <div className="summary-measurements">
+                        {catch_.length ? `${catch_.length}"` : ''} {catch_.weight ? `${catch_.weight}lbs` : ''}
                       </div>
                     </div>
-                    
-                    <div className="session-details">
-                      <div className="session-data">
-                        <p><strong>Species:</strong> {session.session_data?.catches?.map((c: any) => c.species).join(', ') || 'None'}</p>
-                        <p><strong>Location:</strong> {session.session_data?.location?.description || 'Unknown'}</p>
-                        <p><strong>Catches:</strong> {session.session_data?.catches?.length || 0}</p>
-                      </div>
-                    </div>
+                  ))
+                )}
+              </div>
+              
+              {/* Map */}
+              <div className="summary-map">
+                <h4>Catch Locations</h4>
+                <div className="map-container">
+                  <div className="map-placeholder">
+                    Map showing {filteredSessions.length} catch locations
                   </div>
-                ))}
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Share Modal */}
