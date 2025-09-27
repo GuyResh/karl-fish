@@ -34,7 +34,7 @@ function migrateSettings(settings: any): AppSettings {
     angler: settings.angler || {
       login: '',
       password: '',
-      initials: ''
+      name: ''
     },
     units: settings.units || {
       temperature: 'fahrenheit',
@@ -84,7 +84,7 @@ function AppContent() {
             angler: {
               login: '',
               password: '',
-              initials: ''
+              name: ''
             },
             units: {
               temperature: 'fahrenheit',

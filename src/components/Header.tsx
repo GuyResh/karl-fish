@@ -131,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
           {user ? (
             <div className="user-info">
               <span className="user-name" style={{ color: 'white' }}>
-                {profile?.username || user.email}
+                {profile?.name ? profile.name.split(' ')[0] : profile?.username || user.email}
               </span>
               <button
                 onClick={signOut}

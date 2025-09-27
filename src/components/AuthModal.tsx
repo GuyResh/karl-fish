@@ -15,39 +15,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [initials, setInitials] = useState('');
+  const [name, setName] = useState('');
   const [loginUsername, setLoginUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-  const [initialsManuallyEdited, setInitialsManuallyEdited] = useState(false);
   const { signIn, signUp } = useAuth();
 
-  // Function to generate initials from username
-  const generateInitials = (username: string): string => {
-    if (!username.trim()) return '';
-    
-    const words = username.trim().split(/\s+/).filter(word => word.length > 0);
-    const initials = words.slice(0, 3).map(word => word.charAt(0).toUpperCase()).join('');
-    return initials;
-  };
-
-  // Handle username change and auto-generate initials
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUsername = e.target.value;
-    setUsername(newUsername);
-    
-    // Auto-generate initials if user hasn't manually edited them
-    if (!initialsManuallyEdited) {
-      setInitials(generateInitials(newUsername));
-    }
-  };
-
-  // Handle initials change and mark as manually edited
-  const handleInitialsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newInitials = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
-    setInitials(newInitials);
-    setInitialsManuallyEdited(true);
+  // Handle name change
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value.trim());
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -76,20 +53,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
     setError(null);
     setLoading(true);
 
-    if (!email || !password || !username || !initials) {
+    if (!email || !password || !username || !name) {
       setError('All fields are required.');
       setLoading(false);
       return;
     }
 
-    if (initials.length !== 3 || !/^[A-Z]{3}$/.test(initials)) {
-      setError('Initials must be exactly 3 uppercase letters.');
+    if (name.length < 2) {
+      setError('Name must be at least 2 characters.');
       setLoading(false);
       return;
     }
 
     try {
-      await signUp(email, password, username, initials);
+      await signUp(email, password, username, name);
       setShowEmailConfirmation(true);
       setError(null);
     } catch (err: any) {
@@ -209,7 +186,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
                   id={isLogin ? "loginUsername" : "username"}
                   className="form-input"
                   value={isLogin ? loginUsername : username}
-                  onChange={(e) => isLogin ? setLoginUsername(e.target.value) : handleUsernameChange(e)}
+                  onChange={(e) => isLogin ? setLoginUsername(e.target.value) : setUsername(e.target.value)}
                   placeholder={isLogin ? "Enter your username" : "Choose a username"}
                   required
                 />
@@ -250,18 +227,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="initials">
+                    <label className="form-label" htmlFor="name">
                       <User size={16} />
-                      Initials (3 letters)
+                      Full Name
                     </label>
                     <input
                       type="text"
-                      id="initials"
+                      id="name"
                       className="form-input"
-                      value={initials}
-                      onChange={handleInitialsChange}
-                      placeholder="ABC"
-                      maxLength={3}
+                      value={name}
+                      onChange={handleNameChange}
+                      placeholder="John Doe"
+                      minLength={2}
                       required
                     />
                   </div>

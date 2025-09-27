@@ -455,9 +455,9 @@ const Share: React.FC = () => {
                             />
                             <div className="friend-info">
                               <div className="friend-avatar">
-                                {friend.initials}
+                                {friend.name.charAt(0).toUpperCase()}
                               </div>
-                              <span>{friend.display_name || friend.username}</span>
+                              <span>{friend.name}</span>
                             </div>
                           </label>
                         ))}

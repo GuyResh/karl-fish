@@ -104,7 +104,7 @@ export interface AppSettings {
   angler: {
     login?: string;
     password?: string;
-    initials?: string;
+    name?: string;
   };
   units: {
     temperature: 'celsius' | 'fahrenheit';

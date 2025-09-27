@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Mail, Lock, User, Hash } from 'lucide-react';
+import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register: React.FC = () => {
@@ -9,7 +9,7 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: '',
     username: '',
-    initials: ''
+    name: ''
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ const Register: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'initials' ? value.toUpperCase().replace(/[^A-Z]/g, '') : value
+      [name]: name === 'name' ? value.trim() : value
     }));
   };
 
@@ -45,15 +45,15 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (formData.initials.length !== 3) {
-      setError('Initials must be exactly 3 letters');
+    if (formData.name.length < 2) {
+      setError('Name must be at least 2 characters');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await signUp(formData.email, formData.password, formData.username, formData.initials);
+      await signUp(formData.email, formData.password, formData.username, formData.name);
       navigate('/');
     } catch (error: any) {
       setError(error.message || 'Registration failed');
@@ -114,18 +114,17 @@ const Register: React.FC = () => {
 
             <div className="form-group">
               <label className="form-label">
-                <Hash size={16} />
-                Initials
+                <User size={16} />
+                Full Name
               </label>
               <input
                 type="text"
-                name="initials"
-                value={formData.initials}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 className="form-input"
-                placeholder="ABC"
-                maxLength={3}
-                style={{ width: '80px', textTransform: 'uppercase' }}
+                placeholder="John Doe"
+                minLength={2}
                 required
               />
             </div>

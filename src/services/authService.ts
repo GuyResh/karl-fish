@@ -2,14 +2,14 @@ import { supabase, Profile } from '../lib/supabase';
 import { User, AuthError } from '@supabase/supabase-js';
 
 export class AuthService {
-  static async signUp(email: string, password: string, username: string, initials: string) {
+  static async signUp(email: string, password: string, username: string, name: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           username,
-          initials: initials.toUpperCase()
+          name: name.trim()
         }
       }
     });
@@ -18,7 +18,7 @@ export class AuthService {
 
     // Create user profile
     if (data.user) {
-      await this.createProfile(data.user.id, username, initials);
+      await this.createProfile(data.user.id, username, name);
     }
 
     return data;
@@ -67,14 +67,13 @@ export class AuthService {
     return data;
   }
 
-  static async createProfile(userId: string, username: string, initials: string) {
+  static async createProfile(userId: string, username: string, name: string) {
     const { error } = await supabase
       .from('profiles')
       .insert({
         id: userId,
         username,
-        initials: initials.toUpperCase(),
-        display_name: username
+        name: name.trim()
       });
 
     if (error) throw error;
@@ -96,7 +95,7 @@ export class AuthService {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .or(`username.ilike.%${query}%, display_name.ilike.%${query}%`)
+      .or(`username.ilike.%${query}%, name.ilike.%${query}%`)
       .limit(10);
 
     if (error) throw error;

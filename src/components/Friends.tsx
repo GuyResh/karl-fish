@@ -149,10 +149,10 @@ const Friends: React.FC = () => {
                   <div key={user.id} className="user-card">
                     <div className="user-info">
                       <div className="user-avatar">
-                        {user.initials}
+                        {user.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h4>{user.display_name || user.username}</h4>
+                        <h4>{user.name}</h4>
                         <p>@{user.username}</p>
                       </div>
                     </div>
@@ -177,11 +177,11 @@ const Friends: React.FC = () => {
                 {pendingRequests.map(request => (
                   <div key={request.id} className="user-card">
                     <div className="user-info">
-                      <div className="user-avatar">
-                        {request.requester?.initials}
-                      </div>
+                        <div className="user-avatar">
+                          {request.requester?.name?.charAt(0).toUpperCase()}
+                        </div>
                       <div>
-                        <h4>{request.requester?.display_name || request.requester?.username}</h4>
+                        <h4>{request.requester?.name}</h4>
                         <p>@{request.requester?.username}</p>
                       </div>
                     </div>
@@ -215,11 +215,11 @@ const Friends: React.FC = () => {
                 {sentRequests.map(request => (
                   <div key={request.id} className="user-card">
                     <div className="user-info">
-                      <div className="user-avatar">
-                        {request.addressee?.initials}
-                      </div>
+                        <div className="user-avatar">
+                          {request.addressee?.name?.charAt(0).toUpperCase()}
+                        </div>
                       <div>
-                        <h4>{request.addressee?.display_name || request.addressee?.username}</h4>
+                        <h4>{request.addressee?.name}</h4>
                         <p>@{request.addressee?.username}</p>
                       </div>
                     </div>
@@ -243,10 +243,10 @@ const Friends: React.FC = () => {
                   <div key={friend.id} className="user-card">
                     <div className="user-info">
                       <div className="user-avatar">
-                        {friend.initials}
+                        {friend.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h4>{friend.display_name || friend.username}</h4>
+                        <h4>{friend.name}</h4>
                         <p>@{friend.username}</p>
                       </div>
                     </div>

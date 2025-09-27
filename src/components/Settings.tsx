@@ -53,6 +53,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
     }
   };
 
+
   const toggleTestMode = async () => {
     if (isTestModeActive) {
       // Stop test mode
@@ -130,18 +131,17 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 placeholder="Enter your password"
                 style={{ width: '225px' }}
               />
-              <span style={{ fontWeight: '500' }}>Initials</span>
+              <span style={{ fontWeight: '500' }}>Name</span>
               <input
                 type="text"
                 className="form-input"
-                value={localSettings.angler?.initials || ''}
+                value={localSettings.angler?.name || ''}
                 onChange={(e) => {
-                  const value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
-                  handleInputChange('angler', 'initials', value);
+                  const value = e.target.value.trim();
+                  handleInputChange('angler', 'name', value);
                 }}
-                placeholder="ABC"
-                maxLength={3}
-                style={{ width: '60px' }}
+                placeholder="John Doe"
+                style={{ width: '150px' }}
               />
             </div>
           </div>
