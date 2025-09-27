@@ -1,4 +1,4 @@
-import { supabase, SharedSession, Profile } from '../lib/supabase';
+import { supabase, Session, Profile } from '../lib/supabase';
 import { AuthService } from './authService';
 import { FriendService } from './friendService';
 import { FishingSession } from '../types';
@@ -13,7 +13,7 @@ export class SharingService {
     if (!profile) throw new Error('Not authenticated');
 
     const { data, error } = await supabase
-      .from('shared_sessions')
+      .from('sessions')
       .insert({
         user_id: profile.id,
         session_data: session,
@@ -32,7 +32,7 @@ export class SharingService {
     return data;
   }
 
-  static async getSharedSessions(): Promise<SharedSession[]> {
+  static async getSharedSessions(): Promise<Session[]> {
     const profile = await AuthService.getCurrentProfile();
     if (!profile) throw new Error('Not authenticated');
 
@@ -42,7 +42,7 @@ export class SharingService {
 
     // Get public sessions and friend sessions
     const { data, error } = await supabase
-      .from('shared_sessions')
+      .from('sessions')
       .select(`
         *,
         user:profiles(*)
@@ -54,12 +54,12 @@ export class SharingService {
     return data || [];
   }
 
-  static async getUserSessions(): Promise<SharedSession[]> {
+  static async getUserSessions(): Promise<Session[]> {
     const profile = await AuthService.getCurrentProfile();
     if (!profile) throw new Error('Not authenticated');
 
     const { data, error } = await supabase
-      .from('shared_sessions')
+      .from('sessions')
       .select(`
         *,
         user:profiles(*)
@@ -71,12 +71,12 @@ export class SharingService {
     return data || [];
   }
 
-  static async deleteSharedSession(sessionId: string) {
+  static async deleteSession(sessionId: string) {
     const user = await AuthService.getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
     const { error } = await supabase
-      .from('shared_sessions')
+      .from('sessions')
       .delete()
       .eq('id', sessionId)
       .eq('user_id', user.id);
@@ -89,7 +89,7 @@ export class SharingService {
     if (!user) throw new Error('Not authenticated');
 
     const { error } = await supabase
-      .from('shared_sessions')
+      .from('sessions')
       .update({ privacy_level: privacyLevel })
       .eq('id', sessionId)
       .eq('user_id', user.id);
@@ -113,7 +113,7 @@ export class SharingService {
     }
   }
 
-  static async getActivityFeed(): Promise<SharedSession[]> {
+  static async getActivityFeed(): Promise<Session[]> {
     const user = await AuthService.getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
@@ -124,7 +124,7 @@ export class SharingService {
     if (friendIds.length === 0) {
       // If no friends, return public sessions only
       const { data, error } = await supabase
-        .from('shared_sessions')
+        .from('sessions')
         .select(`
           *,
           user:profiles(*)
@@ -139,7 +139,7 @@ export class SharingService {
 
     // Get sessions from friends and public sessions
     const { data, error } = await supabase
-      .from('shared_sessions')
+      .from('sessions')
       .select(`
         *,
         user:profiles(*)
@@ -150,5 +150,28 @@ export class SharingService {
 
     if (error) throw error;
     return data || [];
+  }
+
+  // New method for bulk session upload
+  static async uploadSessions(sessions: FishingSession[]): Promise<void> {
+    const profile = await AuthService.getCurrentProfile();
+    if (!profile) throw new Error('Not authenticated');
+
+    // Prepare sessions for bulk insert
+    const sessionsToInsert = sessions.map(session => ({
+      user_id: profile.id,
+      session_data: session,
+      privacy_level: session.shared ? 'friends' : 'private'
+    }));
+
+    // Use upsert to handle both inserts and updates
+    const { error } = await supabase
+      .from('sessions')
+      .upsert(sessionsToInsert, {
+        onConflict: 'user_id,session_data->id',
+        ignoreDuplicates: false
+      });
+
+    if (error) throw error;
   }
 }

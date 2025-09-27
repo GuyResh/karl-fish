@@ -2,8 +2,9 @@ import { OfflineService } from './offlineService';
 import { FriendService } from './friendService';
 import { SharingService } from './sharingService';
 import { SyncTrackingService } from './syncTrackingService';
-import { Profile, SharedSession } from '../lib/supabase';
+import { Profile, Session } from '../lib/supabase';
 import { AuthService } from './authService';
+import { FishingDataService } from '../database';
 
 export class DataSyncService {
   static async syncAllData(): Promise<void> {
@@ -60,9 +61,24 @@ export class DataSyncService {
 
   static async syncLocalDataToCloud(): Promise<void> {
     try {
-      // This would sync local fishing sessions to the cloud
-      // For now, we'll just log that this would happen
-      console.log('Local data sync to cloud would happen here');
+      const profile = await AuthService.getCurrentProfile();
+      if (!profile) {
+        console.log('No user logged in, skipping local data sync');
+        return;
+      }
+
+      // Get all local sessions
+      const localSessions = await FishingDataService.getAllSessions();
+      console.log(`Found ${localSessions.length} local sessions to sync`);
+
+      if (localSessions.length === 0) {
+        console.log('No local sessions to sync');
+        return;
+      }
+
+      // Use bulk upload method
+      await SharingService.uploadSessions(localSessions);
+      console.log(`Successfully synced ${localSessions.length} sessions to cloud`);
     } catch (error) {
       console.error('Error syncing local data to cloud:', error);
     }
@@ -72,7 +88,7 @@ export class DataSyncService {
     return await OfflineService.getFriendsData();
   }
 
-  static async getOfflineSharedSessions(): Promise<SharedSession[]> {
+  static async getOfflineSharedSessions(): Promise<Session[]> {
     return await OfflineService.getSharedSessions();
   }
 

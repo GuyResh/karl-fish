@@ -28,14 +28,18 @@ export interface Friendship {
   addressee?: Profile;
 }
 
-export interface SharedSession {
+export interface Session {
   id: string;
   user_id: string;
   session_data: any;
   privacy_level: 'public' | 'friends' | 'private';
   created_at: string;
+  updated_at: string;
   user?: Profile;
 }
+
+// Keep SharedSession for backward compatibility
+export type SharedSession = Session;
 
 export interface FriendPermission {
   id: string;

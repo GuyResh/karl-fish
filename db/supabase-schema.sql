@@ -67,12 +67,12 @@ CREATE TABLE IF NOT EXISTS friend_permissions (
   UNIQUE(user_id, friend_id)
 );
 
--- Create shared_sessions table - idempotent
-CREATE TABLE IF NOT EXISTS shared_sessions (
+-- Create sessions table - idempotent
+CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) NOT NULL,
   session_data JSONB NOT NULL,
-  privacy_level TEXT CHECK (privacy_level IN ('public', 'friends', 'private')) DEFAULT 'friends',
+  privacy_level TEXT CHECK (privacy_level IN ('public', 'friends', 'private')) DEFAULT 'private',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -81,10 +81,10 @@ CREATE TABLE IF NOT EXISTS shared_sessions (
 CREATE INDEX IF NOT EXISTS idx_friendships_requester ON friendships(requester_id);
 CREATE INDEX IF NOT EXISTS idx_friendships_addressee ON friendships(addressee_id);
 CREATE INDEX IF NOT EXISTS idx_friendships_status ON friendships(status);
-CREATE INDEX IF NOT EXISTS idx_shared_sessions_user ON shared_sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_shared_sessions_privacy ON shared_sessions(privacy_level);
-CREATE INDEX IF NOT EXISTS idx_shared_sessions_created ON shared_sessions(created_at);
-CREATE INDEX IF NOT EXISTS idx_shared_sessions_updated ON shared_sessions(updated_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_privacy ON sessions(privacy_level);
+CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_updated ON sessions(updated_at);
 
 -- Create function to update updated_at timestamp - idempotent
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -95,10 +95,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create trigger for shared_sessions updated_at - idempotent
-DROP TRIGGER IF EXISTS update_shared_sessions_updated_at ON shared_sessions;
-CREATE TRIGGER update_shared_sessions_updated_at
-    BEFORE UPDATE ON shared_sessions
+-- Create trigger for sessions updated_at - idempotent
+DROP TRIGGER IF EXISTS update_sessions_updated_at ON sessions;
+CREATE TRIGGER update_sessions_updated_at
+    BEFORE UPDATE ON sessions
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
@@ -149,15 +149,15 @@ DROP POLICY IF EXISTS "Users can manage own permissions" ON friend_permissions;
 CREATE POLICY "Users can manage own permissions" ON friend_permissions
   FOR ALL USING (auth.uid() = user_id);
 
--- Shared sessions policies
-ALTER TABLE shared_sessions ENABLE ROW LEVEL SECURITY;
+-- Sessions policies
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view public sessions" ON shared_sessions;
-CREATE POLICY "Users can view public sessions" ON shared_sessions
+DROP POLICY IF EXISTS "Users can view public sessions" ON sessions;
+CREATE POLICY "Users can view public sessions" ON sessions
   FOR SELECT USING (privacy_level = 'public');
 
-DROP POLICY IF EXISTS "Users can view friends' sessions" ON shared_sessions;
-CREATE POLICY "Users can view friends' sessions" ON shared_sessions
+DROP POLICY IF EXISTS "Users can view friends' sessions" ON sessions;
+CREATE POLICY "Users can view friends' sessions" ON sessions
   FOR SELECT USING (
     privacy_level = 'friends' AND
     EXISTS (
@@ -168,20 +168,20 @@ CREATE POLICY "Users can view friends' sessions" ON shared_sessions
     )
   );
 
-DROP POLICY IF EXISTS "Users can view own sessions" ON shared_sessions;
-CREATE POLICY "Users can view own sessions" ON shared_sessions
+DROP POLICY IF EXISTS "Users can view own sessions" ON sessions;
+CREATE POLICY "Users can view own sessions" ON sessions
   FOR SELECT USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can insert own sessions" ON shared_sessions;
-CREATE POLICY "Users can insert own sessions" ON shared_sessions
+DROP POLICY IF EXISTS "Users can insert own sessions" ON sessions;
+CREATE POLICY "Users can insert own sessions" ON sessions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can update own sessions" ON shared_sessions;
-CREATE POLICY "Users can update own sessions" ON shared_sessions
+DROP POLICY IF EXISTS "Users can update own sessions" ON sessions;
+CREATE POLICY "Users can update own sessions" ON sessions
   FOR UPDATE USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can delete own sessions" ON shared_sessions;
-CREATE POLICY "Users can delete own sessions" ON shared_sessions
+DROP POLICY IF EXISTS "Users can delete own sessions" ON sessions;
+CREATE POLICY "Users can delete own sessions" ON sessions
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Functions

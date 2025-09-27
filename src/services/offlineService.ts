@@ -1,5 +1,5 @@
 import { FishingSession, FishCatch, NMEAData, AppSettings } from '../types';
-import { Profile, SharedSession } from '../lib/supabase';
+import { Profile, Session } from '../lib/supabase';
 
 export interface OfflineData {
   sessions: FishingSession[];
@@ -8,7 +8,7 @@ export interface OfflineData {
   settings: AppSettings | null;
   userProfile: Profile | null;
   friendsData: Profile[];
-  sharedSessions: SharedSession[];
+  sharedSessions: Session[];
   lastSync: string | null;
   isOfflineMode: boolean;
 }
@@ -102,14 +102,14 @@ export class OfflineService {
     return data.friendsData || [];
   }
 
-  static async syncSharedSessions(sessions: SharedSession[]): Promise<void> {
+  static async syncSharedSessions(sessions: Session[]): Promise<void> {
     const data = await this.getOfflineData();
     data.sharedSessions = sessions;
     data.lastSync = new Date().toISOString();
     await this.saveOfflineData(data);
   }
 
-  static async getSharedSessions(): Promise<SharedSession[]> {
+  static async getSharedSessions(): Promise<Session[]> {
     const data = await this.getOfflineData();
     return data.sharedSessions || [];
   }

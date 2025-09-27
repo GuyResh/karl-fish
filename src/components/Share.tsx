@@ -4,13 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { SharingService } from '../services/sharingService';
 import { DataSyncService } from '../services/dataSyncService';
 import { OfflineService } from '../services/offlineService';
-import { Profile, SharedSession } from '../lib/supabase';
+import { Profile, Session } from '../lib/supabase';
 import { FishingSession } from '../types';
 
 const Share: React.FC = () => {
   const { user } = useAuth();
-  const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
-  const [, setMySessions] = useState<SharedSession[]>([]);
+  const [sharedSessions, setSharedSessions] = useState<Session[]>([]);
+  const [, setMySessions] = useState<Session[]>([]);
   const [friends, setFriends] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
