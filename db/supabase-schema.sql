@@ -35,9 +35,7 @@
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
-  initials TEXT NOT NULL CHECK (length(initials) = 3),
-  display_name TEXT,
-  bio TEXT,
+  name TEXT NOT NULL,
   location TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -91,21 +89,8 @@ CREATE INDEX IF NOT EXISTS idx_sessions_updated ON sessions(updated_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_user_session_id 
 ON sessions(user_id, (session_data->>'id'));
 
--- Create function to update updated_at timestamp - idempotent
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
 -- Create trigger for sessions updated_at - idempotent
 DROP TRIGGER IF EXISTS update_sessions_updated_at ON sessions;
-CREATE TRIGGER update_sessions_updated_at
-    BEFORE UPDATE ON sessions
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
 
 -- Row Level Security Policies - idempotent
 
@@ -190,17 +175,29 @@ CREATE POLICY "Users can delete own sessions" ON sessions
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Functions
+-- Drop all triggers first, then functions to avoid dependency conflicts
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_friendship_accepted ON friendships;
+DROP TRIGGER IF EXISTS normalize_username_trigger ON profiles;
+DROP TRIGGER IF EXISTS update_sessions_updated_at ON sessions;
+
+-- Drop all functions
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.create_friend_permissions() CASCADE;
+DROP FUNCTION IF EXISTS public.normalize_username() CASCADE;
+DROP FUNCTION IF EXISTS public.update_updated_at_column() CASCADE;
+DROP FUNCTION IF EXISTS public.get_user_email_by_username(TEXT);
+DROP FUNCTION IF EXISTS public.get_profile_with_email(UUID);
 
 -- Function to automatically create profile on user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
+CREATE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, initials, display_name)
+  INSERT INTO public.profiles (id, username, name)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'username', 'user' || substr(NEW.id::text, 1, 8)),
-    COALESCE(NEW.raw_user_meta_data->>'initials', 'USR'),
-    COALESCE(NEW.raw_user_meta_data->>'username', 'user' || substr(NEW.id::text, 1, 8))
+    COALESCE(NEW.raw_user_meta_data->>'name', 'User')
   );
   RETURN NEW;
 END;
@@ -213,7 +210,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Function to create default friend permissions
-CREATE OR REPLACE FUNCTION public.create_friend_permissions()
+CREATE FUNCTION public.create_friend_permissions()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Create permissions for both users when friendship is accepted
@@ -234,7 +231,7 @@ CREATE TRIGGER on_friendship_accepted
   FOR EACH ROW EXECUTE FUNCTION public.create_friend_permissions();
 
 -- Function to normalize username to lowercase
-CREATE OR REPLACE FUNCTION public.normalize_username()
+CREATE FUNCTION public.normalize_username()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.username = LOWER(NEW.username);
@@ -250,7 +247,7 @@ CREATE TRIGGER normalize_username_trigger
   EXECUTE FUNCTION public.normalize_username();
 
 -- Function to get user email by username (case-insensitive)
-CREATE OR REPLACE FUNCTION public.get_user_email_by_username(username_param TEXT)
+CREATE FUNCTION public.get_user_email_by_username(username_param TEXT)
 RETURNS TEXT AS $$
 DECLARE
   user_email TEXT;
@@ -265,14 +262,12 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to get profile with email
-CREATE OR REPLACE FUNCTION public.get_profile_with_email(profile_id UUID)
+CREATE FUNCTION public.get_profile_with_email(profile_id UUID)
 RETURNS TABLE (
   id UUID,
   username TEXT,
-  initials TEXT,
-  display_name TEXT,
+  name TEXT,
   email TEXT,
-  bio TEXT,
   location TEXT,
   created_at TIMESTAMP WITH TIME ZONE,
   updated_at TIMESTAMP WITH TIME ZONE
@@ -282,10 +277,8 @@ BEGIN
   SELECT 
     p.id,
     p.username,
-    p.initials,
-    p.display_name,
+    p.name,
     au.email,
-    p.bio,
     p.location,
     p.created_at,
     p.updated_at
@@ -294,3 +287,18 @@ BEGIN
   WHERE p.id = profile_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to update updated_at timestamp
+CREATE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create trigger for sessions updated_at
+CREATE TRIGGER update_sessions_updated_at
+    BEFORE UPDATE ON sessions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
