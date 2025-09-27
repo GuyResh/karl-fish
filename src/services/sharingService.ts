@@ -157,22 +157,43 @@ export class SharingService {
     const profile = await AuthService.getCurrentProfile();
     if (!profile) throw new Error('Not authenticated');
 
-    // Prepare sessions for bulk insert
-    const sessionsToInsert = sessions.map(session => ({
-      user_id: profile.id,
-      session_data: session,
-      privacy_level: session.shared ? 'friends' : 'private'
-    }));
+    // Process sessions one by one to handle conflicts properly
+    for (const session of sessions) {
+      try {
+        // First, try to find existing session with same user_id and session_data.id
+        const { data: existingSessions } = await supabase
+          .from('sessions')
+          .select('id')
+          .eq('user_id', profile.id)
+          .eq('session_data->>id', session.id);
 
-    // Use upsert to handle both inserts and updates
-    // Note: The unique index idx_sessions_user_session_id must exist in the database
-    const { error } = await supabase
-      .from('sessions')
-      .upsert(sessionsToInsert, {
-        onConflict: 'user_id,(session_data->>id)',
-        ignoreDuplicates: false
-      });
+        if (existingSessions && existingSessions.length > 0) {
+          // Update existing session
+          const { error } = await supabase
+            .from('sessions')
+            .update({
+              session_data: session,
+              privacy_level: session.shared ? 'friends' : 'private'
+            })
+            .eq('id', existingSessions[0].id);
 
-    if (error) throw error;
+          if (error) throw error;
+        } else {
+          // Insert new session
+          const { error } = await supabase
+            .from('sessions')
+            .insert({
+              user_id: profile.id,
+              session_data: session,
+              privacy_level: session.shared ? 'friends' : 'private'
+            });
+
+          if (error) throw error;
+        }
+      } catch (error) {
+        console.error(`Error processing session ${session.id}:`, error);
+        throw error;
+      }
+    }
   }
 }

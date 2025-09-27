@@ -103,6 +103,20 @@ export class AuthService {
     return data || [];
   }
 
+  static async getAllUsers(): Promise<Profile[]> {
+    const currentUser = await this.getCurrentUser();
+    if (!currentUser) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .neq('id', currentUser.id) // Exclude current user
+      .order('username');
+
+    if (error) throw error;
+    return data || [];
+  }
+
   static onAuthStateChange(callback: (user: User | null) => void) {
     return supabase.auth.onAuthStateChange((_event, session) => {
       callback(session?.user ?? null);

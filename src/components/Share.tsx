@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { SharingService } from '../services/sharingService';
 import { DataSyncService } from '../services/dataSyncService';
 import { OfflineService } from '../services/offlineService';
+import { AuthService } from '../services/authService';
+import { FriendService } from '../services/friendService';
 import { Profile, Session } from '../lib/supabase';
 import { FishingSession } from '../types';
 
@@ -11,6 +13,7 @@ const Share: React.FC = () => {
   const { user } = useAuth();
   const [sharedSessions, setSharedSessions] = useState<Session[]>([]);
   const [, setMySessions] = useState<Session[]>([]);
+  const [allUsers, setAllUsers] = useState<Profile[]>([]);
   const [friends, setFriends] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -37,11 +40,11 @@ const Share: React.FC = () => {
       extractSpeciesCounts();
       processSharedSessions();
     }
-  }, [sharedSessions, selectedUsers, selectedSpecies]);
+  }, [sharedSessions, selectedUsers, selectedSpecies, allUsers]);
 
   useEffect(() => {
     processSharedSessions();
-  }, [selectedUsers, selectedSpecies, sharedSessions]);
+  }, [selectedUsers, selectedSpecies, sharedSessions, allUsers]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -60,18 +63,21 @@ const Share: React.FC = () => {
         
         setSharedSessions(sharedData);
         setMySessions([]); // No my sessions in offline mode
+        setAllUsers(friendsData); // In offline mode, only show friends
         setFriends(friendsData);
         setStatus('Offline mode - showing cached data');
       } else {
         // Load online data
-        const [sharedData, myData, friendsData] = await Promise.all([
+        const [sharedData, myData, allUsersData, friendsData] = await Promise.all([
           SharingService.getSharedSessions(),
           SharingService.getUserSessions(),
-          DataSyncService.getOfflineFriendsData()
+          AuthService.getAllUsers(),
+          FriendService.getFriends()
         ]);
         
         setSharedSessions(sharedData);
         setMySessions(myData);
+        setAllUsers(allUsersData); // All users except current user
         setFriends(friendsData);
       }
       
@@ -155,7 +161,7 @@ const Share: React.FC = () => {
             ...catch_,
             sessionDate: session.session_data.date,
             sessionStartTime: session.session_data.startTime,
-            userName: friends.find(f => f.id === session.user_id)?.username || 'Unknown',
+            userName: allUsers.find(u => u.id === session.user_id)?.username || 'Unknown',
             location: session.session_data.location
           });
         });
@@ -270,27 +276,30 @@ const Share: React.FC = () => {
               <div className="users-list">
                 {isLoading ? (
                   <div className="loading">Loading anglers...</div>
-                ) : friends.length === 0 ? (
-                  <div className="no-data">No friends found</div>
+                ) : allUsers.length === 0 ? (
+                  <div className="no-data">No anglers found</div>
                 ) : (
-                  friends.map(friend => (
-                    <div key={friend.id} className="user-item">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.includes(friend.id)}
-                        onChange={() => toggleUserSelection(friend.id)}
-                        className="user-checkbox"
-                      />
-                      <span className="user-name">{friend.username}</span>
-                      <div className="friend-status">
-                        {selectedUsers.includes(friend.id) ? (
-                          <Users size={16} className="friend-icon" />
-                        ) : (
-                          <UserPlus size={16} className="invite-icon" />
-                        )}
+                  allUsers.map(user => {
+                    const isFriend = friends.some(f => f.id === user.id);
+                    return (
+                      <div key={user.id} className="user-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={() => toggleUserSelection(user.id)}
+                          className="user-checkbox"
+                        />
+                        <span className="user-name">{user.username}</span>
+                        <div className="friend-status" title={isFriend ? "Friend" : "Not a friend"}>
+                          {isFriend ? (
+                            <Users size={16} className="friend-icon" />
+                          ) : (
+                            <UserPlus size={16} className="invite-icon" />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
