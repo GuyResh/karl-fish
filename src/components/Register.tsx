@@ -21,7 +21,7 @@ const Register: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'name' ? value.trim().replace(/\s+/g, ' ') : value
+      [name]: value
     }));
   };
 
@@ -53,7 +53,9 @@ const Register: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await signUp(formData.email, formData.password, formData.username, formData.name);
+      // Normalize the name before sending
+      const normalizedName = formData.name.trim().replace(/\s+/g, ' ');
+      await signUp(formData.email, formData.password, formData.username, normalizedName);
       navigate('/');
     } catch (error: any) {
       setError(error.message || 'Registration failed');

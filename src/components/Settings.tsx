@@ -137,7 +137,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 className="form-input"
                 value={localSettings.angler?.name || ''}
                 onChange={(e) => {
-                  const value = e.target.value.trim().replace(/\s+/g, ' '); // Trim and normalize spaces
+                  const value = e.target.value; // Allow typing spaces freely
                   handleInputChange('angler', 'name', value);
                 }}
                 placeholder="John Doe"

@@ -24,7 +24,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
 
   // Handle name change
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value.trim().replace(/\s+/g, ' ')); // Trim and normalize spaces
+    setName(e.target.value); // Allow typing spaces freely
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -66,7 +66,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
     }
 
     try {
-      await signUp(email, password, username, name);
+      // Normalize the name before sending
+      const normalizedName = name.trim().replace(/\s+/g, ' ');
+      await signUp(email, password, username, normalizedName);
       setShowEmailConfirmation(true);
       setError(null);
     } catch (err: any) {
@@ -312,8 +314,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
             <div className="modal-content">
               <div style={{ textAlign: 'center', padding: '1rem' }}>
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📧</div>
-                <h3>Registration Successful!</h3>
+                <h3>Account Created Successfully!</h3>
                 <p>We've sent a confirmation email to <strong>{email}</strong></p>
+                <p><strong>You must confirm your email before you can sign in.</strong></p>
                 <p>Please check your inbox and click the confirmation link to activate your account.</p>
                 <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '1rem' }}>
                   Don't see the email? Check your spam folder.
@@ -325,7 +328,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onOfflineMode })
                 onClick={() => {
                   setShowEmailConfirmation(false);
                   setIsLogin(true);
-                  // Don't close the modal - just switch to login form
+                  onClose(); // Close the modal entirely after registration
                 }}
                 className="btn btn-primary"
                 style={{ width: '100%' }}
