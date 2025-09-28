@@ -55,8 +55,9 @@ const Transfer: React.FC = () => {
         await ExportService.exportAndDownload(options);
         setExportStatus('Transfer completed successfully!');
       } else {
-        await ExportService.exportToEmail(options);
-        setExportStatus('File downloaded and email client opened! Please attach the downloaded file to your email.');
+        // Use the new API email method
+        const result = await ExportService.sendEmailViaAPI(options);
+        setExportStatus(`Email sent successfully! ${result.sessionsCount} sessions exported as ${result.format.toUpperCase()}.`);
       }
     } catch (error) {
       console.error('Transfer error:', error);
@@ -573,9 +574,9 @@ const Transfer: React.FC = () => {
               <div className="info-item">
                 <h4>Email Transfer</h4>
                 <ul>
-                  <li>Downloads the transfer file to your computer</li>
-                  <li>Opens your default email client with pre-filled content</li>
-                  <li>You manually attach the downloaded file</li>
+                  <li>Sends export directly to your email address</li>
+                  <li>Professional email from karlfish@gmx.com</li>
+                  <li>File attached automatically - no manual steps</li>
                   <li>Perfect for sharing with fishing partners</li>
                 </ul>
               </div>

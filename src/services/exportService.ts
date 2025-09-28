@@ -92,6 +92,37 @@ export class ExportService {
     window.open(mailtoUrl, '_blank');
   }
 
+  static async sendEmailViaAPI(options: ExportOptions): Promise<{sessionsCount: number, format: string}> {
+    if (!options.emailRecipients || options.emailRecipients.length === 0) {
+      throw new Error('Email recipients are required');
+    }
+
+    // Get session data
+    const sessions = await this.getSessionsForExport(options);
+    const exportFormat = options.format || 'csv';
+
+    // Call the API endpoint
+    const response = await fetch('/api/send-export-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userEmail: options.emailRecipients[0], // Use first recipient as primary
+        format: exportFormat,
+        sessionData: sessions
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to send email');
+    }
+
+    const result = await response.json();
+    return result;
+  }
+
   private static async getSessionsForExport(options: ExportOptions): Promise<FishingSession[]> {
     if (options.dateRange) {
       return await FishingDataService.getSessionsByDateRange(
