@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Download, Mail, FileText, Filter, Upload, Share2 } from 'lucide-react';
 import { ExportService } from '../services/exportService';
 import { ExportOptions, FishCatch } from '../types';
@@ -22,6 +22,13 @@ const Transfer: React.FC = () => {
   const [exportStatus, setExportStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Set default email to user's registered email
+  useEffect(() => {
+    if (user?.email && !emailRecipients) {
+      setEmailRecipients(user.email);
+    }
+  }, [user?.email, emailRecipients]);
 
   const handleFormatChange = (format: 'csv' | 'json') => {
     setExportOptions(prev => ({ ...prev, format }));
