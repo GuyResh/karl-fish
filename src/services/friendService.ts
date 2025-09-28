@@ -19,6 +19,26 @@ export class FriendService {
 
   // Alias for sendFriendRequest for easier use
   static async addFriend(friendId: string) {
+    const user = await AuthService.getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Check if friendship already exists
+    const { data: existingFriendship } = await supabase
+      .from('friendships')
+      .select('id, status')
+      .or(`and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`)
+      .single();
+
+    if (existingFriendship) {
+      if (existingFriendship.status === 'accepted') {
+        throw new Error('Already friends with this user');
+      } else if (existingFriendship.status === 'pending') {
+        throw new Error('Friend request already sent');
+      } else if (existingFriendship.status === 'blocked') {
+        throw new Error('Cannot send friend request to blocked user');
+      }
+    }
+
     return this.sendFriendRequest(friendId);
   }
 
@@ -88,6 +108,19 @@ export class FriendService {
     if (error) throw error;
   }
 
+  static async unfriendUser(userId: string) {
+    const user = await AuthService.getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('friendships')
+      .delete()
+      .or(`and(requester_id.eq.${user.id},addressee_id.eq.${userId}),and(requester_id.eq.${userId},addressee_id.eq.${user.id})`)
+      .eq('status', 'accepted');
+
+    if (error) throw error;
+  }
+
   static async getFriends(): Promise<Profile[]> {
     const user = await AuthService.getCurrentUser();
     if (!user) throw new Error('Not authenticated');
@@ -146,6 +179,26 @@ export class FriendService {
       `)
       .eq('requester_id', user.id)
       .eq('status', 'pending');
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getAllFriendships(): Promise<any[]> {
+    const user = await AuthService.getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('friendships')
+      .select(`
+        id,
+        status,
+        requester_id,
+        addressee_id,
+        requester:profiles!friendships_requester_id_fkey(id, username, name, location),
+        addressee:profiles!friendships_addressee_id_fkey(id, username, name, location)
+      `)
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
 
     if (error) throw error;
     return data || [];

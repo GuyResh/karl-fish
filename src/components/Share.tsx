@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Users, Eye, EyeOff, UserPlus, MapPin } from 'lucide-react';
+import { RefreshCw, Users, Eye, EyeOff, UserPlus, MapPin, Check, X, UserMinus, UserCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SharingService } from '../services/sharingService';
 import { DataSyncService } from '../services/dataSyncService';
@@ -15,6 +15,7 @@ const Share: React.FC = () => {
   const [, setMySessions] = useState<Session[]>([]);
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
   const [friends, setFriends] = useState<Profile[]>([]);
+  const [friendships, setFriendships] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [status, setStatus] = useState('');
@@ -68,17 +69,19 @@ const Share: React.FC = () => {
         setStatus('Offline mode - showing cached data');
       } else {
         // Load online data
-        const [sharedData, myData, allUsersData, friendsData] = await Promise.all([
+        const [sharedData, myData, allUsersData, friendsData, friendshipsData] = await Promise.all([
           SharingService.getSharedSessions(),
           SharingService.getUserSessions(),
           AuthService.getAllUsers(),
-          FriendService.getFriends()
+          FriendService.getFriends(),
+          FriendService.getAllFriendships()
         ]);
         
         setSharedSessions(sharedData);
         setMySessions(myData);
         setAllUsers(allUsersData); // All users except current user
         setFriends(friendsData);
+        setFriendships(friendshipsData);
       }
       
     } catch (error) {
@@ -222,9 +225,63 @@ const Share: React.FC = () => {
       await FriendService.addFriend(friendId);
       setStatus(`Friend request sent to ${friendName}!`);
       await loadData(); // Reload data to update friend status
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding friend:', error);
-      setStatus(`Error adding friend: ${error}`);
+      
+      // Handle specific error messages
+      if (error.message?.includes('Already friends')) {
+        setStatus(`You are already friends with ${friendName}`);
+      } else if (error.message?.includes('Friend request already sent')) {
+        setStatus(`Friend request already sent to ${friendName}`);
+      } else if (error.message?.includes('blocked')) {
+        setStatus(`Cannot send friend request to ${friendName}`);
+      } else {
+        setStatus(`Error adding friend: ${error.message || error}`);
+      }
+    }
+  };
+
+  const handleAcceptFriend = async (friendshipId: string, friendName: string) => {
+    try {
+      await FriendService.acceptFriendRequest(friendshipId);
+      setStatus(`Accepted friend request from ${friendName}!`);
+      await loadData(); // Reload data to update friend status
+    } catch (error: any) {
+      console.error('Error accepting friend:', error);
+      setStatus(`Error accepting friend: ${error.message || error}`);
+    }
+  };
+
+  const handleBlockUser = async (friendId: string, friendName: string) => {
+    try {
+      await FriendService.blockUser(friendId);
+      setStatus(`Blocked ${friendName}`);
+      await loadData(); // Reload data to update friend status
+    } catch (error: any) {
+      console.error('Error blocking user:', error);
+      setStatus(`Error blocking user: ${error.message || error}`);
+    }
+  };
+
+  const handleUnfriendUser = async (friendId: string, friendName: string) => {
+    try {
+      await FriendService.unfriendUser(friendId);
+      setStatus(`Unfriended ${friendName}`);
+      await loadData(); // Reload data to update friend status
+    } catch (error: any) {
+      console.error('Error unfriending user:', error);
+      setStatus(`Error unfriending user: ${error.message || error}`);
+    }
+  };
+
+  const handleUnblockUser = async (friendId: string, friendName: string) => {
+    try {
+      await FriendService.unblockUser(friendId);
+      setStatus(`Unblocked ${friendName}`);
+      await loadData(); // Reload data to update friend status
+    } catch (error: any) {
+      console.error('Error unblocking user:', error);
+      setStatus(`Error unblocking user: ${error.message || error}`);
     }
   };
 
@@ -297,6 +354,22 @@ const Share: React.FC = () => {
                 ) : (
                   allUsers.map(user => {
                     const isFriend = friends.some(f => f.id === user.id);
+                    const friendship = friendships.find(f => 
+                      (f.requester_id === user.id || f.addressee_id === user.id)
+                    );
+                    
+                    // Determine friendship state
+                    let friendshipState = 'stranger';
+                    if (isFriend) {
+                      friendshipState = 'friend';
+                    } else if (friendship) {
+                      if (friendship.status === 'pending') {
+                        friendshipState = friendship.requester_id === user.id ? 'pending_sent' : 'pending_received';
+                      } else if (friendship.status === 'blocked') {
+                        friendshipState = 'blocked';
+                      }
+                    }
+                    
                     return (
                       <div key={user.id} className="user-item">
                         <input
@@ -306,21 +379,141 @@ const Share: React.FC = () => {
                           className="user-checkbox"
                         />
                         <span className="user-name">{user.username}</span>
-                        <div 
-                          className="friend-status" 
-                          title={isFriend ? "Friend" : "Click to add friend"}
-                          onClick={!isFriend ? () => handleAddFriend(user.id, user.username) : undefined}
-                          style={{ 
-                            cursor: !isFriend ? 'pointer' : 'default',
-                            padding: '4px',
-                            borderRadius: '4px',
-                            transition: 'background-color 0.2s'
-                          }}
-                        >
-                          {isFriend ? (
-                            <Users size={16} className="friend-icon" />
-                          ) : (
-                            <UserPlus size={16} className="invite-icon" />
+                        
+                        {/* Friendship Status Display */}
+                        <div className="friend-status-container" style={{ display: 'flex', gap: '4px' }}>
+                          {friendshipState === 'stranger' && (
+                            <div 
+                              className="friend-status" 
+                              title="Click to add friend"
+                              onClick={() => handleAddFriend(user.id, user.username)}
+                              style={{ 
+                                cursor: 'pointer',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                transition: 'background-color 0.2s',
+                                opacity: 0.6
+                              }}
+                            >
+                              <UserPlus size={16} className="invite-icon" />
+                            </div>
+                          )}
+                          
+                          {friendshipState === 'pending_sent' && (
+                            <div 
+                              className="friend-status" 
+                              title="Request sent"
+                              style={{ 
+                                cursor: 'default',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                backgroundColor: '#fbbf24',
+                                color: 'white'
+                              }}
+                            >
+                              <UserPlus size={16} />
+                            </div>
+                          )}
+                          
+                          {friendshipState === 'pending_received' && (
+                            <>
+                              <div 
+                                className="friend-status" 
+                                title="Accept friend request"
+                                onClick={() => handleAcceptFriend(friendship.id, user.username)}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#10b981',
+                                  color: 'white',
+                                  transition: 'background-color 0.2s'
+                                }}
+                              >
+                                <Check size={16} />
+                              </div>
+                              <div 
+                                className="friend-status" 
+                                title="Block user"
+                                onClick={() => handleBlockUser(user.id, user.username)}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#ef4444',
+                                  color: 'white',
+                                  transition: 'background-color 0.2s'
+                                }}
+                              >
+                                <X size={16} />
+                              </div>
+                            </>
+                          )}
+                          
+                          {friendshipState === 'friend' && (
+                            <>
+                              <div 
+                                className="friend-status" 
+                                title="Friend"
+                                style={{ 
+                                  cursor: 'default',
+                                  padding: '4px',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#10b981',
+                                  color: 'white'
+                                }}
+                              >
+                                <Users size={16} />
+                              </div>
+                              <div 
+                                className="friend-status" 
+                                title="Unfriend"
+                                onClick={() => handleUnfriendUser(user.id, user.username)}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#6b7280',
+                                  color: 'white',
+                                  transition: 'background-color 0.2s'
+                                }}
+                              >
+                                <UserMinus size={16} />
+                              </div>
+                            </>
+                          )}
+                          
+                          {friendshipState === 'blocked' && (
+                            <>
+                              <div 
+                                className="friend-status" 
+                                title="Blocked"
+                                style={{ 
+                                  cursor: 'default',
+                                  padding: '4px',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#ef4444',
+                                  color: 'white'
+                                }}
+                              >
+                                <X size={16} />
+                              </div>
+                              <div 
+                                className="friend-status" 
+                                title="Unblock"
+                                onClick={() => handleUnblockUser(user.id, user.username)}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#6b7280',
+                                  color: 'white',
+                                  transition: 'background-color 0.2s'
+                                }}
+                              >
+                                <UserCheck size={16} />
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
