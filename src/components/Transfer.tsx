@@ -749,7 +749,7 @@ const Transfer: React.FC = () => {
         title="Clear Local Data"
         message="You are about to delete all local data from this device. Cloud data will be preserved, but you'll need to download it again to access it on this device."
         confirmLabel="Clear Local Data"
-        requiresCount={2}
+        requiresCount={3}
         onConfirm={handleClearLocalData}
       />
     </div>

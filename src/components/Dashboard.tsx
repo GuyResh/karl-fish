@@ -289,7 +289,14 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           {recentSessions.length === 0 ? (
-            <p>No sessions yet. <Link to="/sessions/new">Start your first fishing session!</Link></p>
+            <div className="empty-state">
+              <Fish size={48} />
+              <h3>No sessions found</h3>
+              <p>Start logging your fishing adventures!</p>
+              <Link to="/sessions/new" className="btn btn-primary">
+                Create First Session
+              </Link>
+            </div>
           ) : (
             <div className="recent-sessions dashboard-recent-sessions">
               {recentSessions.map(session => (

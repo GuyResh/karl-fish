@@ -17,6 +17,11 @@ export class FriendService {
     if (error) throw error;
   }
 
+  // Alias for sendFriendRequest for easier use
+  static async addFriend(friendId: string) {
+    return this.sendFriendRequest(friendId);
+  }
+
   static async acceptFriendRequest(requestId: string) {
     const { error } = await supabase
       .from('friendships')

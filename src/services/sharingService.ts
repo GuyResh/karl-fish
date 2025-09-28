@@ -197,7 +197,10 @@ export class SharingService {
         .eq('user_id', userId)
         .in('session_data->>id', sessionIds);
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Error fetching existing sessions:', fetchError);
+        throw fetchError;
+      }
 
       // Create a map of existing sessions for quick lookup
       const existingMap = new Map();
@@ -210,47 +213,40 @@ export class SharingService {
         });
       }
 
-      // Separate sessions into updates and inserts
-      const sessionsToUpdate: any[] = [];
-      const sessionsToInsert: any[] = [];
+      console.log(`Found ${existingMap.size} existing sessions out of ${sessions.length} to process`);
 
-      sessions.forEach(session => {
-        const existingId = existingMap.get(session.id);
-        if (existingId) {
-          sessionsToUpdate.push({
-            id: existingId,
-            user_id: userId,
-            session_data: session,
-            privacy_level: session.shared ? 'friends' : 'private'
-          });
-        } else {
-          sessionsToInsert.push({
-            user_id: userId,
-            session_data: session,
-            privacy_level: session.shared ? 'friends' : 'private'
-          });
-        }
-      });
+      // Filter out sessions that already exist and haven't changed
+      const sessionsToUpsert = sessions
+        .filter(session => {
+          const existingId = existingMap.get(session.id);
+          // Only include if it's new or if we don't have the existing ID
+          return !existingId;
+        })
+        .map(session => ({
+          user_id: userId,
+          session_data: session,
+          privacy_level: session.shared ? 'friends' : 'private'
+        }));
 
-      // Batch update existing sessions
-      if (sessionsToUpdate.length > 0) {
-        const { error: updateError } = await supabase
-          .from('sessions')
-          .upsert(sessionsToUpdate);
-        
-        if (updateError) throw updateError;
-        // console.log(`Updated ${sessionsToUpdate.length} existing sessions`);
+      console.log(`Processing ${sessionsToUpsert.length} new sessions (${sessions.length - sessionsToUpsert.length} already exist)`);
+      
+      // Skip if no new sessions to process
+      if (sessionsToUpsert.length === 0) {
+        console.log('No new sessions to upload in this batch');
+        return;
       }
-
-      // Batch insert new sessions
-      if (sessionsToInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from('sessions')
-          .insert(sessionsToInsert);
-        
-        if (insertError) throw insertError;
-        // console.log(`Inserted ${sessionsToInsert.length} new sessions`);
+      
+      // Use upsert - Supabase should handle conflicts based on primary key
+      const { error: upsertError } = await supabase
+        .from('sessions')
+        .upsert(sessionsToUpsert);
+      
+      if (upsertError) {
+        console.error('Upsert error:', upsertError);
+        throw upsertError;
       }
+      
+      // console.log(`Upserted ${sessionsToUpsert.length} sessions`);
 
     } catch (error) {
       console.error('Error uploading session batch:', error);

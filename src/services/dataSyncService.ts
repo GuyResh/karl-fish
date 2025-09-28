@@ -7,11 +7,21 @@ import { AuthService } from './authService';
 import { FishingDataService } from '../database';
 
 export class DataSyncService {
+  private static isSyncing = false;
+
   static async syncAllData(): Promise<void> {
+    // Prevent multiple simultaneous syncs
+    if (this.isSyncing) {
+      console.log('Sync already in progress, skipping...');
+      return;
+    }
+
     if (!(await OfflineService.shouldSync())) {
       console.log('Skipping sync - offline mode or no internet');
       return;
     }
+
+    this.isSyncing = true;
 
     try {
       console.log('Starting data sync...');
@@ -36,6 +46,8 @@ export class DataSyncService {
       console.log('Data sync completed');
     } catch (error) {
       console.error('Error during data sync:', error);
+    } finally {
+      this.isSyncing = false;
     }
   }
 

@@ -149,7 +149,10 @@ function AppContent() {
   useEffect(() => {
     const syncData = async () => {
       if (user && !isOfflineMode) {
-        await DataSyncService.syncAllData();
+        // Add a small delay to prevent rapid-fire syncs
+        setTimeout(async () => {
+          await DataSyncService.syncAllData();
+        }, 100);
       }
     };
     syncData();

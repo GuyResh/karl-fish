@@ -212,6 +212,22 @@ const Share: React.FC = () => {
     }
   };
 
+  const handleAddFriend = async (friendId: string, friendName: string) => {
+    if (!user) {
+      setStatus('Please sign in to add friends');
+      return;
+    }
+
+    try {
+      await FriendService.addFriend(friendId);
+      setStatus(`Friend request sent to ${friendName}!`);
+      await loadData(); // Reload data to update friend status
+    } catch (error) {
+      console.error('Error adding friend:', error);
+      setStatus(`Error adding friend: ${error}`);
+    }
+  };
+
 
   if (!user) {
     return (
@@ -290,7 +306,17 @@ const Share: React.FC = () => {
                           className="user-checkbox"
                         />
                         <span className="user-name">{user.username}</span>
-                        <div className="friend-status" title={isFriend ? "Friend" : "Not a friend"}>
+                        <div 
+                          className="friend-status" 
+                          title={isFriend ? "Friend" : "Click to add friend"}
+                          onClick={!isFriend ? () => handleAddFriend(user.id, user.username) : undefined}
+                          style={{ 
+                            cursor: !isFriend ? 'pointer' : 'default',
+                            padding: '4px',
+                            borderRadius: '4px',
+                            transition: 'background-color 0.2s'
+                          }}
+                        >
                           {isFriend ? (
                             <Users size={16} className="friend-icon" />
                           ) : (
