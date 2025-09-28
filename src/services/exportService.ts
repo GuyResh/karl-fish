@@ -103,7 +103,7 @@ export class ExportService {
 
     // Determine API endpoint based on deployment
     const apiEndpoint = this.getEmailAPIEndpoint();
-    // console.log('Calling email API endpoint:', apiEndpoint);
+    console.log('Calling email API endpoint:', apiEndpoint);
 
     // Call the API endpoint
     const response = await fetch(apiEndpoint, {
