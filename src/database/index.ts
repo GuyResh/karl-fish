@@ -213,6 +213,48 @@ export class FishingDataService {
     await db.catches.delete(id);
   }
 
+  // Clear all sessions and their catches
+  static async clearAllSessions(): Promise<void> {
+    const userId = this.getCurrentUserIdOrDefault();
+    
+    await db.transaction('rw', [db.sessions, db.catches], async () => {
+      if (this.getCurrentUserId()) {
+        // Logged in user - only clear their data
+        await db.catches.where('userId').equals(userId).delete();
+        await db.sessions.where('userId').equals(userId).delete();
+      } else {
+        // Offline mode - clear all data
+        await db.catches.clear();
+        await db.sessions.clear();
+      }
+    });
+    
+    // Track local update
+    await SyncTrackingService.setLastLocalUpdate();
+  }
+
+  // Clear all user data (sessions, catches, and NMEA data)
+  static async clearAllUserData(): Promise<void> {
+    const userId = this.getCurrentUserIdOrDefault();
+    
+    await db.transaction('rw', [db.sessions, db.catches, db.nmeaData], async () => {
+      if (this.getCurrentUserId()) {
+        // Logged in user - only clear their data
+        await db.catches.where('userId').equals(userId).delete();
+        await db.sessions.where('userId').equals(userId).delete();
+        await db.nmeaData.where('userId').equals(userId).delete();
+      } else {
+        // Offline mode - clear all data
+        await db.catches.clear();
+        await db.sessions.clear();
+        await db.nmeaData.clear();
+      }
+    });
+    
+    // Track local update
+    await SyncTrackingService.setLastLocalUpdate();
+  }
+
   // Danger: clears all app data
   static async clearAllData(): Promise<void> {
     await db.transaction('rw', [db.sessions, db.catches, db.settings, db.nmeaData], async () => {
@@ -283,16 +325,8 @@ export class FishingDataService {
   }> {
     const sessions = await this.getAllSessions();
     
-    // Get catches based on user status
-    let allCatches;
-    if (this.getCurrentUserId()) {
-      // Logged in user - only their catches
-      const userId = this.getCurrentUserId()!;
-      allCatches = await db.catches.where('userId').equals(userId).toArray();
-    } else {
-      // Offline mode - get all catches
-      allCatches = await db.catches.toArray();
-    }
+    // Count catches from session.catches arrays instead of separate catches table
+    const allCatches = sessions.flatMap(session => session.catches || []);
     
     const totalSessions = sessions.length;
     const totalCatches = allCatches.length;

@@ -166,4 +166,69 @@ export class DataSyncService {
     await this.syncAllData();
     console.log('Offline mode disabled, data synced');
   }
+
+  static async forceDownloadFromCloud(): Promise<void> {
+    try {
+      console.log('Force downloading all data from cloud...');
+      await this.downloadSessionsFromCloud();
+      
+      // Dispatch event to refresh UI
+      window.dispatchEvent(new CustomEvent('dataUpdated'));
+      
+      console.log('Force download completed');
+    } catch (error) {
+      console.error('Error during force download:', error);
+      throw error;
+    }
+  }
+
+  static async clearAllData(): Promise<void> {
+    try {
+      console.log('Clearing all data...');
+      
+      // Clear local data
+      await FishingDataService.clearAllData();
+      
+      // Clear cloud data if user is logged in
+      const profile = await AuthService.getCurrentProfile();
+      if (profile) {
+        const { data: sessions } = await supabase
+          .from('sessions')
+          .select('id')
+          .eq('user_id', profile.id);
+        
+        if (sessions && sessions.length > 0) {
+          await supabase
+            .from('sessions')
+            .delete()
+            .eq('user_id', profile.id);
+        }
+      }
+      
+      // Dispatch event to refresh UI
+      window.dispatchEvent(new CustomEvent('dataCleared'));
+      
+      console.log('All data cleared successfully');
+    } catch (error) {
+      console.error('Error clearing all data:', error);
+      throw error;
+    }
+  }
+
+  static async clearLocalData(): Promise<void> {
+    try {
+      console.log('Clearing local data...');
+      
+      // Clear local data only
+      await FishingDataService.clearAllData();
+      
+      // Dispatch event to refresh UI
+      window.dispatchEvent(new CustomEvent('dataCleared'));
+      
+      console.log('Local data cleared successfully');
+    } catch (error) {
+      console.error('Error clearing local data:', error);
+      throw error;
+    }
+  }
 }

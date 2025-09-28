@@ -32,24 +32,47 @@ const Dashboard: React.FC = () => {
   const [currentHeading, setCurrentHeading] = useState<number | null>(null);
   const [currentDepth, setCurrentDepth] = useState<number | null>(null);
 
+  const loadDashboardData = async () => {
+    try {
+      const [statsData, sessions] = await Promise.all([
+        FishingDataService.getSessionStats(),
+        FishingDataService.getAllSessions()
+      ]);
+      
+      console.log('Dashboard loaded stats:', statsData);
+      console.log('Dashboard loaded sessions:', sessions.length);
+      setStats(statsData);
+      setRecentSessions(sessions.slice(0, 4)); // Show last 4 sessions
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const [statsData, sessions] = await Promise.all([
-          FishingDataService.getSessionStats(),
-          FishingDataService.getAllSessions()
-        ]);
-        
-        setStats(statsData);
-        setRecentSessions(sessions.slice(0, 4)); // Show last 4 sessions
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+    loadDashboardData();
+  }, []);
+
+  // Listen for data changes to refresh dashboard
+  useEffect(() => {
+    const handleDataCleared = () => {
+      console.log('Dashboard: Data cleared event received, refreshing...');
+      loadDashboardData();
     };
 
-    loadDashboardData();
+    const handleDataUpdated = () => {
+      console.log('Dashboard: Data updated event received, refreshing...');
+      loadDashboardData();
+    };
+
+    window.addEventListener('dataCleared', handleDataCleared);
+    window.addEventListener('dataUpdated', handleDataUpdated);
+
+    return () => {
+      window.removeEventListener('dataCleared', handleDataCleared);
+      window.removeEventListener('dataUpdated', handleDataUpdated);
+    };
   }, []);
 
   // Monitor GPS connection and location updates

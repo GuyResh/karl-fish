@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, Mail, FileText, Filter, Upload, Share2 } from 'lucide-react';
+import { Download, Mail, FileText, Filter, Upload, Share2, Trash2, RefreshCw } from 'lucide-react';
 import { ExportService } from '../services/exportService';
 import { ExportOptions, FishCatch } from '../types';
 import { format } from 'date-fns';
 import { FishingDataService } from '../database';
 import { useAuth } from '../contexts/AuthContext';
+import { DataSyncService } from '../services/dataSyncService';
 
 const Transfer: React.FC = () => {
   const { user } = useAuth();
@@ -366,6 +367,94 @@ const Transfer: React.FC = () => {
     fileInputRef.current?.click();
   };
 
+  const handleClearAllData = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL data (local and cloud)? This action cannot be undone!')) {
+      return;
+    }
+
+    setIsExporting(true);
+    setExportStatus('');
+
+    try {
+      // Clear local data
+      await FishingDataService.clearAllData();
+      
+      // Clear cloud data if user is logged in
+      if (user) {
+        const profile = await import('../services/authService').then(m => m.AuthService.getCurrentProfile());
+        if (profile) {
+          // Delete all sessions from cloud
+          const { data: sessions } = await import('../lib/supabase').then(m => 
+            m.supabase.from('sessions').select('id').eq('user_id', profile.id)
+          );
+          
+          if (sessions && sessions.length > 0) {
+            await import('../lib/supabase').then(m => 
+              m.supabase.from('sessions').delete().eq('user_id', profile.id)
+            );
+          }
+        }
+      }
+
+      // Dispatch event to refresh dashboard
+      window.dispatchEvent(new CustomEvent('dataCleared'));
+      
+      setExportStatus('All data cleared successfully!');
+    } catch (error) {
+      console.error('Clear all data error:', error);
+      setExportStatus(`Clear all data failed: ${error}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleClearLocalData = async () => {
+    if (!window.confirm('Are you sure you want to delete all local data? This will keep cloud data but remove everything from this device.')) {
+      return;
+    }
+
+    setIsExporting(true);
+    setExportStatus('');
+
+    try {
+      await FishingDataService.clearAllData();
+      
+      // Dispatch event to refresh dashboard
+      window.dispatchEvent(new CustomEvent('dataCleared'));
+      
+      setExportStatus('Local data cleared successfully!');
+    } catch (error) {
+      console.error('Clear local data error:', error);
+      setExportStatus(`Clear local data failed: ${error}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleForceDownload = async () => {
+    if (!user) {
+      setExportStatus('Please sign in to download from cloud');
+      return;
+    }
+
+    setIsExporting(true);
+    setExportStatus('');
+
+    try {
+      await DataSyncService.forceDownloadFromCloud();
+      
+      // Dispatch event to refresh dashboard
+      window.dispatchEvent(new CustomEvent('dataUpdated'));
+      
+      setExportStatus('Successfully downloaded all data from cloud!');
+    } catch (error) {
+      console.error('Force download error:', error);
+      setExportStatus(`Force download failed: ${error}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="export">
       <div className="card">
@@ -545,6 +634,50 @@ const Transfer: React.FC = () => {
               <FileText size={16} />
               {isExporting ? 'Generating...' : 'Stats Report'}
             </button>
+          </div>
+
+          {/* Data Management */}
+          <div className="export-section">
+            <h3 style={{ color: '#dc2626', marginBottom: '1rem' }}>
+              <Trash2 size={16} />
+              Data Management
+            </h3>
+            <div className="export-actions" style={{ gap: '0.5rem' }}>
+              <button
+                onClick={handleClearLocalData}
+                disabled={isExporting || isUploading}
+                className="btn btn-warning"
+                style={{ fontSize: '0.875rem' }}
+              >
+                <Trash2 size={14} />
+                Clear Local Data
+              </button>
+
+              <button
+                onClick={handleForceDownload}
+                disabled={isExporting || isUploading}
+                className="btn btn-info"
+                style={{ fontSize: '0.875rem' }}
+              >
+                <RefreshCw size={14} />
+                Force Download
+              </button>
+
+              <button
+                onClick={handleClearAllData}
+                disabled={isExporting || isUploading}
+                className="btn btn-danger"
+                style={{ fontSize: '0.875rem' }}
+              >
+                <Trash2 size={14} />
+                Clear All Data
+              </button>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>
+              <strong>Clear Local Data:</strong> Deletes local storage, keeps cloud data<br/>
+              <strong>Force Download:</strong> Downloads all data from cloud to local<br/>
+              <strong>Clear All Data:</strong> Deletes both local and cloud data (irreversible)
+            </div>
           </div>
 
           {/* Status */}
