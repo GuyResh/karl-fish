@@ -242,25 +242,49 @@ export class FriendService {
       .single();
 
     if (friendship) {
-      // Create permissions for both users using upsert to avoid duplicate key errors
-      await supabase
+      // Check if permissions already exist for both users
+      const { data: existingPermissions } = await supabase
         .from('friend_permissions')
-        .upsert([
-          {
-            user_id: friendship.requester_id,
-            friend_id: friendship.addressee_id,
-            can_view_sessions: true,
-            can_view_catches: true,
-            can_view_location: true
-          },
-          {
-            user_id: friendship.addressee_id,
-            friend_id: friendship.requester_id,
-            can_view_sessions: true,
-            can_view_catches: true,
-            can_view_location: true
-          }
-        ]);
+        .select('user_id, friend_id')
+        .or(`and(user_id.eq.${friendship.requester_id},friend_id.eq.${friendship.addressee_id}),and(user_id.eq.${friendship.addressee_id},friend_id.eq.${friendship.requester_id})`);
+
+      const existingPairs = new Set();
+      existingPermissions?.forEach(perm => {
+        existingPairs.add(`${perm.user_id}-${perm.friend_id}`);
+      });
+
+      const permissionsToCreate = [];
+
+      // Only create permissions that don't already exist
+      const requesterToAddressee = `${friendship.requester_id}-${friendship.addressee_id}`;
+      const addresseeToRequester = `${friendship.addressee_id}-${friendship.requester_id}`;
+
+      if (!existingPairs.has(requesterToAddressee)) {
+        permissionsToCreate.push({
+          user_id: friendship.requester_id,
+          friend_id: friendship.addressee_id,
+          can_view_sessions: true,
+          can_view_catches: true,
+          can_view_location: true
+        });
+      }
+
+      if (!existingPairs.has(addresseeToRequester)) {
+        permissionsToCreate.push({
+          user_id: friendship.addressee_id,
+          friend_id: friendship.requester_id,
+          can_view_sessions: true,
+          can_view_catches: true,
+          can_view_location: true
+        });
+      }
+
+      // Only insert if there are permissions to create
+      if (permissionsToCreate.length > 0) {
+        await supabase
+          .from('friend_permissions')
+          .insert(permissionsToCreate);
+      }
     }
   }
 }
