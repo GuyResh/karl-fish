@@ -157,43 +157,104 @@ export class SharingService {
     const profile = await AuthService.getCurrentProfile();
     if (!profile) throw new Error('Not authenticated');
 
-    // Process sessions one by one to handle conflicts properly
-    for (const session of sessions) {
-      try {
-        // First, try to find existing session with same user_id and session_data.id
-        const { data: existingSessions } = await supabase
-          .from('sessions')
-          .select('id')
-          .eq('user_id', profile.id)
-          .eq('session_data->>id', session.id);
+    // Ensure we have a valid session for RLS
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error('Authentication error:', sessionError);
+      throw new Error('No valid authentication session. Please sign in again.');
+    }
+    
+    // console.log('User authenticated:', session.user.email);
+    // console.log('Auth UID:', session.user.id);
+    // console.log('Profile ID:', profile.id);
+    // console.log('UIDs match:', session.user.id === profile.id);
 
-        if (existingSessions && existingSessions.length > 0) {
-          // Update existing session
-          const { error } = await supabase
-            .from('sessions')
-            .update({
-              session_data: session,
-              privacy_level: session.shared ? 'friends' : 'private'
-            })
-            .eq('id', existingSessions[0].id);
+    if (sessions.length === 0) {
+      console.log('No sessions to upload');
+      return;
+    }
 
-          if (error) throw error;
-        } else {
-          // Insert new session
-          const { error } = await supabase
-            .from('sessions')
-            .insert({
-              user_id: profile.id,
-              session_data: session,
-              privacy_level: session.shared ? 'friends' : 'private'
-            });
+    console.log(`Uploading ${sessions.length} sessions in batches...`);
 
-          if (error) throw error;
-        }
-      } catch (error) {
-        console.error(`Error processing session ${session.id}:`, error);
-        throw error;
+    // Process sessions in batches of 100 to avoid rate limits
+    const batchSize = 100;
+    for (let i = 0; i < sessions.length; i += batchSize) {
+      const batch = sessions.slice(i, i + batchSize);
+      await this.uploadSessionBatch(profile.id, batch);
+      // console.log(`Processed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(sessions.length / batchSize)}`);
+    }
+
+    // console.log(`Successfully uploaded ${sessions.length} sessions`);
+  }
+
+  private static async uploadSessionBatch(userId: string, sessions: FishingSession[]): Promise<void> {
+    try {
+      // Get all existing sessions for this user in one query
+      const sessionIds = sessions.map(s => s.id);
+      const { data: existingSessions, error: fetchError } = await supabase
+        .from('sessions')
+        .select('id, session_data')
+        .eq('user_id', userId)
+        .in('session_data->>id', sessionIds);
+
+      if (fetchError) throw fetchError;
+
+      // Create a map of existing sessions for quick lookup
+      const existingMap = new Map();
+      if (existingSessions) {
+        existingSessions.forEach(session => {
+          const sessionDataId = session.session_data?.id;
+          if (sessionDataId) {
+            existingMap.set(sessionDataId, session.id);
+          }
+        });
       }
+
+      // Separate sessions into updates and inserts
+      const sessionsToUpdate = [];
+      const sessionsToInsert = [];
+
+      sessions.forEach(session => {
+        const existingId = existingMap.get(session.id);
+        if (existingId) {
+          sessionsToUpdate.push({
+            id: existingId,
+            user_id: userId,
+            session_data: session,
+            privacy_level: session.shared ? 'friends' : 'private'
+          });
+        } else {
+          sessionsToInsert.push({
+            user_id: userId,
+            session_data: session,
+            privacy_level: session.shared ? 'friends' : 'private'
+          });
+        }
+      });
+
+      // Batch update existing sessions
+      if (sessionsToUpdate.length > 0) {
+        const { error: updateError } = await supabase
+          .from('sessions')
+          .upsert(sessionsToUpdate);
+        
+        if (updateError) throw updateError;
+        // console.log(`Updated ${sessionsToUpdate.length} existing sessions`);
+      }
+
+      // Batch insert new sessions
+      if (sessionsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('sessions')
+          .insert(sessionsToInsert);
+        
+        if (insertError) throw insertError;
+        // console.log(`Inserted ${sessionsToInsert.length} new sessions`);
+      }
+
+    } catch (error) {
+      console.error('Error uploading session batch:', error);
+      throw error;
     }
   }
 }

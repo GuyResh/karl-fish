@@ -57,13 +57,18 @@ export class AuthService {
     const user = await this.getCurrentUser();
     if (!user) return null;
 
+    // console.log('getCurrentProfile - user.id:', user.id, 'type:', typeof user.id);
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('getCurrentProfile error:', error);
+      throw error;
+    }
     return data;
   }
 

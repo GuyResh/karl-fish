@@ -32,12 +32,12 @@ export default async function handler(req, res) {
 
     // Create SMTP transporter
     const transporter = nodemailer.createTransporter({
-      host: process.env.SMTP_SERVER,
-      port: parseInt(process.env.SMTP_PORT) || 587,
+      host: process.env.VITE_SMTP_SERVER || process.env.SMTP_SERVER,
+      port: parseInt(process.env.VITE_SMTP_PORT || process.env.SMTP_PORT) || 587,
       secure: false, // true for 465, false for other ports
       auth: {
-        user: process.env.SMTP_USERNAME,
-        pass: process.env.SMTP_PASSWORD,
+        user: process.env.VITE_SMTP_USERNAME || process.env.SMTP_USERNAME,
+        pass: process.env.VITE_SMTP_PASSWORD || process.env.SMTP_PASSWORD,
       },
     });
 
@@ -102,7 +102,7 @@ export default async function handler(req, res) {
 
     // Send email
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USERNAME,
+      from: process.env.VITE_SMTP_FROM || process.env.SMTP_FROM || process.env.VITE_SMTP_USERNAME || process.env.SMTP_USERNAME,
       to: userEmail,
       subject: subject,
       text: text,

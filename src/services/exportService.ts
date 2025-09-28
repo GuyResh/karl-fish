@@ -103,6 +103,7 @@ export class ExportService {
 
     // Determine API endpoint based on deployment
     const apiEndpoint = this.getEmailAPIEndpoint();
+    // console.log('Calling email API endpoint:', apiEndpoint);
 
     // Call the API endpoint
     const response = await fetch(apiEndpoint, {
@@ -118,11 +119,34 @@ export class ExportService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to send email');
+      // Try to get error details, but handle non-JSON responses
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch (jsonError) {
+        // If response is not JSON, try to get text
+        try {
+          const errorText = await response.text();
+          errorMessage = errorText.substring(0, 100); // Limit error text length
+        } catch (textError) {
+          // If we can't even get text, use the status
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+      }
+      throw new Error(`API Error: ${errorMessage}`);
     }
 
-    const result = await response.json();
+    // Try to parse JSON response
+    let result;
+    try {
+      result = await response.json();
+    } catch (jsonError) {
+      // If response is not JSON, get the text
+      const responseText = await response.text();
+      throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
+    }
+
     return result;
   }
 
@@ -130,12 +154,12 @@ export class ExportService {
     // Check if we're on GitHub Pages (has /karl-fish/ in path)
     if (window.location.pathname.includes('/karl-fish/')) {
       // Use Vercel API endpoint for GitHub Pages deployment
-      // You can set this in environment variables if needed
       return 'https://karlfish.net/api/send-export-email';
     }
     
-    // Use relative path for Vercel deployment
-    return '/api/send-export-email';
+    // For local development and Vercel deployment, use Vercel API
+    // Since local dev doesn't have API routes, always use Vercel API
+    return 'https://karlfish.net/api/send-export-email';
   }
 
   private static async getSessionsForExport(options: ExportOptions): Promise<FishingSession[]> {

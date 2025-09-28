@@ -79,7 +79,7 @@ export class DataSyncService {
 
       // Use bulk upload method
       await SharingService.uploadSessions(localSessions);
-      console.log(`Successfully synced ${localSessions.length} sessions to cloud`);
+      // console.log(`Successfully synced ${localSessions.length} sessions to cloud`);
     } catch (error) {
       console.error('Error syncing local data to cloud:', error);
     }
