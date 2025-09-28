@@ -2,7 +2,7 @@ import { OfflineService } from './offlineService';
 import { FriendService } from './friendService';
 import { SharingService } from './sharingService';
 import { SyncTrackingService } from './syncTrackingService';
-import { Profile, Session } from '../lib/supabase';
+import { Profile, Session, supabase } from '../lib/supabase';
 import { AuthService } from './authService';
 import { FishingDataService } from '../database';
 
@@ -72,7 +72,8 @@ export class DataSyncService {
       console.log(`Found ${localSessions.length} local sessions to sync`);
 
       if (localSessions.length === 0) {
-        console.log('No local sessions to sync');
+        console.log('No local sessions found - downloading from cloud instead');
+        await this.downloadSessionsFromCloud();
         return;
       }
 
@@ -81,6 +82,53 @@ export class DataSyncService {
       console.log(`Successfully synced ${localSessions.length} sessions to cloud`);
     } catch (error) {
       console.error('Error syncing local data to cloud:', error);
+    }
+  }
+
+  static async downloadSessionsFromCloud(): Promise<void> {
+    try {
+      const profile = await AuthService.getCurrentProfile();
+      if (!profile) {
+        console.log('No user logged in, cannot download sessions');
+        return;
+      }
+
+      console.log('Downloading sessions from cloud...');
+      
+      // Get all sessions from Supabase for this user
+      const { data: cloudSessions, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!cloudSessions || cloudSessions.length === 0) {
+        console.log('No sessions found in cloud');
+        return;
+      }
+
+      console.log(`Found ${cloudSessions.length} sessions in cloud`);
+
+      // Convert cloud sessions to local format and save to IndexedDB
+      for (const cloudSession of cloudSessions) {
+        const sessionData = cloudSession.session_data;
+        if (sessionData) {
+          // Add the shared flag based on privacy level
+          sessionData.shared = cloudSession.privacy_level === 'friends' || cloudSession.privacy_level === 'public';
+          
+          // Save to local storage
+          await FishingDataService.createSession(sessionData);
+        }
+      }
+
+      console.log(`Successfully downloaded ${cloudSessions.length} sessions from cloud`);
+    } catch (error) {
+      console.error('Error downloading sessions from cloud:', error);
+      throw error;
     }
   }
 
