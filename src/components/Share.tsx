@@ -352,10 +352,11 @@ const Share: React.FC = () => {
                 ) : allUsers.length === 0 ? (
                   <div className="no-data">No anglers found</div>
                 ) : (
-                  allUsers.map(user => {
-                    const isFriend = friends.some(f => f.id === user.id);
+                  allUsers.map(displayedUser => {
+                    const isFriend = friends.some(f => f.id === displayedUser.id);
                     const friendship = friendships.find(f => 
-                      (f.requester_id === user.id || f.addressee_id === user.id)
+                      (f.requester_id === user.id && f.addressee_id === displayedUser.id) ||
+                      (f.requester_id === displayedUser.id && f.addressee_id === user.id)
                     );
                     
                     // Determine friendship state
@@ -364,6 +365,8 @@ const Share: React.FC = () => {
                       friendshipState = 'friend';
                     } else if (friendship) {
                       if (friendship.status === 'pending') {
+                        // If current logged-in user is the requester, they sent the request (show "sent")
+                        // If current logged-in user is the addressee, they received the request (show "accept/block")
                         friendshipState = friendship.requester_id === user.id ? 'pending_sent' : 'pending_received';
                       } else if (friendship.status === 'blocked') {
                         friendshipState = 'blocked';
@@ -371,14 +374,14 @@ const Share: React.FC = () => {
                     }
                     
                     return (
-                      <div key={user.id} className="user-item">
+                      <div key={displayedUser.id} className="user-item">
                         <input
                           type="checkbox"
-                          checked={selectedUsers.includes(user.id)}
-                          onChange={() => toggleUserSelection(user.id)}
+                          checked={selectedUsers.includes(displayedUser.id)}
+                          onChange={() => toggleUserSelection(displayedUser.id)}
                           className="user-checkbox"
                         />
-                        <span className="user-name">{user.username}</span>
+                        <span className="user-name">{displayedUser.username}</span>
                         
                         {/* Friendship Status Display */}
                         <div className="friend-status-container" style={{ display: 'flex', gap: '4px' }}>
@@ -386,7 +389,7 @@ const Share: React.FC = () => {
                             <div 
                               className="friend-status" 
                               title="Click to add friend"
-                              onClick={() => handleAddFriend(user.id, user.username)}
+                              onClick={() => handleAddFriend(displayedUser.id, displayedUser.username)}
                               style={{ 
                                 cursor: 'pointer',
                                 padding: '4px',
@@ -420,7 +423,7 @@ const Share: React.FC = () => {
                               <div 
                                 className="friend-status" 
                                 title="Accept friend request"
-                                onClick={() => handleAcceptFriend(friendship.id, user.username)}
+                                onClick={() => handleAcceptFriend(friendship.id, displayedUser.username)}
                                 style={{ 
                                   cursor: 'pointer',
                                   padding: '4px',
@@ -435,7 +438,7 @@ const Share: React.FC = () => {
                               <div 
                                 className="friend-status" 
                                 title="Block user"
-                                onClick={() => handleBlockUser(user.id, user.username)}
+                                onClick={() => handleBlockUser(displayedUser.id, displayedUser.username)}
                                 style={{ 
                                   cursor: 'pointer',
                                   padding: '4px',
@@ -468,7 +471,7 @@ const Share: React.FC = () => {
                               <div 
                                 className="friend-status" 
                                 title="Unfriend"
-                                onClick={() => handleUnfriendUser(user.id, user.username)}
+                                onClick={() => handleUnfriendUser(displayedUser.id, displayedUser.username)}
                                 style={{ 
                                   cursor: 'pointer',
                                   padding: '4px',
@@ -501,7 +504,7 @@ const Share: React.FC = () => {
                               <div 
                                 className="friend-status" 
                                 title="Unblock"
-                                onClick={() => handleUnblockUser(user.id, user.username)}
+                                onClick={() => handleUnblockUser(displayedUser.id, displayedUser.username)}
                                 style={{ 
                                   cursor: 'pointer',
                                   padding: '4px',

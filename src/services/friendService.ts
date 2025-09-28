@@ -242,10 +242,10 @@ export class FriendService {
       .single();
 
     if (friendship) {
-      // Create permissions for both users
+      // Create permissions for both users using upsert to avoid duplicate key errors
       await supabase
         .from('friend_permissions')
-        .insert([
+        .upsert([
           {
             user_id: friendship.requester_id,
             friend_id: friendship.addressee_id,
