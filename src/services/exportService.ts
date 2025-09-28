@@ -101,8 +101,11 @@ export class ExportService {
     const sessions = await this.getSessionsForExport(options);
     const exportFormat = options.format || 'csv';
 
+    // Determine API endpoint based on deployment
+    const apiEndpoint = this.getEmailAPIEndpoint();
+
     // Call the API endpoint
-    const response = await fetch('/api/send-export-email', {
+    const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -121,6 +124,18 @@ export class ExportService {
 
     const result = await response.json();
     return result;
+  }
+
+  private static getEmailAPIEndpoint(): string {
+    // Check if we're on GitHub Pages (has /karl-fish/ in path)
+    if (window.location.pathname.includes('/karl-fish/')) {
+      // Use Vercel API endpoint for GitHub Pages deployment
+      // You can set this in environment variables if needed
+      return 'https://karlfish.net/api/send-export-email';
+    }
+    
+    // Use relative path for Vercel deployment
+    return '/api/send-export-email';
   }
 
   private static async getSessionsForExport(options: ExportOptions): Promise<FishingSession[]> {
