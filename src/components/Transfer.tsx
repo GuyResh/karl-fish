@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { FishingDataService } from '../database';
 import { useAuth } from '../contexts/AuthContext';
 import { DataSyncService } from '../services/dataSyncService';
+import ConfirmModal from './ConfirmModal';
 
 const Transfer: React.FC = () => {
   const { user } = useAuth();
@@ -23,6 +24,10 @@ const Transfer: React.FC = () => {
   const [exportStatus, setExportStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Confirmation modal states
+  const [isClearAllOpen, setIsClearAllOpen] = useState(false);
+  const [isClearLocalOpen, setIsClearLocalOpen] = useState(false);
 
   // Set default email to user's registered email
   useEffect(() => {
@@ -368,10 +373,6 @@ const Transfer: React.FC = () => {
   };
 
   const handleClearAllData = async () => {
-    if (!window.confirm('Are you sure you want to delete ALL data (local and cloud)? This action cannot be undone!')) {
-      return;
-    }
-
     setIsExporting(true);
     setExportStatus('');
 
@@ -409,10 +410,6 @@ const Transfer: React.FC = () => {
   };
 
   const handleClearLocalData = async () => {
-    if (!window.confirm('Are you sure you want to delete all local data? This will keep cloud data but remove everything from this device.')) {
-      return;
-    }
-
     setIsExporting(true);
     setExportStatus('');
 
@@ -644,7 +641,7 @@ const Transfer: React.FC = () => {
             </h3>
             <div className="export-actions" style={{ gap: '0.5rem' }}>
               <button
-                onClick={handleClearLocalData}
+                onClick={() => setIsClearLocalOpen(true)}
                 disabled={isExporting || isUploading}
                 className="btn btn-warning"
                 style={{ fontSize: '0.875rem' }}
@@ -664,7 +661,7 @@ const Transfer: React.FC = () => {
               </button>
 
               <button
-                onClick={handleClearAllData}
+                onClick={() => setIsClearAllOpen(true)}
                 disabled={isExporting || isUploading}
                 className="btn btn-danger"
                 style={{ fontSize: '0.875rem' }}
@@ -734,6 +731,27 @@ const Transfer: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modals */}
+      <ConfirmModal
+        isOpen={isClearAllOpen}
+        onClose={() => setIsClearAllOpen(false)}
+        title="WARNING: Clear All Data"
+        message="You are about to delete ALL data (local and cloud)! This action cannot be undone and will permanently remove all your fishing sessions and catches."
+        confirmLabel="Delete Everything"
+        requiresCount={3}
+        onConfirm={handleClearAllData}
+      />
+
+      <ConfirmModal
+        isOpen={isClearLocalOpen}
+        onClose={() => setIsClearLocalOpen(false)}
+        title="Clear Local Data"
+        message="You are about to delete all local data from this device. Cloud data will be preserved, but you'll need to download it again to access it on this device."
+        confirmLabel="Clear Local Data"
+        requiresCount={2}
+        onConfirm={handleClearLocalData}
+      />
     </div>
   );
 };
