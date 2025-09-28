@@ -211,8 +211,8 @@ export class SharingService {
       }
 
       // Separate sessions into updates and inserts
-      const sessionsToUpdate = [];
-      const sessionsToInsert = [];
+      const sessionsToUpdate: any[] = [];
+      const sessionsToInsert: any[] = [];
 
       sessions.forEach(session => {
         const existingId = existingMap.get(session.id);
