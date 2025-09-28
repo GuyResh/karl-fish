@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
   // Handle CORS preflight requests
@@ -20,6 +20,9 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   try {
+    console.log('Email API called with method:', req.method);
+    console.log('Request body keys:', Object.keys(req.body || {}));
+    
     const { userEmail, format = 'csv', sessionData } = req.body;
 
     if (!userEmail) {
