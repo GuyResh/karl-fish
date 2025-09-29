@@ -89,12 +89,110 @@ export class DataSyncService {
         return;
       }
 
-      // Use bulk upload method
-      await SharingService.uploadSessions(localSessions);
-      // console.log(`Successfully synced ${localSessions.length} sessions to cloud`);
+      // Perform bidirectional sync
+      await this.performBidirectionalSync(localSessions);
     } catch (error) {
       console.error('Error syncing local data to cloud:', error);
     }
+  }
+
+  private static async performBidirectionalSync(localSessions: any[]): Promise<void> {
+    const profile = await AuthService.getCurrentProfile();
+    if (!profile) return;
+
+    // Get cloud sessions with timestamps
+    const { data: cloudSessions, error } = await supabase
+      .from('sessions')
+      .select('id, session_data, updated_at')
+      .eq('user_id', profile.id)
+      .order('updated_at', { ascending: false })
+      .limit(10000);
+
+    if (error) {
+      console.error('Error fetching cloud sessions:', error);
+      // Fallback to upload-only sync
+      await SharingService.uploadSessions(localSessions);
+      return;
+    }
+
+      console.log(`Found ${cloudSessions?.length || 0} cloud sessions`);
+      console.log('Cloud sessions sample:', cloudSessions?.slice(0, 3).map(s => ({ id: s.id, user_id: s.user_id, session_id: s.session_data?.id })));
+
+    // Create maps for efficient lookup
+    const localMap = new Map();
+    const cloudMap = new Map();
+
+    localSessions.forEach(session => {
+      localMap.set(session.id, {
+        ...session,
+        lastModified: new Date(session.updatedAt || session.date).getTime()
+      });
+    });
+
+    cloudSessions?.forEach(session => {
+      const sessionData = session.session_data;
+      if (sessionData?.id) {
+        cloudMap.set(sessionData.id, {
+          ...sessionData,
+          lastModified: new Date(session.updated_at).getTime(),
+          cloudId: session.id
+        });
+      }
+    });
+
+    // Determine what needs to be synced
+    const sessionsToUpload = [];
+    const sessionsToDownload = [];
+
+    // Check each local session
+    for (const [sessionId, localSession] of localMap) {
+      const cloudSession = cloudMap.get(sessionId);
+      
+      if (!cloudSession) {
+        // Local session doesn't exist in cloud - upload it
+        sessionsToUpload.push(localSession);
+      } else if (localSession.lastModified > cloudSession.lastModified) {
+        // Local session is newer - update cloud
+        sessionsToUpload.push(localSession);
+      }
+    }
+
+    // Check each cloud session
+    for (const [sessionId, cloudSession] of cloudMap) {
+      const localSession = localMap.get(sessionId);
+      
+      if (!localSession) {
+        // Cloud session doesn't exist locally - download it
+        sessionsToDownload.push(cloudSession);
+      } else if (cloudSession.lastModified > localSession.lastModified) {
+        // Cloud session is newer - update local
+        sessionsToDownload.push(cloudSession);
+      }
+    }
+
+    console.log(`Sync plan: Upload ${sessionsToUpload.length}, Download ${sessionsToDownload.length}`);
+
+    // Execute sync operations
+    if (sessionsToUpload.length > 0) {
+      await SharingService.uploadSessions(sessionsToUpload);
+      console.log(`Uploaded ${sessionsToUpload.length} new sessions`);
+    }
+
+    if (sessionsToDownload.length > 0) {
+      // Download newer sessions to local storage
+      for (const cloudSession of sessionsToDownload) {
+        try {
+          // Remove cloudId before saving locally
+          const { cloudId, ...sessionData } = cloudSession;
+          await FishingDataService.createSession(sessionData);
+        } catch (error) {
+          console.error(`Error downloading session ${cloudSession.id}:`, error);
+        }
+      }
+      console.log(`Downloaded ${sessionsToDownload.length} sessions from cloud`);
+    }
+
+    console.log('Bidirectional sync completed');
   }
 
   static async downloadSessionsFromCloud(): Promise<void> {
@@ -106,13 +204,15 @@ export class DataSyncService {
       }
 
       console.log('Downloading sessions from cloud...');
+      console.log('Current user profile ID:', profile.id);
       
       // Get all sessions from Supabase for this user
       const { data: cloudSessions, error } = await supabase
         .from('sessions')
         .select('*')
         .eq('user_id', profile.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10000); // Explicitly set a high limit to get all sessions
 
       if (error) {
         throw error;
@@ -124,6 +224,7 @@ export class DataSyncService {
       }
 
       console.log(`Found ${cloudSessions.length} sessions in cloud`);
+      console.log('Cloud sessions sample:', cloudSessions.slice(0, 3).map(s => ({ id: s.id, user_id: s.user_id, session_id: s.session_data?.id })));
 
       // Convert cloud sessions to local format and save to IndexedDB
       for (const cloudSession of cloudSessions) {
