@@ -89,8 +89,8 @@ function generateRandomTime(): string {
 function generateCoordinates() {
   const baseLat = 41.0;
   const baseLon = -70.8;
-  const lat = baseLat + (Math.random() - 0.5) * 0.02; // Small random variation
-  const lon = baseLon + (Math.random() - 0.5) * 0.02;
+  const lat = baseLat + (Math.random() - 0.5) * 0.3; // ±0.15° variation (~10+ miles)
+  const lon = baseLon + (Math.random() - 0.5) * 0.3; // ±0.15° variation (~10+ miles)
   return { lat: parseFloat(lat.toFixed(6)), lon: parseFloat(lon.toFixed(6)) };
 }
 
