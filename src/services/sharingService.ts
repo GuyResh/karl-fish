@@ -250,12 +250,12 @@ export class SharingService {
           return !existingId;
         })
         .map(session => {
-          // Remove the shared attribute from session data - privacy is managed at DB level
-          const { shared, ...sessionData } = session;
+          // Keep the shared attribute in session data for UI purposes
+          // Privacy is managed at DB level via privacy_level column
           return {
             user_id: userId,
-            session_data: sessionData,
-            privacy_level: 'private' // Default to private, will be updated via shareSession
+            session_data: session,
+            privacy_level: session.shared ? 'friends' : 'private'
           };
         });
 

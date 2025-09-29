@@ -103,7 +103,7 @@ export class DataSyncService {
     // Get cloud sessions with timestamps
     const { data: cloudSessions, error } = await supabase
       .from('sessions')
-      .select('id, user_id, session_data, updated_at')
+      .select('id, user_id, session_data, privacy_level, updated_at')
       .eq('user_id', profile.id)
       .order('updated_at', { ascending: false })
       .limit(10000);
@@ -136,6 +136,7 @@ export class DataSyncService {
         cloudMap.set(sessionData.id, {
           ...sessionData,
           dbId: session.id, // Store the database ID
+          privacy_level: session.privacy_level, // Include privacy level
           lastModified: new Date(session.updated_at).getTime()
         });
       }
@@ -185,9 +186,10 @@ export class DataSyncService {
       // Download newer sessions to local storage
       for (const cloudSession of sessionsToDownload) {
         try {
-          // Prepare session data with dbId for future syncs
+          // Prepare session data with dbId and shared status for future syncs
           const sessionData = {
             ...cloudSession,
+            shared: cloudSession.privacy_level === 'friends' || cloudSession.privacy_level === 'public',
             dbId: cloudSession.dbId,
             lastModified: new Date(cloudSession.lastModified)
           };
@@ -247,9 +249,10 @@ export class DataSyncService {
       for (const cloudSession of cloudSessions) {
         const sessionData = cloudSession.session_data;
         if (sessionData) {
-          // Add sync metadata (privacy is managed at DB level, not in session data)
+          // Add sync metadata and shared status based on privacy level
           const localSessionData = {
             ...sessionData,
+            shared: cloudSession.privacy_level === 'friends' || cloudSession.privacy_level === 'public',
             dbId: cloudSession.id, // Store the database ID
             lastModified: new Date(cloudSession.updated_at)
           };

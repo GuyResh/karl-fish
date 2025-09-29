@@ -54,12 +54,21 @@ const SessionList: React.FC = () => {
     try {
       const session = sessions.find(s => s.id === sessionId);
       if (session) {
-        // For now, just toggle to 'friends' privacy level
-        // In a full implementation, this would open a share modal
-        await SharingService.shareSession(session, 'friends');
+        // Toggle the shared status
+        const newSharedStatus = !session.shared;
+        const privacyLevel = newSharedStatus ? 'friends' : 'private';
         
-        // Refresh the sessions to get updated data
-        await loadSessions();
+        // Update local store immediately for responsive UI
+        const updatedSession = { ...session, shared: newSharedStatus };
+        await FishingDataService.updateSession(sessionId, updatedSession);
+        
+        // Update UI state immediately
+        setSessions(sessions.map(s => 
+          s.id === sessionId ? updatedSession : s
+        ));
+        
+        // Then sync to cloud (this will update the database)
+        await SharingService.shareSession(session, privacyLevel);
       }
     } catch (error) {
       console.error('Error updating session share status:', error);
@@ -157,13 +166,13 @@ const SessionList: React.FC = () => {
                   {formatDate(session.date)}
                 </div>
                 <div className="session-actions">
-                  <button 
-                    onClick={() => handleShare(session.id)}
-                    className="btn btn-outline-info btn-sm"
-                    title="Share session"
-                  >
-                    <Share2 size={14} />
-                  </button>
+                   <button 
+                     onClick={() => handleShare(session.id)}
+                     className={`btn btn-sm ${session.shared ? 'btn-info' : 'btn-outline-info'}`}
+                     title={session.shared ? 'Unshare session' : 'Share with friends'}
+                   >
+                     <Share2 size={14} />
+                   </button>
                   <Link 
                     to={`/sessions/${session.id}`}
                     className="btn btn-secondary btn-sm"
