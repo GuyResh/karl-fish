@@ -1378,7 +1378,7 @@ li code {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  min-height: 100px;
+  height: 100%;
   text-align: center;
   width: 100%;
 }
@@ -2536,18 +2536,21 @@ li code {
 }
 
 .users-list, .species-list {
-  max-height: 200px;
+  height: 126px;
   overflow-y: auto;
   border: 1px solid #dee2e6;
   border-radius: 4px;
   background: white;
-  min-height: 120px;
+  padding-right: 8px;
 }
 
 .user-item, .species-item {
   display: flex;
   align-items: center;
   padding: 0.25rem;
+  background: white;
+  border: none;
+  border-radius: 0;
   border-bottom: 1px solid #f1f3f4;
   gap: 0.5rem;
   min-height: 28px;
@@ -2561,6 +2564,11 @@ li code {
 
 .user-item:last-child, .species-item:last-child {
   border-bottom: none;
+}
+
+.me-name {
+  font-style: italic;
+  font-weight: 600;
 }
 
 .user-checkbox, .species-checkbox {
@@ -2629,28 +2637,53 @@ li code {
   background: white;
 }
 
-/* Scrollable summary list container - 5 lines only */
+/* Scrollable summary list container - match species-list exactly */
 .summary-list-container {
-  max-height: 200px; /* Approximately 5 lines */
+  height: 114px;
   overflow-y: auto;
   border: 1px solid #dee2e6;
   border-radius: 4px;
   background: white;
+  padding-right: 8px;
 }
 
 .summary-list-container .summary-list {
   max-height: none; /* Remove max-height from inner list */
   overflow-y: visible; /* Let the container handle scrolling */
+  border: none; /* Remove border - container has the border */
+  background: transparent; /* Use container background */
+  height: 100%; /* Fill container height */
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-list-container .summary-list .no-data {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  width: 100%;
+  color: #666;
+  font-style: italic;
 }
 
 .summary-item {
-  display: grid;
-  grid-template-columns: 80px 60px 100px 200px 1fr 100px;
-  gap: 0.5rem;
-  padding: 0.25rem;
-  border-bottom: 1px solid #f1f3f4;
+  display: flex;
   align-items: center;
+  padding: 0.25rem;
+  background: white;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #f1f3f4;
+  gap: 0.5rem;
+  min-height: 28px;
+  transition: background-color 0.2s;
   font-size: 0.8rem;
+}
+
+.summary-item:hover {
+  background: #f8f9fa;
 }
 
 .summary-item:last-child {
@@ -2658,17 +2691,28 @@ li code {
 }
 
 /* Summary item column styling */
-.summary-date,
+.summary-date {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+  width: 80px;
+  flex-shrink: 0;
+}
+
 .summary-time {
   font-size: 0.75rem;
   color: #666;
   text-align: center;
+  width: 60px;
+  flex-shrink: 0;
 }
 
 .summary-user {
   font-size: 0.75rem;
   font-weight: 500;
   color: #666;
+  width: 100px;
+  flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2677,6 +2721,8 @@ li code {
 .summary-location {
   font-size: 0.7rem;
   color: #666;
+  width: 200px;
+  flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2689,7 +2735,8 @@ li code {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-width: 0; /* Allow flex item to shrink */
+  flex: 1;
+  min-width: 0;
 }
 
 .summary-species .species-name {
@@ -2704,18 +2751,13 @@ li code {
   font-size: 0.75rem;
   color: #666;
   text-align: right;
+  width: 100px;
+  flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-
-.summary-location {
-  display: flex;
-  align-items: center;
-  gap: 0.125rem;
-  color: #666;
-}
 
 .summary-map {
   border-top: 1px solid #dee2e6;
@@ -2804,9 +2846,8 @@ li code {
 }
 
 .map-placeholder {
-  color: #6b7280;
+  color: #6c757d;
   font-style: italic;
-  font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;

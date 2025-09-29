@@ -11,9 +11,9 @@ import { FishingSession } from '../types';
 import LeafletMap, { CatchLocation } from './LeafletMap';
 
 const Share: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [sharedSessions, setSharedSessions] = useState<Session[]>([]);
-  const [, setMySessions] = useState<Session[]>([]);
+  const [mySessions, setMySessions] = useState<Session[]>([]);
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
   const [friends, setFriends] = useState<Profile[]>([]);
   const [friendships, setFriendships] = useState<any[]>([]);
@@ -160,7 +160,16 @@ const Share: React.FC = () => {
       return;
     }
 
-    const sessions = sharedSessions.filter(session => {
+    // Get all sessions to process (shared + my own if "me" is selected)
+    const allSessionsToProcess = [...sharedSessions];
+    
+    // If "me" is selected, also include my own sessions
+    if (user && selectedUsers.includes(user.id)) {
+      const myOwnSessions = mySessions || [];
+      allSessionsToProcess.push(...myOwnSessions);
+    }
+
+    const sessions = allSessionsToProcess.filter(session => {
       const userMatch = selectedUsers.includes(session.user_id);
       const speciesMatch = session.session_data.catches?.some((catch_: any) => 
         selectedSpecies.includes(catch_.species)
@@ -175,11 +184,21 @@ const Share: React.FC = () => {
         session.session_data.catches.forEach((catch_: any) => {
           // Only include catches that match the selected species
           if (selectedSpecies.includes(catch_.species)) {
+            // Get username - special handling for current user
+            let userName = 'Unknown';
+            if (session.user_id === user?.id) {
+              // Current user - use profile name or username
+              userName = profile?.name ? profile.name.split(' ')[0] : profile?.username || user?.email || 'Unknown';
+            } else {
+              // Other users - look up in allUsers
+              userName = allUsers.find(u => u.id === session.user_id)?.username || 'Unknown';
+            }
+
             allCatches.push({
               ...catch_,
               sessionDate: session.session_data.date,
               sessionStartTime: session.session_data.startTime,
-              userName: allUsers.find(u => u.id === session.user_id)?.username || 'Unknown',
+              userName: userName,
               location: session.session_data.location
             });
           }
@@ -202,7 +221,16 @@ const Share: React.FC = () => {
       return;
     }
     
-    sharedSessions.forEach(session => {
+    // Get all sessions to process (shared + my own if "me" is selected)
+    const allSessionsToProcess = [...sharedSessions];
+    
+    // If "me" is selected, also include my own sessions
+    if (user && selectedUsers.includes(user.id)) {
+      const myOwnSessions = mySessions || [];
+      allSessionsToProcess.push(...myOwnSessions);
+    }
+    
+    allSessionsToProcess.forEach(session => {
       // Only process sessions from selected users
       if (selectedUsers.includes(session.user_id) && session.session_data.catches) {
         session.session_data.catches.forEach((catch_: any) => {
@@ -366,7 +394,7 @@ const Share: React.FC = () => {
         <div className="card-header">
           <h1 className="card-title">
             <Users size={20} />
-            Shared Sessions from Friends
+            <span style={{ marginLeft: '8px' }}>Shared Sessions</span>
           </h1>
           <div className="header-actions">
             <button
@@ -404,10 +432,28 @@ const Share: React.FC = () => {
               <div className="users-list">
                 {isLoading ? (
                   <div className="loading">Loading anglers...</div>
-                ) : allUsers.length === 0 ? (
-                  <div className="no-data">No anglers found</div>
                 ) : (
-                  allUsers.map(displayedUser => {
+                  <>
+                    {/* Current User - "Me" */}
+                    <div className="user-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(user.id)}
+                        onChange={() => toggleUserSelection(user.id)}
+                        className="user-checkbox"
+                      />
+                      <div className="user-info">
+                        <span className="user-name me-name">
+                          {profile?.name ? profile.name.split(' ')[0] : profile?.username || user.email}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Other Users */}
+                    {allUsers.length === 0 ? (
+                      <div className="no-data">No other anglers found</div>
+                    ) : (
+                      allUsers.map(displayedUser => {
                     const isFriend = friends.some(f => f.id === displayedUser.id);
                     const friendship = friendships.find(f => 
                       (f.requester_id === user.id && f.addressee_id === displayedUser.id) ||
@@ -576,7 +622,9 @@ const Share: React.FC = () => {
                         </div>
                       </div>
                     );
-                  })
+                      })
+                    )}
+                  </>
                 )}
               </div>
             </div>
