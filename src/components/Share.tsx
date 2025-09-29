@@ -42,16 +42,16 @@ const Share: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    if (sharedSessions.length > 0) {
+    if (sharedSessions.length > 0 || mySessions.length > 0) {
       extractSpeciesCounts();
       calculateDateRange();
       processSharedSessions();
     }
-  }, [sharedSessions, selectedUsers, selectedSpecies, allUsers]);
+  }, [sharedSessions, mySessions, selectedUsers, selectedSpecies, allUsers]);
 
   useEffect(() => {
     processSharedSessions();
-  }, [selectedUsers, selectedSpecies, sharedSessions, allUsers, dateFilter]);
+  }, [selectedUsers, selectedSpecies, sharedSessions, mySessions, allUsers, dateFilter]);
 
   // Initialize all sessions as selected for map when filteredSessions changes
   useEffect(() => {
@@ -203,7 +203,8 @@ const Share: React.FC = () => {
     }
 
     const sessions = allSessionsToProcess.filter(session => {
-      const userMatch = selectedUsers.includes(session.user_id);
+      const userMatch = selectedUsers.includes(session.user_id) || 
+        (user && selectedUsers.includes(user.id) && session.user_id === user.id);
       const speciesMatch = session.session_data.catches?.some((catch_: any) => 
         selectedSpecies.includes(catch_.species)
       );
@@ -295,8 +296,11 @@ const Share: React.FC = () => {
     }
     
     allSessionsToProcess.forEach(session => {
-      // Only process sessions from selected users
-      if (selectedUsers.includes(session.user_id) && session.session_data.catches) {
+      // Check if this session belongs to a selected user
+      const isSelectedUser = selectedUsers.includes(session.user_id) || 
+        (user && selectedUsers.includes(user.id) && session.user_id === user.id);
+      
+      if (isSelectedUser && session.session_data.catches) {
         session.session_data.catches.forEach((catch_: any) => {
           const species = catch_.species || 'Unknown';
           speciesCount[species] = (speciesCount[species] || 0) + 1;
@@ -736,15 +740,15 @@ const Share: React.FC = () => {
           </div>
 
           {/* Date Range Filter */}
-          {dateRange && dateFilter && (
+          {dateRange && (
             <div className="date-range-filter">
               <div className="date-range-header">
                 <span className="date-range-label">Date</span>
                 <DateRangeSlider
                   minDate={dateRange.start}
                   maxDate={dateRange.end}
-                  startDate={dateFilter.start}
-                  endDate={dateFilter.end}
+                  startDate={dateFilter?.start || dateRange.start}
+                  endDate={dateFilter?.end || dateRange.end}
                   onChange={(start, end) => setDateFilter({ start, end })}
                   className="date-range-slider"
                 />
