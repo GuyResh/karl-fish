@@ -103,7 +103,7 @@ export class DataSyncService {
     // Get cloud sessions with timestamps
     const { data: cloudSessions, error } = await supabase
       .from('sessions')
-      .select('id, session_data, updated_at')
+      .select('id, user_id, session_data, updated_at')
       .eq('user_id', profile.id)
       .order('updated_at', { ascending: false })
       .limit(10000);
