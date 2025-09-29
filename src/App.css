@@ -2544,6 +2544,17 @@ li code {
   padding-right: 8px;
 }
 
+.users-list .loading, .species-list .loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 0;
+}
+
 .user-item, .species-item {
   display: flex;
   align-items: center;
