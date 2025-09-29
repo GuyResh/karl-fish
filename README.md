@@ -35,10 +35,12 @@ A comprehensive React-based fishing log application that can be deployed as a we
 
 ### 👥 Social Features
 - **User Authentication**: Secure user accounts with email verification
-- **Friend System**: Add friends and manage friend requests
+- **Friend System**: Add friends and manage friend requests with comprehensive state management
 - **Session Sharing**: Share fishing sessions with friends or make them public
 - **Privacy Controls**: Control who can see your sessions (private, friends, public)
 - **Angler Discovery**: Find and connect with other anglers
+- **Interactive Sharing Dashboard**: Filter sessions by users and species with color-coded visualization
+- **Live Map Integration**: Interactive Leaflet maps showing catch locations with clustering
 - **Real-time Updates**: Live updates when friends share new sessions
 
 ### 🖥️ Deployment Options
@@ -179,8 +181,10 @@ The application automatically collects from all connected N2K devices:
 2. **Verify Email**: Check your email and click the confirmation link
 3. **Add Friends**: Go to Friends page → Search for other anglers → Send friend requests
 4. **Share Sessions**: Mark sessions as "shared" to make them visible to friends
-5. **View Shared Sessions**: Go to Share page to see friends' fishing sessions
-6. **Privacy Settings**: Control who can see your sessions (private, friends, public)
+5. **View Shared Sessions**: Go to Share page to see friends' fishing sessions with interactive filtering
+6. **Interactive Maps**: View catch locations on interactive Leaflet maps with species color-coding
+7. **Species Filtering**: Filter shared sessions by species with color-coded swatches
+8. **Privacy Settings**: Control who can see your sessions (private, friends, public)
 
 ### Cloud Synchronization
 1. **Automatic Sync**: Your data syncs to the cloud when you're online
@@ -273,7 +277,8 @@ src/
 - **Lucide React** - Icons
 - **Date-fns** - Date utilities
 - **Vite** - Build tool and development server
-- **Leaflet** - Interactive maps
+- **Leaflet + React-Leaflet** - Interactive maps with clustering and custom markers
+- **Nodemailer** - Server-side email functionality
 
 ## Contributing
 
@@ -299,11 +304,15 @@ For issues and questions:
 ### ✅ Completed Features
 - [x] User authentication and account management
 - [x] Cloud synchronization with Supabase
-- [x] Friend system and social features
+- [x] Friend system and social features with comprehensive state management
 - [x] Session sharing with privacy controls
+- [x] Interactive sharing dashboard with user and species filtering
+- [x] Leaflet map integration with catch location visualization
+- [x] Color-coded species identification across all interfaces
 - [x] Offline-first data storage
 - [x] Cross-platform deployment (Vercel, GitHub Pages)
 - [x] User-specific data isolation
+- [x] Server-side email export via Vercel API
 
 ### 🚧 In Progress
 - [ ] Real-time notifications for friend activity

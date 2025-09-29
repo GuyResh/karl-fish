@@ -74,15 +74,20 @@ Karl Fish is an offline-first fishing logbook with cloud sync, social sharing vi
 - CSS grid with 2 columns, consistent alignment
 - Location: lat and lon shown on separate lines with fixed width; description wraps
 - Catches count aligned with coords column width
+- Share/Unshare toggle with immediate UI feedback
 
 #### Share
-- Anglers list (all users except current)
-- Friendship UI per user:
+- **Anglers Panel**: All users except current with consistent row heights
+- **Species Panel**: Color-coded species list with swatches matching map markers
+- **Session Summary**: Optimized table with lat/long coordinates and species filtering
+- **Interactive Map**: Leaflet integration with catch location clustering and color coding
+- **Friendship UI** per user:
   - Stranger: grey UserPlus (click to request)
   - Pending Sent: yellow badge (not clickable)
   - Pending Received: green Check (Accept), red X (Block)
   - Friend: green Users + grey Unfriend
   - Blocked: red X + grey Unblock
+- **Filtering Logic**: Species only appear when users are selected; bidirectional filtering
 - Uses `FriendService` for actions; reloads state after change
 
 #### Transfer
@@ -215,6 +220,14 @@ Karl Fish is an offline-first fishing logbook with cloud sync, social sharing vi
 
 ---
 
+### UI/UX Improvements
+- **Consistent Panel Styling**: Anglers, Species, and Session Summary panels use unified row heights and spacing
+- **Color-Coded Species**: Species identification with consistent color swatches across all interfaces
+- **Interactive Maps**: Leaflet integration replaces static iframe maps with clustering and custom markers
+- **Optimized Table Layout**: Session Summary uses proper column sizing with lat/long coordinates and tooltips
+- **Responsive Filtering**: Species list updates based on selected users; bidirectional filtering logic
+- **Visual Hierarchy**: Consistent font sizes, colors, and spacing throughout the application
+
 ### QA Checklist
 - Registration name normalization and email confirm modal
 - Sessions grid 2-column layout and location formatting
@@ -222,3 +235,6 @@ Karl Fish is an offline-first fishing logbook with cloud sync, social sharing vi
 - Friendship actions reflect correct roles and states
 - Export download and email work; CORS ok from GH Pages
 - Dashboard updates on dataCleared/dataUpdated
+- Species filtering works correctly (empty when no users selected)
+- Color swatches consistent between panels and map markers
+- Interactive maps load and display catch locations properly
