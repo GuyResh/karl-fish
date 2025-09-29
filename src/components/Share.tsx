@@ -9,6 +9,7 @@ import { FriendService } from '../services/friendService';
 import { Profile, Session } from '../lib/supabase';
 import { FishingSession } from '../types';
 import LeafletMap, { CatchLocation } from './LeafletMap';
+import DateRangeSlider from './DateRangeSlider';
 
 const Share: React.FC = () => {
   const { user, profile } = useAuth();
@@ -29,7 +30,10 @@ const Share: React.FC = () => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
   const [allSpecies, setAllSpecies] = useState<{[species: string]: number}>({});
+  const [dateRange, setDateRange] = useState<{start: Date, end: Date} | null>(null);
   const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
+  const [selectedSessionsForMap, setSelectedSessionsForMap] = useState<Set<number>>(new Set());
+  const [dateFilter, setDateFilter] = useState<{start: Date, end: Date} | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -40,13 +44,30 @@ const Share: React.FC = () => {
   useEffect(() => {
     if (sharedSessions.length > 0) {
       extractSpeciesCounts();
+      calculateDateRange();
       processSharedSessions();
     }
   }, [sharedSessions, selectedUsers, selectedSpecies, allUsers]);
 
   useEffect(() => {
     processSharedSessions();
-  }, [selectedUsers, selectedSpecies, sharedSessions, allUsers]);
+  }, [selectedUsers, selectedSpecies, sharedSessions, allUsers, dateFilter]);
+
+  // Initialize all sessions as selected for map when filteredSessions changes
+  useEffect(() => {
+    if (filteredSessions.length > 0) {
+      setSelectedSessionsForMap(new Set(filteredSessions.map((_, index) => index)));
+    } else {
+      setSelectedSessionsForMap(new Set());
+    }
+  }, [filteredSessions]);
+
+  // Initialize date filter when date range is calculated
+  useEffect(() => {
+    if (dateRange) {
+      setDateFilter({ start: dateRange.start, end: dateRange.end });
+    }
+  }, [dateRange]);
 
 
   const loadData = async () => {
@@ -147,6 +168,18 @@ const Share: React.FC = () => {
     );
   };
 
+  const toggleSessionForMap = (index: number) => {
+    setSelectedSessionsForMap(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
   const toggleAllSpecies = () => {
     const speciesList = Object.keys(allSpecies);
     const allSelected = selectedSpecies.length === speciesList.length && speciesList.length > 0;
@@ -174,7 +207,15 @@ const Share: React.FC = () => {
       const speciesMatch = session.session_data.catches?.some((catch_: any) => 
         selectedSpecies.includes(catch_.species)
       );
-      return Boolean(userMatch && speciesMatch);
+      
+      // Add date filtering if date filter is set
+      let dateMatch = true;
+      if (dateFilter) {
+        const sessionDate = new Date(session.session_data.date || session.session_data.startTime || session.updated_at);
+        dateMatch = sessionDate >= dateFilter.start && sessionDate <= dateFilter.end;
+      }
+      
+      return Boolean(userMatch && speciesMatch && dateMatch);
     });
 
     // Flatten all catches from filtered sessions, but only include catches that match selected species
@@ -210,6 +251,29 @@ const Share: React.FC = () => {
     allCatches.sort((a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime());
     
     setFilteredSessions(allCatches);
+  };
+
+  const calculateDateRange = () => {
+    const allSessions = [...sharedSessions, ...mySessions];
+    if (allSessions.length === 0) {
+      setDateRange(null);
+      return;
+    }
+
+    const dates = allSessions.map(session => {
+      const sessionData = session.session_data as any;
+      return new Date(sessionData.date || sessionData.startTime || session.updated_at);
+    }).filter(date => !isNaN(date.getTime()));
+
+    if (dates.length === 0) {
+      setDateRange(null);
+      return;
+    }
+
+    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    
+    setDateRange({ start: minDate, end: maxDate });
   };
 
   const extractSpeciesCounts = () => {
@@ -260,17 +324,19 @@ const Share: React.FC = () => {
 
   // Convert filtered sessions to catch locations for Leaflet map
   const getCatchLocations = (): CatchLocation[] => {
-    return filteredSessions.map(catch_ => ({
-      id: catch_.id,
-      latitude: catch_.location.latitude,
-      longitude: catch_.location.longitude,
-      species: catch_.species,
-      userName: catch_.userName,
-      sessionDate: catch_.sessionDate,
-      length: catch_.length,
-      weight: catch_.weight,
-      location: catch_.location
-    }));
+    return filteredSessions
+      .filter((_, index) => selectedSessionsForMap.has(index))
+      .map(catch_ => ({
+        id: catch_.id,
+        latitude: catch_.location.latitude,
+        longitude: catch_.location.longitude,
+        species: catch_.species,
+        userName: catch_.userName,
+        sessionDate: catch_.sessionDate,
+        length: catch_.length,
+        weight: catch_.weight,
+        location: catch_.location
+      }));
   };
 
   const formatDate = (dateString: string) => {
@@ -669,6 +735,23 @@ const Share: React.FC = () => {
             </div>
           </div>
 
+          {/* Date Range Filter */}
+          {dateRange && dateFilter && (
+            <div className="date-range-filter">
+              <div className="date-range-header">
+                <span className="date-range-label">Date</span>
+                <DateRangeSlider
+                  minDate={dateRange.start}
+                  maxDate={dateRange.end}
+                  startDate={dateFilter.start}
+                  endDate={dateFilter.end}
+                  onChange={(start, end) => setDateFilter({ start, end })}
+                  className="date-range-slider"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Summary Panel */}
           <div className="summary-panel">
             <h3>Session Summary</h3>
@@ -680,6 +763,13 @@ const Share: React.FC = () => {
                   ) : (
                     filteredSessions.map((catch_, index) => (
                       <div key={index} className="summary-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedSessionsForMap.has(index)}
+                          onChange={() => toggleSessionForMap(index)}
+                          className="summary-checkbox"
+                          title="Toggle for map display"
+                        />
                         <div className="summary-date">
                           {new Date(catch_.sessionDate).toLocaleDateString()}
                         </div>
@@ -717,6 +807,7 @@ const Share: React.FC = () => {
                       height="100%"
                       zoom={4}
                       className="catch-locations-map"
+                      showCurrentLocation={true}
                     />
                   ) : (
                     <div className="map-placeholder">
