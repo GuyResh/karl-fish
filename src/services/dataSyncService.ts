@@ -247,10 +247,9 @@ export class DataSyncService {
       for (const cloudSession of cloudSessions) {
         const sessionData = cloudSession.session_data;
         if (sessionData) {
-          // Add the shared flag based on privacy level and sync metadata
+          // Add sync metadata (privacy is managed at DB level, not in session data)
           const localSessionData = {
             ...sessionData,
-            shared: cloudSession.privacy_level === 'friends' || cloudSession.privacy_level === 'public',
             dbId: cloudSession.id, // Store the database ID
             lastModified: new Date(cloudSession.updated_at)
           };

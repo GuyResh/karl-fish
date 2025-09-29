@@ -12,24 +12,51 @@ export class SharingService {
     const profile = await AuthService.getCurrentProfile();
     if (!profile) throw new Error('Not authenticated');
 
-    const { data, error } = await supabase
+    // First, check if session already exists in cloud
+    const { data: existingSession } = await supabase
       .from('sessions')
-      .insert({
-        user_id: profile.id,
-        session_data: session,
-        privacy_level: privacyLevel
-      })
-      .select()
+      .select('id')
+      .eq('user_id', profile.id)
+      .eq('session_data->>id', session.id)
       .single();
 
-    if (error) throw error;
+    let result;
+    if (existingSession) {
+      // Update existing session
+      const { data, error } = await supabase
+        .from('sessions')
+        .update({ 
+          session_data: session,
+          privacy_level: privacyLevel 
+        })
+        .eq('id', existingSession.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      result = data;
+    } else {
+      // Insert new session
+      const { data, error } = await supabase
+        .from('sessions')
+        .insert({
+          user_id: profile.id,
+          session_data: session,
+          privacy_level: privacyLevel
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+    }
 
     // If specific friends are selected, create friend-specific permissions
     if (specificFriendIds && specificFriendIds.length > 0) {
-      await this.createSpecificFriendPermissions(data.id, specificFriendIds);
+      await this.createSpecificFriendPermissions(result.id, specificFriendIds);
     }
 
-    return data;
+    return result;
   }
 
   static async getSharedSessions(): Promise<Session[]> {
@@ -222,11 +249,15 @@ export class SharingService {
           // Only include if it's new or if we don't have the existing ID
           return !existingId;
         })
-        .map(session => ({
-          user_id: userId,
-          session_data: session,
-          privacy_level: session.shared ? 'friends' : 'private'
-        }));
+        .map(session => {
+          // Remove the shared attribute from session data - privacy is managed at DB level
+          const { shared, ...sessionData } = session;
+          return {
+            user_id: userId,
+            session_data: sessionData,
+            privacy_level: 'private' // Default to private, will be updated via shareSession
+          };
+        });
 
       console.log(`Processing ${sessionsToUpsert.length} new sessions (${sessions.length - sessionsToUpsert.length} already exist)`);
       

@@ -4,6 +4,7 @@ import { Edit, Trash2, MapPin, Clock, Fish, Thermometer, Wind, Search, Plus, Sha
 import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
+import { SharingService } from '../services/sharingService';
 
 const SessionList: React.FC = () => {
   const [sessions, setSessions] = useState<FishingSession[]>([]);
@@ -51,16 +52,14 @@ const SessionList: React.FC = () => {
 
   const handleShare = async (sessionId: string) => {
     try {
-      // Toggle the shared status
       const session = sessions.find(s => s.id === sessionId);
       if (session) {
-        const updatedSession = { ...session, shared: !session.shared };
-        await FishingDataService.updateSession(sessionId, { shared: updatedSession.shared });
+        // For now, just toggle to 'friends' privacy level
+        // In a full implementation, this would open a share modal
+        await SharingService.shareSession(session, 'friends');
         
-        // Update the local state
-        setSessions(sessions.map(s => 
-          s.id === sessionId ? { ...s, shared: updatedSession.shared } : s
-        ));
+        // Refresh the sessions to get updated data
+        await loadSessions();
       }
     } catch (error) {
       console.error('Error updating session share status:', error);
@@ -160,8 +159,8 @@ const SessionList: React.FC = () => {
                 <div className="session-actions">
                   <button 
                     onClick={() => handleShare(session.id)}
-                    className={`btn btn-sm ${session.shared ? 'btn-info' : 'btn-outline-info'}`}
-                    title={session.shared ? 'Unshare' : 'Share'}
+                    className="btn btn-outline-info btn-sm"
+                    title="Share session"
                   >
                     <Share2 size={14} />
                   </button>
