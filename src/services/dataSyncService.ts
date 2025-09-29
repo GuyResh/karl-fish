@@ -115,27 +115,28 @@ export class DataSyncService {
       return;
     }
 
-      console.log(`Found ${cloudSessions?.length || 0} cloud sessions`);
-      console.log('Cloud sessions sample:', cloudSessions?.slice(0, 3).map(s => ({ id: s.id, user_id: s.user_id, session_id: s.session_data?.id })));
+    console.log(`Found ${cloudSessions?.length || 0} cloud sessions`);
 
-    // Create maps for efficient lookup
+    // Create maps for efficient lookup using session_data.id
     const localMap = new Map();
     const cloudMap = new Map();
 
+    // Map local sessions by their JSON id
     localSessions.forEach(session => {
       localMap.set(session.id, {
         ...session,
-        lastModified: new Date(session.updatedAt || session.date).getTime()
+        lastModified: session.lastModified ? new Date(session.lastModified).getTime() : new Date(session.date).getTime()
       });
     });
 
+    // Map cloud sessions by their session_data.id
     cloudSessions?.forEach(session => {
       const sessionData = session.session_data;
       if (sessionData?.id) {
         cloudMap.set(sessionData.id, {
           ...sessionData,
-          lastModified: new Date(session.updated_at).getTime(),
-          cloudId: session.id
+          dbId: session.id, // Store the database ID
+          lastModified: new Date(session.updated_at).getTime()
         });
       }
     });
@@ -144,7 +145,7 @@ export class DataSyncService {
     const sessionsToUpload = [];
     const sessionsToDownload = [];
 
-    // Check each local session
+    // Check each local session against cloud
     for (const [sessionId, localSession] of localMap) {
       const cloudSession = cloudMap.get(sessionId);
       
@@ -157,7 +158,7 @@ export class DataSyncService {
       }
     }
 
-    // Check each cloud session
+    // Check each cloud session against local
     for (const [sessionId, cloudSession] of cloudMap) {
       const localSession = localMap.get(sessionId);
       
@@ -175,22 +176,28 @@ export class DataSyncService {
     // Execute sync operations
     if (sessionsToUpload.length > 0) {
       await SharingService.uploadSessions(sessionsToUpload);
-      console.log(`Uploaded ${sessionsToUpload.length} new sessions`);
+      console.log(`Uploaded ${sessionsToUpload.length} sessions to cloud`);
+    } else {
+      console.log('No sessions required uploading to cloud');
     }
 
     if (sessionsToDownload.length > 0) {
       // Download newer sessions to local storage
       for (const cloudSession of sessionsToDownload) {
         try {
-          // Remove cloudId before saving locally
-          const { cloudId, ...sessionData } = cloudSession;
+          // Prepare session data with dbId for future syncs
+          const sessionData = {
+            ...cloudSession,
+            dbId: cloudSession.dbId,
+            lastModified: new Date(cloudSession.lastModified)
+          };
           
-          // Check if session already exists locally before creating
+          // Check if session already exists locally
           const existingSession = await FishingDataService.getSession(sessionData.id);
           if (!existingSession) {
             await FishingDataService.createSession(sessionData);
           } else {
-            // Update existing session if cloud is newer
+            // Update existing session
             await FishingDataService.updateSession(sessionData.id, sessionData);
           }
         } catch (error) {
@@ -198,6 +205,8 @@ export class DataSyncService {
         }
       }
       console.log(`Downloaded ${sessionsToDownload.length} sessions from cloud`);
+    } else {
+      console.log('No sessions required downloading from cloud');
     }
 
     console.log('Bidirectional sync completed');
@@ -238,14 +247,19 @@ export class DataSyncService {
       for (const cloudSession of cloudSessions) {
         const sessionData = cloudSession.session_data;
         if (sessionData) {
-          // Add the shared flag based on privacy level
-          sessionData.shared = cloudSession.privacy_level === 'friends' || cloudSession.privacy_level === 'public';
+          // Add the shared flag based on privacy level and sync metadata
+          const localSessionData = {
+            ...sessionData,
+            shared: cloudSession.privacy_level === 'friends' || cloudSession.privacy_level === 'public',
+            dbId: cloudSession.id, // Store the database ID
+            lastModified: new Date(cloudSession.updated_at)
+          };
           
           // Check if session already exists locally before creating
           const existingSession = await FishingDataService.getSession(sessionData.id);
           if (!existingSession) {
             // Save to local storage only if it doesn't exist
-            await FishingDataService.createSession(sessionData);
+            await FishingDataService.createSession(localSessionData);
           }
         }
       }

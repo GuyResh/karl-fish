@@ -61,6 +61,9 @@ export interface FishingSession {
   fishingMethod?: string;
   success?: boolean;
   shared?: boolean;
+  // Sync-related fields
+  dbId?: string; // Database row ID (null if not synced to cloud)
+  lastModified?: Date; // Last modification timestamp
 }
 
 export interface NMEAData {
