@@ -8,6 +8,7 @@ import { AuthService } from '../services/authService';
 import { FriendService } from '../services/friendService';
 import { Profile, Session } from '../lib/supabase';
 import { FishingSession } from '../types';
+import LeafletMap, { CatchLocation } from './LeafletMap';
 
 const Share: React.FC = () => {
   const { user } = useAuth();
@@ -46,6 +47,7 @@ const Share: React.FC = () => {
   useEffect(() => {
     processSharedSessions();
   }, [selectedUsers, selectedSpecies, sharedSessions, allUsers]);
+
 
   const loadData = async () => {
     setIsLoading(true);
@@ -166,18 +168,21 @@ const Share: React.FC = () => {
       return Boolean(userMatch && speciesMatch);
     });
 
-    // Flatten all catches from filtered sessions
+    // Flatten all catches from filtered sessions, but only include catches that match selected species
     const allCatches: any[] = [];
     sessions.forEach(session => {
       if (session.session_data.catches) {
         session.session_data.catches.forEach((catch_: any) => {
-          allCatches.push({
-            ...catch_,
-            sessionDate: session.session_data.date,
-            sessionStartTime: session.session_data.startTime,
-            userName: allUsers.find(u => u.id === session.user_id)?.username || 'Unknown',
-            location: session.session_data.location
-          });
+          // Only include catches that match the selected species
+          if (selectedSpecies.includes(catch_.species)) {
+            allCatches.push({
+              ...catch_,
+              sessionDate: session.session_data.date,
+              sessionStartTime: session.session_data.startTime,
+              userName: allUsers.find(u => u.id === session.user_id)?.username || 'Unknown',
+              location: session.session_data.location
+            });
+          }
         });
       }
     });
@@ -190,8 +195,16 @@ const Share: React.FC = () => {
 
   const extractSpeciesCounts = () => {
     const speciesCount: {[species: string]: number} = {};
+    
+    // Only count species from selected users' sessions
+    if (selectedUsers.length === 0) {
+      setAllSpecies({});
+      return;
+    }
+    
     sharedSessions.forEach(session => {
-      if (session.session_data.catches) {
+      // Only process sessions from selected users
+      if (selectedUsers.includes(session.user_id) && session.session_data.catches) {
         session.session_data.catches.forEach((catch_: any) => {
           const species = catch_.species || 'Unknown';
           speciesCount[species] = (speciesCount[species] || 0) + 1;
@@ -199,6 +212,37 @@ const Share: React.FC = () => {
       }
     });
     setAllSpecies(speciesCount);
+  };
+
+  // Generate consistent colors for species
+  const getSpeciesColor = (species: string): string => {
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+      '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
+    ];
+    
+    // Simple hash function to get consistent color for each species
+    let hash = 0;
+    for (let i = 0; i < species.length; i++) {
+      hash = species.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Convert filtered sessions to catch locations for Leaflet map
+  const getCatchLocations = (): CatchLocation[] => {
+    return filteredSessions.map(catch_ => ({
+      id: catch_.id,
+      latitude: catch_.location.latitude,
+      longitude: catch_.location.longitude,
+      species: catch_.species,
+      userName: catch_.userName,
+      sessionDate: catch_.sessionDate,
+      length: catch_.length,
+      weight: catch_.weight,
+      location: catch_.location
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -566,6 +610,10 @@ const Share: React.FC = () => {
                         />
                         <span className="species-name">{species}</span>
                         <span className="species-count">({count})</span>
+                        <div 
+                          className="species-color-swatch" 
+                          style={{ backgroundColor: getSpeciesColor(species) }}
+                        ></div>
                       </div>
                     ))
                 )}
@@ -577,39 +625,56 @@ const Share: React.FC = () => {
           <div className="summary-panel">
             <h3>Session Summary</h3>
             <div className="summary-content">
-              <div className="summary-list">
-                {filteredSessions.length === 0 ? (
-                  <div className="no-data">No sessions match your filters</div>
-                ) : (
-                  filteredSessions.map((catch_, index) => (
-                    <div key={index} className="summary-item">
-                      <div className="summary-date">
-                        {new Date(catch_.sessionDate).toLocaleDateString()}
+              <div className="summary-list-container">
+                <div className="summary-list">
+                  {filteredSessions.length === 0 ? (
+                    <div className="no-data">No sessions match your filters</div>
+                  ) : (
+                    filteredSessions.map((catch_, index) => (
+                      <div key={index} className="summary-item">
+                        <div className="summary-date">
+                          {new Date(catch_.sessionDate).toLocaleDateString()}
+                        </div>
+                        <div className="summary-time">
+                          {new Date(catch_.sessionStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div className="summary-user">{catch_.userName}</div>
+                        <div className="summary-location" title={catch_.location?.description || 'Unknown'}>
+                          <MapPin size={14} />
+                          {catch_.location?.latitude?.toFixed(4)}, {catch_.location?.longitude?.toFixed(4)}
+                        </div>
+                        <div className="summary-species">
+                          <div 
+                            className="species-color-swatch" 
+                            style={{ backgroundColor: getSpeciesColor(catch_.species) }}
+                          ></div>
+                          <span className="species-name">{catch_.species}</span>
+                        </div>
+                        <div className="summary-measurements">
+                          {catch_.length ? `${catch_.length}"` : ''} {catch_.weight ? `${catch_.weight}lbs` : ''}
+                        </div>
                       </div>
-                      <div className="summary-time">
-                        {new Date(catch_.sessionStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                      <div className="summary-user">{catch_.userName}</div>
-                      <div className="summary-location">
-                        <MapPin size={14} />
-                        {catch_.location?.description || 'Unknown'}
-                      </div>
-                      <div className="summary-species">{catch_.species}</div>
-                      <div className="summary-measurements">
-                        {catch_.length ? `${catch_.length}"` : ''} {catch_.weight ? `${catch_.weight}lbs` : ''}
-                      </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
               
               {/* Map */}
               <div className="summary-map">
                 <h4>Catch Locations</h4>
                 <div className="map-container">
-                  <div className="map-placeholder">
-                    Map showing {filteredSessions.length} catch locations
-                  </div>
+                  {filteredSessions.length > 0 ? (
+                    <LeafletMap
+                      catches={getCatchLocations()}
+                      height="100%"
+                      zoom={4}
+                      className="catch-locations-map"
+                    />
+                  ) : (
+                    <div className="map-placeholder">
+                      Select users and species to view catch locations
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

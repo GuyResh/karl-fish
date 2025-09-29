@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, MapPin, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { X, MapPin } from 'lucide-react';
+import LeafletMap, { CatchLocation } from './LeafletMap';
 
 interface MapModalProps {
   isOpen: boolean;
@@ -9,16 +10,18 @@ interface MapModalProps {
 }
 
 const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, latitude, longitude }) => {
-  const [useAltMap, setUseAltMap] = useState(false);
-  
   if (!isOpen) return null;
 
-  // Use a wider view with better zoom and ensure marker is visible
-  // Try multiple approaches for better marker visibility
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.02},${latitude-0.02},${longitude+0.02},${latitude+0.02}&layer=mapnik&marker=${latitude},${longitude}&zoom=12`;
-  
-  // Alternative map URL with different marker approach
-  const altMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.02},${latitude-0.02},${longitude+0.02},${latitude+0.02}&layer=mapnik&mlat=${latitude}&mlon=${longitude}&zoom=12`;
+  // Create a single catch location for the map
+  const catchLocation: CatchLocation = {
+    id: 'location-marker',
+    latitude,
+    longitude,
+    species: 'Location',
+    location: {
+      description: 'Session Location'
+    }
+  };
 
   return (
     <div className="map-modal-overlay" onClick={onClose}>
@@ -29,13 +32,6 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, latitude, longitud
             <span>Location Map</span>
           </div>
           <div className="map-modal-actions">
-            <button 
-              onClick={() => setUseAltMap(!useAltMap)}
-              className="map-modal-refresh"
-              title="Switch map view"
-            >
-              <RefreshCw size={16} />
-            </button>
             <button 
               onClick={onClose}
               className="map-modal-close"
@@ -48,25 +44,18 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, latitude, longitud
         
         <div className="map-modal-content">
           <div className="map-container">
-            <iframe
-              src={useAltMap ? altMapUrl : mapUrl}
-              width="100%"
+            <LeafletMap
+              catches={[catchLocation]}
+              center={[latitude, longitude]}
+              zoom={8}
               height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Location Map"
-              key={useAltMap ? 'alt' : 'main'}
             />
           </div>
           
           <div className="map-coordinates">
             <div className="coordinate-item">
-              <strong>Latitude:</strong> {latitude.toFixed(6)}
-            </div>
-            <div className="coordinate-item">
-              <strong>Longitude:</strong> {longitude.toFixed(6)}
+              <MapPin size={14} />
+              <span>{latitude.toFixed(4)}°N, {Math.abs(longitude).toFixed(4)}°W</span>
             </div>
           </div>
         </div>
