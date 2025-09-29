@@ -184,7 +184,15 @@ export class DataSyncService {
         try {
           // Remove cloudId before saving locally
           const { cloudId, ...sessionData } = cloudSession;
-          await FishingDataService.createSession(sessionData);
+          
+          // Check if session already exists locally before creating
+          const existingSession = await FishingDataService.getSession(sessionData.id);
+          if (!existingSession) {
+            await FishingDataService.createSession(sessionData);
+          } else {
+            // Update existing session if cloud is newer
+            await FishingDataService.updateSession(sessionData.id, sessionData);
+          }
         } catch (error) {
           console.error(`Error downloading session ${cloudSession.id}:`, error);
         }
@@ -233,8 +241,12 @@ export class DataSyncService {
           // Add the shared flag based on privacy level
           sessionData.shared = cloudSession.privacy_level === 'friends' || cloudSession.privacy_level === 'public';
           
-          // Save to local storage
-          await FishingDataService.createSession(sessionData);
+          // Check if session already exists locally before creating
+          const existingSession = await FishingDataService.getSession(sessionData.id);
+          if (!existingSession) {
+            // Save to local storage only if it doesn't exist
+            await FishingDataService.createSession(sessionData);
+          }
         }
       }
 
@@ -283,6 +295,8 @@ export class DataSyncService {
   static async forceDownloadFromCloud(): Promise<void> {
     try {
       console.log('Force downloading all data from cloud...');
+      
+      // Download fresh data from cloud (with deduplication)
       await this.downloadSessionsFromCloud();
       
       // Dispatch event to refresh UI

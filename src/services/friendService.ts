@@ -242,48 +242,32 @@ export class FriendService {
       .single();
 
     if (friendship) {
-      // Check if permissions already exist for both users
-      const { data: existingPermissions } = await supabase
+      // Use upsert to create or update permissions for both users
+      // Specify the conflict resolution columns
+      const { error } = await supabase
         .from('friend_permissions')
-        .select('user_id, friend_id')
-        .or(`and(user_id.eq.${friendship.requester_id},friend_id.eq.${friendship.addressee_id}),and(user_id.eq.${friendship.addressee_id},friend_id.eq.${friendship.requester_id})`);
-
-      const existingPairs = new Set();
-      existingPermissions?.forEach(perm => {
-        existingPairs.add(`${perm.user_id}-${perm.friend_id}`);
-      });
-
-      const permissionsToCreate = [];
-
-      // Only create permissions that don't already exist
-      const requesterToAddressee = `${friendship.requester_id}-${friendship.addressee_id}`;
-      const addresseeToRequester = `${friendship.addressee_id}-${friendship.requester_id}`;
-
-      if (!existingPairs.has(requesterToAddressee)) {
-        permissionsToCreate.push({
-          user_id: friendship.requester_id,
-          friend_id: friendship.addressee_id,
-          can_view_sessions: true,
-          can_view_catches: true,
-          can_view_location: true
+        .upsert([
+          {
+            user_id: friendship.requester_id,
+            friend_id: friendship.addressee_id,
+            can_view_sessions: true,
+            can_view_catches: true,
+            can_view_location: true
+          },
+          {
+            user_id: friendship.addressee_id,
+            friend_id: friendship.requester_id,
+            can_view_sessions: true,
+            can_view_catches: true,
+            can_view_location: true
+          }
+        ], {
+          onConflict: 'user_id,friend_id'
         });
-      }
 
-      if (!existingPairs.has(addresseeToRequester)) {
-        permissionsToCreate.push({
-          user_id: friendship.addressee_id,
-          friend_id: friendship.requester_id,
-          can_view_sessions: true,
-          can_view_catches: true,
-          can_view_location: true
-        });
-      }
-
-      // Only insert if there are permissions to create
-      if (permissionsToCreate.length > 0) {
-        await supabase
-          .from('friend_permissions')
-          .insert(permissionsToCreate);
+      if (error) {
+        console.error('Error creating friend permissions:', error);
+        // Don't throw - this is not critical for the friendship to work
       }
     }
   }
