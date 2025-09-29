@@ -145,14 +145,25 @@ const Share: React.FC = () => {
     );
   };
 
+  const toggleAllSpecies = () => {
+    const speciesList = Object.keys(allSpecies);
+    const allSelected = selectedSpecies.length === speciesList.length && speciesList.length > 0;
+    setSelectedSpecies(allSelected ? [] : speciesList);
+  };
+
   const processSharedSessions = () => {
+    // Require at least one selected user AND at least one selected species
+    if (selectedUsers.length === 0 || selectedSpecies.length === 0) {
+      setFilteredSessions([]);
+      return;
+    }
+
     const sessions = sharedSessions.filter(session => {
-      const userMatch = selectedUsers.length === 0 || selectedUsers.includes(session.user_id);
-      const speciesMatch = selectedSpecies.length === 0 || 
-        session.session_data.catches.some((catch_: any) => 
-          selectedSpecies.includes(catch_.species)
-        );
-      return userMatch && speciesMatch;
+      const userMatch = selectedUsers.includes(session.user_id);
+      const speciesMatch = session.session_data.catches?.some((catch_: any) => 
+        selectedSpecies.includes(catch_.species)
+      );
+      return Boolean(userMatch && speciesMatch);
     });
 
     // Flatten all catches from filtered sessions
@@ -528,7 +539,17 @@ const Share: React.FC = () => {
 
             {/* Right Panel - Species */}
             <div className="species-panel">
-              <h3>Species</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Species</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'normal', fontSize: '0.9rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSpecies.length === Object.keys(allSpecies).length && Object.keys(allSpecies).length > 0}
+                    onChange={toggleAllSpecies}
+                  />
+                  All
+                </label>
+              </h3>
               <div className="species-list">
                 {Object.entries(allSpecies).length === 0 ? (
                   <div className="no-data">No species data</div>
