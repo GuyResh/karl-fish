@@ -255,13 +255,23 @@ const Share: React.FC = () => {
     }
 
     // Get all sessions to process (shared + my own if "me" is selected)
-    const allSessionsToProcess = [...sharedSessions];
+    const rawSessions: any[] = [...sharedSessions];
     
     // If "me" is selected, also include my own sessions
     if (user && selectedUsers.includes(user.id)) {
       const myOwnSessions = mySessions || [];
-      allSessionsToProcess.push(...myOwnSessions);
+      rawSessions.push(...myOwnSessions);
     }
+
+    // De-duplicate by canonical session id
+    const seenProcess = new Set<string>();
+    const allSessionsToProcess = rawSessions.filter((session: any) => {
+      const key = 'session_data' in session ? session.session_data?.id : session.id;
+      if (!key) return false;
+      if (seenProcess.has(key)) return false;
+      seenProcess.add(key);
+      return true;
+    });
 
     const sessions = allSessionsToProcess.filter((session: any) => {
       // Handle different session structures
@@ -381,14 +391,23 @@ const Share: React.FC = () => {
     }
     
     // Get all sessions to process (shared + my own if "me" is selected)
-    const allSessionsToProcess = [...sharedSessions];
+    const rawSessions: any[] = [...sharedSessions];
     
     // If "me" is selected, also include my own sessions
     if (user && selectedUsers.includes(user.id)) {
       const myOwnSessions = mySessions || [];
-      allSessionsToProcess.push(...myOwnSessions);
+      rawSessions.push(...myOwnSessions);
     }
-    
+    // De-duplicate by canonical session id
+    const seen = new Set<string>();
+    const allSessionsToProcess = rawSessions.filter((session: any) => {
+      const key = 'session_data' in session ? session.session_data?.id : session.id;
+      if (!key) return false;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
     allSessionsToProcess.forEach((session: any) => {
       // Handle different session structures
       let sessionData, sessionUserId;
