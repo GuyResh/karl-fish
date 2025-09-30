@@ -9,7 +9,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react()],
     base,
-  clearScreen: false,
+    clearScreen: false,
   server: {
     port: 4000,
     strictPort: true,
