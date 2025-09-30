@@ -79,6 +79,7 @@ function AppContent() {
   const [sampleOpen, setSampleOpen] = useState(false);
   const [sampleData, setSampleData] = useState<any[] | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [hasCachedData, setHasCachedData] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   useEffect(() => {
@@ -135,6 +136,35 @@ function AppContent() {
     };
     checkOfflineMode();
   }, []);
+
+  // Probe local cache to see if we have any data to show when logged out
+  useEffect(() => {
+    const probeCache = async () => {
+      try {
+        const [localSessions, offlineShared] = await Promise.all([
+          FishingDataService.getAllSessions(),
+          // Use DataSyncService helper which reads IndexedDB-backed shared cache
+          DataSyncService.getOfflineSharedSessions()
+        ]);
+
+        const hasAny = (localSessions && localSessions.length > 0) || (offlineShared && offlineShared.length > 0);
+        setHasCachedData(Boolean(hasAny));
+
+        // If logged out but we have cached data, enable offline mode automatically
+        if (!user && hasAny) {
+          await DataSyncService.enableOfflineMode();
+          setIsOfflineMode(true);
+          // Ensure auth modal is not forced open
+          setShowAuthModal(false);
+        }
+      } catch (e) {
+        console.error('Error probing local cache:', e);
+        setHasCachedData(false);
+      }
+    };
+
+    probeCache();
+  }, [user]);
 
   useEffect(() => {
     const loadSampleData = async () => {
@@ -204,8 +234,8 @@ function AppContent() {
     );
   }
 
-  // Show auth modal if not logged in and not in offline mode
-  if (!user && !isOfflineMode) {
+  // Show auth modal only if not logged in AND we have neither offline mode nor cached data
+  if (!user && !isOfflineMode && !hasCachedData) {
     return (
       <div className="app">
         <Header settings={settings} onShowAuth={handleShowAuthModal} />

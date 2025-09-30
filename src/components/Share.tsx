@@ -8,6 +8,7 @@ import { AuthService } from '../services/authService';
 import { FriendService } from '../services/friendService';
 import { Profile, Session } from '../lib/supabase';
 import { FishingSession } from '../types';
+import { FishingDataService } from '../database';
 import LeafletMap, { CatchLocation } from './LeafletMap';
 import DateRangeSlider from './DateRangeSlider';
 
@@ -34,6 +35,7 @@ const Share: React.FC = () => {
   const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
   const [selectedSessionsForMap, setSelectedSessionsForMap] = useState<Set<number>>(new Set());
   const [dateFilter, setDateFilter] = useState<{start: Date, end: Date} | null>(null);
+  const [currentNmeaLocation, setCurrentNmeaLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -73,6 +75,30 @@ const Share: React.FC = () => {
       setDateFilter({ start: dateRange.start, end: dateRange.end });
     }
   }, [dateRange]);
+
+  // Pull latest NMEA location to drive map current-location override
+  useEffect(() => {
+    const loadLatestNmea = async () => {
+      try {
+        const allNmea = await FishingDataService.getAllNMEAData();
+        if (allNmea && allNmea.length > 0) {
+          const latestWithCoords = allNmea
+            .filter((d: any) => d.latitude && d.longitude)
+            .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+          if (latestWithCoords) {
+            setCurrentNmeaLocation({ lat: latestWithCoords.latitude, lng: latestWithCoords.longitude });
+          }
+        }
+      } catch (e) {
+        console.error('Share: failed to load NMEA data', e);
+      }
+    };
+
+    loadLatestNmea();
+    const onDataUpdated = () => loadLatestNmea();
+    window.addEventListener('dataUpdated', onDataUpdated);
+    return () => window.removeEventListener('dataUpdated', onDataUpdated);
+  }, []);
 
 
   const loadData = async () => {
@@ -908,6 +934,7 @@ const Share: React.FC = () => {
                       zoom={4}
                       className="catch-locations-map"
                       showCurrentLocation={true}
+                      currentLocationOverride={currentNmeaLocation || undefined}
                     />
                   ) : (
                     <div className="map-placeholder">

@@ -109,6 +109,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await AuthService.signOut();
       setUser(null);
       setProfile(null);
+      // Do NOT clear local data on sign out; allow offline viewing
+      // Optionally, we could enable offline mode here if cache exists. App boot will probe cache.
     } finally {
       setLoading(false);
     }

@@ -109,7 +109,10 @@ const SessionList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="card">
+      <div
+        className="card loading-center"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 160, textAlign: 'center' }}
+      >
         <div className="loading-spinner"></div>
         <p>Loading sessions...</p>
       </div>

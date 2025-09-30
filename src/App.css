@@ -46,6 +46,21 @@ body {
   margin-bottom: 24px;
 }
 
+/* Center inline loading states inside cards */
+.card.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  text-align: center;
+}
+
+/* Tweak spinner spacing inside loading cards to not shift centering */
+.card.loading-center .loading-spinner {
+  margin-bottom: 12px;
+}
+
 .app-loading p {
   font-size: 1.25rem;
   font-weight: 500;

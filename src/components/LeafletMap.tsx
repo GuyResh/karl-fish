@@ -41,6 +41,7 @@ export interface LeafletMapProps {
   height?: string;
   className?: string;
   showCurrentLocation?: boolean;
+  currentLocationOverride?: { lat: number; lng: number };
 }
 
 const LeafletMap: React.FC<LeafletMapProps> = ({
@@ -49,7 +50,8 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   zoom = 4,
   height = '400px',
   className = '',
-  showCurrentLocation = false
+  showCurrentLocation = false,
+  currentLocationOverride
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -146,12 +148,16 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     });
   };
 
-  // Get current location when component mounts and showCurrentLocation is true
+  // Get current location from override or browser geolocation
   useEffect(() => {
+    if (currentLocationOverride) {
+      setCurrentLocation(currentLocationOverride);
+      return;
+    }
     if (showCurrentLocation) {
       getCurrentLocation();
     }
-  }, [showCurrentLocation]);
+  }, [showCurrentLocation, currentLocationOverride]);
 
   // Initialize map
   useEffect(() => {
