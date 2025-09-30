@@ -1,6 +1,7 @@
 # Karl Fish - Fishing Log Application
 
-![Karl Fish Logo](KarlFish.png)
+![Karl Fish](KarlFish.png)
+![Karl Fish Share](KarlFishShare.png)
 
 A comprehensive React-based fishing log application that can be deployed as a web app or desktop/tablet application using Tauri. Features integration with NMEA 2000 marine electronics networks for automatic data collection from all connected devices.
 
