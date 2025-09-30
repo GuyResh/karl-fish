@@ -13,6 +13,16 @@ import './App.css';
 import { generateTwoYearsOfData } from './services/sampleDataGenerator';
 import ConfirmModal from './components/ConfirmModal';
 
+// Suppress Mozilla deprecation warnings from Leaflet
+const originalWarn = console.warn;
+console.warn = (message: any, ...args: any[]) => {
+  if (typeof message === 'string' && 
+      (message.includes('MouseEvent.mozPressure') || message.includes('MouseEvent.mozInputSource'))) {
+    return; // Suppress these specific warnings
+  }
+  originalWarn(message, ...args);
+};
+
 // Lazy load components for better code splitting
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const SessionForm = lazy(() => import('./components/SessionForm'));
@@ -148,15 +158,19 @@ function AppContent() {
 
   useEffect(() => {
     const syncData = async () => {
-      if (user && !isOfflineMode) {
-        // Add a small delay to prevent rapid-fire syncs
+      if (user) {
+        // When user logs in, disable offline mode first
+        await DataSyncService.disableOfflineMode();
+        setIsOfflineMode(false);
+        
+        // Then sync data
         setTimeout(async () => {
           await DataSyncService.syncAllData();
         }, 100);
       }
     };
     syncData();
-  }, [user, isOfflineMode]);
+  }, [user]);
 
   const updateSettings = async (newSettings: AppSettings) => {
     try {

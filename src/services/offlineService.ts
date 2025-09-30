@@ -1,5 +1,6 @@
 import { FishingSession, FishCatch, NMEAData, AppSettings } from '../types';
 import { Profile, Session } from '../lib/supabase';
+import { SharedDataService } from './sharedDataService';
 
 export interface OfflineData {
   sessions: FishingSession[];
@@ -91,6 +92,10 @@ export class OfflineService {
   }
 
   static async syncFriendsData(friends: Profile[]): Promise<void> {
+    // Save to IndexedDB
+    await SharedDataService.saveProfiles(friends);
+    
+    // Also update localStorage for backward compatibility
     const data = await this.getOfflineData();
     data.friendsData = friends;
     data.lastSync = new Date().toISOString();
@@ -98,11 +103,22 @@ export class OfflineService {
   }
 
   static async getFriendsData(): Promise<Profile[]> {
+    // Try IndexedDB first
+    const profiles = await SharedDataService.getProfiles();
+    if (profiles.length > 0) {
+      return profiles;
+    }
+    
+    // Fallback to localStorage for backward compatibility
     const data = await this.getOfflineData();
     return data.friendsData || [];
   }
 
   static async syncSharedSessions(sessions: Session[]): Promise<void> {
+    // Save to IndexedDB
+    await SharedDataService.saveSessions(sessions);
+    
+    // Also update localStorage for backward compatibility
     const data = await this.getOfflineData();
     data.sharedSessions = sessions;
     data.lastSync = new Date().toISOString();
@@ -110,6 +126,13 @@ export class OfflineService {
   }
 
   static async getSharedSessions(): Promise<Session[]> {
+    // Try IndexedDB first
+    const sessions = await SharedDataService.getSessions();
+    if (sessions.length > 0) {
+      return sessions;
+    }
+    
+    // Fallback to localStorage for backward compatibility
     const data = await this.getOfflineData();
     return data.sharedSessions || [];
   }
@@ -127,5 +150,27 @@ export class OfflineService {
   static async getLastSyncTime(): Promise<Date | null> {
     const data = await this.getOfflineData();
     return data.lastSync ? new Date(data.lastSync) : null;
+  }
+
+  // New methods for friendships and friend permissions
+  static async syncFriendships(friendships: any[]): Promise<void> {
+    await SharedDataService.saveFriendships(friendships);
+  }
+
+  static async getFriendships(): Promise<any[]> {
+    return await SharedDataService.getFriendships();
+  }
+
+  static async syncFriendPermissions(permissions: any[]): Promise<void> {
+    await SharedDataService.saveFriendPermissions(permissions);
+  }
+
+  static async getFriendPermissions(): Promise<any[]> {
+    return await SharedDataService.getFriendPermissions();
+  }
+
+  // Clear all shared data from IndexedDB
+  static async clearSharedData(): Promise<void> {
+    await SharedDataService.clearAllSharedData();
   }
 }

@@ -32,6 +32,12 @@ export class DataSyncService {
       // Sync friends data
       await this.syncFriendsData();
       
+      // Sync friendships data
+      await this.syncFriendshipsData();
+      
+      // Sync friend permissions data
+      await this.syncFriendPermissionsData();
+      
       // Sync shared sessions
       await this.syncSharedSessions();
       
@@ -58,6 +64,26 @@ export class DataSyncService {
       console.log(`Synced ${friends.length} friends`);
     } catch (error) {
       console.error('Error syncing friends data:', error);
+    }
+  }
+
+  static async syncFriendshipsData(): Promise<void> {
+    try {
+      const friendships = await FriendService.getAllFriendships();
+      await OfflineService.syncFriendships(friendships);
+      console.log(`Synced ${friendships.length} friendships to offline storage`);
+    } catch (error) {
+      console.error('Error syncing friendships data:', error);
+    }
+  }
+
+  static async syncFriendPermissionsData(): Promise<void> {
+    try {
+      // Note: FriendService doesn't have a method for permissions yet
+      // This is a placeholder for when that functionality is added
+      console.log('Friend permissions sync not yet implemented');
+    } catch (error) {
+      console.error('Error syncing friend permissions data:', error);
     }
   }
 
@@ -281,6 +307,14 @@ export class DataSyncService {
     return await OfflineService.getSharedSessions();
   }
 
+  static async getOfflineFriendships(): Promise<any[]> {
+    return await OfflineService.getFriendships();
+  }
+
+  static async getOfflineFriendPermissions(): Promise<any[]> {
+    return await OfflineService.getFriendPermissions();
+  }
+
   static async isDataStale(): Promise<boolean> {
     const lastSync = await OfflineService.getLastSyncTime();
     if (!lastSync) return true;
@@ -354,6 +388,23 @@ export class DataSyncService {
       console.log('All data cleared successfully');
     } catch (error) {
       console.error('Error clearing all data:', error);
+      throw error;
+    }
+  }
+
+  static async clearSharedData(): Promise<void> {
+    try {
+      console.log('Clearing shared data...');
+      
+      // Clear shared data from IndexedDB
+      await FishingDataService.clearSharedData();
+      
+      // Clear shared data from localStorage
+      await OfflineService.clearSharedData();
+      
+      console.log('Shared data cleared');
+    } catch (error) {
+      console.error('Error clearing shared data:', error);
       throw error;
     }
   }

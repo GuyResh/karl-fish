@@ -2619,11 +2619,24 @@ li code {
   margin-bottom: 0.5rem;
 }
 
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  margin-left: 5px;
+}
+
 .summary-panel h3 {
-  margin: 0 0 0.25rem 0;
+  margin: 0;
   color: #333;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.summary-header .summary-checkbox {
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .summary-content {

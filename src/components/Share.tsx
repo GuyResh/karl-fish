@@ -14,7 +14,7 @@ import DateRangeSlider from './DateRangeSlider';
 const Share: React.FC = () => {
   const { user, profile } = useAuth();
   const [sharedSessions, setSharedSessions] = useState<Session[]>([]);
-  const [mySessions, setMySessions] = useState<Session[]>([]);
+  const [mySessions, setMySessions] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
   const [friends, setFriends] = useState<Profile[]>([]);
   const [friendships, setFriendships] = useState<any[]>([]);
@@ -37,6 +37,11 @@ const Share: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      // When user logs in, disable offline mode and load fresh data
+      DataSyncService.disableOfflineMode();
+      loadData();
+    } else {
+      // Even if not logged in, try to load offline data
       loadData();
     }
   }, [user]);
@@ -78,20 +83,40 @@ const Share: React.FC = () => {
       const offlineMode = await OfflineService.isOfflineMode();
       setIsOfflineMode(offlineMode);
 
-      if (offlineMode) {
-        // Load offline data
-        const [sharedData, friendsData] = await Promise.all([
+      if (!user) {
+        // Not logged in - load cached data
+        const [sharedData, friendsData, friendshipsData, localSessions] = await Promise.all([
           DataSyncService.getOfflineSharedSessions(),
-          DataSyncService.getOfflineFriendsData()
+          DataSyncService.getOfflineFriendsData(),
+          DataSyncService.getOfflineFriendships(),
+          // Load local sessions from IndexedDB even when not logged in
+          import('../database').then(({ FishingDataService }) => FishingDataService.getAllSessions())
         ]);
         
         setSharedSessions(sharedData);
-        setMySessions([]); // No my sessions in offline mode
+        setMySessions(localSessions); // Show local sessions even when not logged in
         setAllUsers(friendsData); // In offline mode, only show friends
         setFriends(friendsData);
+        setFriendships(friendshipsData);
+        setStatus('Showing cached data (not logged in)');
+      } else if (offlineMode) {
+        // Logged in but in offline mode - show cached data
+        const [sharedData, friendsData, friendshipsData, localSessions] = await Promise.all([
+          DataSyncService.getOfflineSharedSessions(),
+          DataSyncService.getOfflineFriendsData(),
+          DataSyncService.getOfflineFriendships(),
+          // Load local sessions from IndexedDB
+          import('../database').then(({ FishingDataService }) => FishingDataService.getAllSessions())
+        ]);
+        
+        setSharedSessions(sharedData);
+        setMySessions(localSessions);
+        setAllUsers(friendsData);
+        setFriends(friendsData);
+        setFriendships(friendshipsData);
         setStatus('Offline mode - showing cached data');
       } else {
-        // Load online data
+        // Logged in and online - load fresh data from server
         const [sharedData, myData, allUsersData, friendsData, friendshipsData] = await Promise.all([
           SharingService.getSharedSessions(),
           SharingService.getUserSessions(),
@@ -105,6 +130,7 @@ const Share: React.FC = () => {
         setAllUsers(allUsersData); // All users except current user
         setFriends(friendsData);
         setFriendships(friendshipsData);
+        setStatus(''); // Clear status when loading fresh data
       }
       
     } catch (error) {
@@ -180,6 +206,15 @@ const Share: React.FC = () => {
     });
   };
 
+  const toggleAllSessionsForMap = () => {
+    const allSelected = selectedSessionsForMap.size === filteredSessions.length && filteredSessions.length > 0;
+    if (allSelected) {
+      setSelectedSessionsForMap(new Set());
+    } else {
+      setSelectedSessionsForMap(new Set(filteredSessions.map((_, index) => index)));
+    }
+  };
+
   const toggleAllSpecies = () => {
     const speciesList = Object.keys(allSpecies);
     const allSelected = selectedSpecies.length === speciesList.length && speciesList.length > 0;
@@ -202,17 +237,29 @@ const Share: React.FC = () => {
       allSessionsToProcess.push(...myOwnSessions);
     }
 
-    const sessions = allSessionsToProcess.filter(session => {
-      const userMatch = selectedUsers.includes(session.user_id) || 
-        (user && selectedUsers.includes(user.id) && session.user_id === user.id);
-      const speciesMatch = session.session_data.catches?.some((catch_: any) => 
+    const sessions = allSessionsToProcess.filter((session: any) => {
+      // Handle different session structures
+      let sessionData, sessionUserId;
+      if ('session_data' in session) {
+        // Shared session from Supabase
+        sessionData = session.session_data as any;
+        sessionUserId = session.user_id;
+      } else {
+        // Local session from IndexedDB
+        sessionData = session as any;
+        sessionUserId = session.userId || session.user_id;
+      }
+      
+      const userMatch = selectedUsers.includes(sessionUserId) || 
+        (user && selectedUsers.includes(user.id) && sessionUserId === user.id);
+      const speciesMatch = sessionData.catches?.some((catch_: any) => 
         selectedSpecies.includes(catch_.species)
       );
       
       // Add date filtering if date filter is set
       let dateMatch = true;
       if (dateFilter) {
-        const sessionDate = new Date(session.session_data.date || session.session_data.startTime || session.updated_at);
+        const sessionDate = new Date(sessionData.date || sessionData.startTime || session.updated_at);
         dateMatch = sessionDate >= dateFilter.start && sessionDate <= dateFilter.end;
       }
       
@@ -221,27 +268,39 @@ const Share: React.FC = () => {
 
     // Flatten all catches from filtered sessions, but only include catches that match selected species
     const allCatches: any[] = [];
-    sessions.forEach(session => {
-      if (session.session_data.catches) {
-        session.session_data.catches.forEach((catch_: any) => {
+    sessions.forEach((session: any) => {
+      // Handle different session structures
+      let sessionData, sessionUserId;
+      if ('session_data' in session) {
+        // Shared session from Supabase
+        sessionData = session.session_data as any;
+        sessionUserId = session.user_id;
+      } else {
+        // Local session from IndexedDB
+        sessionData = session as any;
+        sessionUserId = session.userId || session.user_id;
+      }
+      
+      if (sessionData.catches) {
+        sessionData.catches.forEach((catch_: any) => {
           // Only include catches that match the selected species
           if (selectedSpecies.includes(catch_.species)) {
             // Get username - special handling for current user
             let userName = 'Unknown';
-            if (session.user_id === user?.id) {
+            if (sessionUserId === user?.id) {
               // Current user - use profile name or username
               userName = profile?.name ? profile.name.split(' ')[0] : profile?.username || user?.email || 'Unknown';
             } else {
               // Other users - look up in allUsers
-              userName = allUsers.find(u => u.id === session.user_id)?.username || 'Unknown';
+              userName = allUsers.find(u => u.id === sessionUserId)?.username || 'Unknown';
             }
 
             allCatches.push({
               ...catch_,
-              sessionDate: session.session_data.date,
-              sessionStartTime: session.session_data.startTime,
+              sessionDate: sessionData.date,
+              sessionStartTime: sessionData.startTime,
               userName: userName,
-              location: session.session_data.location
+              location: sessionData.location
             });
           }
         });
@@ -262,7 +321,16 @@ const Share: React.FC = () => {
     }
 
     const dates = allSessions.map(session => {
-      const sessionData = session.session_data as any;
+      // Handle different session structures
+      let sessionData;
+      if ('session_data' in session) {
+        // Shared session from Supabase
+        sessionData = session.session_data as any;
+      } else {
+        // Local session from IndexedDB
+        sessionData = session as any;
+      }
+      
       return new Date(sessionData.date || sessionData.startTime || session.updated_at);
     }).filter(date => !isNaN(date.getTime()));
 
@@ -295,13 +363,25 @@ const Share: React.FC = () => {
       allSessionsToProcess.push(...myOwnSessions);
     }
     
-    allSessionsToProcess.forEach(session => {
-      // Check if this session belongs to a selected user
-      const isSelectedUser = selectedUsers.includes(session.user_id) || 
-        (user && selectedUsers.includes(user.id) && session.user_id === user.id);
+    allSessionsToProcess.forEach((session: any) => {
+      // Handle different session structures
+      let sessionData, sessionUserId;
+      if ('session_data' in session) {
+        // Shared session from Supabase
+        sessionData = session.session_data as any;
+        sessionUserId = session.user_id;
+      } else {
+        // Local session from IndexedDB
+        sessionData = session as any;
+        sessionUserId = session.userId || session.user_id;
+      }
       
-      if (isSelectedUser && session.session_data.catches) {
-        session.session_data.catches.forEach((catch_: any) => {
+      // Check if this session belongs to a selected user
+      const isSelectedUser = selectedUsers.includes(sessionUserId) || 
+        (user && selectedUsers.includes(user.id) && sessionUserId === user.id);
+      
+      if (isSelectedUser && sessionData.catches) {
+        sessionData.catches.forEach((catch_: any) => {
           const species = catch_.species || 'Unknown';
           speciesCount[species] = (speciesCount[species] || 0) + 1;
         });
@@ -439,7 +519,10 @@ const Share: React.FC = () => {
   };
 
 
-  if (!user) {
+  // Check if we have any data to show (either online or offline)
+  const hasData = sharedSessions.length > 0 || mySessions.length > 0 || allUsers.length > 0 || friends.length > 0;
+  
+  if (!user && !hasData && !isLoading) {
     return (
       <div className="share">
         <div className="card">
@@ -505,19 +588,21 @@ const Share: React.FC = () => {
                 ) : (
                   <>
                     {/* Current User - "Me" */}
-                    <div className="user-item">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.includes(user.id)}
-                        onChange={() => toggleUserSelection(user.id)}
-                        className="user-checkbox"
-                      />
-                      <div className="user-info">
-                        <span className="user-name me-name">
-                          {profile?.name ? profile.name.split(' ')[0] : profile?.username || user.email}
-                        </span>
+                    {user && (
+                      <div className="user-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={() => toggleUserSelection(user.id)}
+                          className="user-checkbox"
+                        />
+                        <div className="user-info">
+                          <span className="user-name me-name">
+                            {profile?.name ? profile.name.split(' ')[0] : profile?.username || user.email}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    )}
                     
                     {/* Other Users */}
                     {allUsers.length === 0 ? (
@@ -525,16 +610,16 @@ const Share: React.FC = () => {
                     ) : (
                       allUsers.map(displayedUser => {
                     const isFriend = friends.some(f => f.id === displayedUser.id);
-                    const friendship = friendships.find(f => 
+                    const friendship = user ? friendships.find(f => 
                       (f.requester_id === user.id && f.addressee_id === displayedUser.id) ||
                       (f.requester_id === displayedUser.id && f.addressee_id === user.id)
-                    );
+                    ) : null;
                     
                     // Determine friendship state
                     let friendshipState = 'stranger';
                     if (isFriend) {
                       friendshipState = 'friend';
-                    } else if (friendship) {
+                    } else if (friendship && user) {
                       if (friendship.status === 'pending') {
                         // If current logged-in user is the requester, they sent the request (show "sent")
                         // If current logged-in user is the addressee, they received the request (show "accept/block")
@@ -758,7 +843,18 @@ const Share: React.FC = () => {
 
           {/* Summary Panel */}
           <div className="summary-panel">
-            <h3>Session Summary</h3>
+            <div className="summary-header">
+              {filteredSessions.length > 0 && (
+                <input
+                  type="checkbox"
+                  checked={selectedSessionsForMap.size === filteredSessions.length && filteredSessions.length > 0}
+                  onChange={toggleAllSessionsForMap}
+                  className="summary-checkbox"
+                  title="All"
+                />
+              )}
+              <h3>Session Summary</h3>
+            </div>
             <div className="summary-content">
               <div className="summary-list-container">
                 <div className="summary-list">

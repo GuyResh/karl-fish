@@ -1,5 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { FishingSession, FishCatch, AppSettings, NMEAData } from '../types';
+import { Profile, Session, Friendship, FriendPermission } from '../lib/supabase';
 import { SyncTrackingService } from '../services/syncTrackingService';
 
 export class FishingDatabase extends Dexie {
@@ -7,14 +8,27 @@ export class FishingDatabase extends Dexie {
   catches!: Table<FishCatch>;
   settings!: Table<AppSettings>;
   nmeaData!: Table<NMEAData>;
+  
+  // Shared data tables
+  sharedProfiles!: Table<Profile>;
+  sharedSessions!: Table<Session>;
+  friendships!: Table<Friendship>;
+  friendPermissions!: Table<FriendPermission>;
 
   constructor() {
     super('FishingDatabase');
-    this.version(2).stores({
+    this.version(3).stores({
+      // Existing stores (unchanged)
       sessions: 'id, userId, date, startTime, endTime, location.latitude, location.longitude',
       catches: 'id, userId, species, length, weight, condition, sessionId',
       settings: 'id, userId',
-      nmeaData: 'id, userId, timestamp, latitude, longitude'
+      nmeaData: 'id, userId, timestamp, latitude, longitude',
+      
+      // New shared data stores
+      sharedProfiles: 'id, username, name, created_at',
+      sharedSessions: 'id, user_id, privacy_level, created_at',
+      friendships: 'id, requester_id, addressee_id, status, created_at',
+      friendPermissions: 'id, user_id, friend_id, created_at'
     });
   }
 }
@@ -255,12 +269,27 @@ export class FishingDataService {
     await SyncTrackingService.setLastLocalUpdate();
   }
 
+  // Clear only shared data (friends, shared sessions, etc.)
+  static async clearSharedData(): Promise<void> {
+    await db.transaction('rw', [db.sharedProfiles, db.sharedSessions, db.friendships, db.friendPermissions], async () => {
+      await db.sharedProfiles.clear();
+      await db.sharedSessions.clear();
+      await db.friendships.clear();
+      await db.friendPermissions.clear();
+    });
+  }
+
   // Danger: clears all app data
   static async clearAllData(): Promise<void> {
-    await db.transaction('rw', [db.sessions, db.catches, db.settings, db.nmeaData], async () => {
+    await db.transaction('rw', [db.sessions, db.catches, db.settings, db.nmeaData, db.sharedProfiles, db.sharedSessions, db.friendships, db.friendPermissions], async () => {
       await db.catches.clear();
       await db.sessions.clear();
       await db.nmeaData.clear();
+      // Clear shared data
+      await db.sharedProfiles.clear();
+      await db.sharedSessions.clear();
+      await db.friendships.clear();
+      await db.friendPermissions.clear();
       // preserve settings table entry; do not clear settings to keep user prefs
     });
   }
