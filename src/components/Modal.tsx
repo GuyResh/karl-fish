@@ -6,9 +6,10 @@ interface ModalProps {
   title?: string;
   children: ReactNode;
   actions?: ReactNode;
+  maxHeight?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, actions }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, actions, maxHeight }) => {
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -41,6 +42,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, actions
         .modal-content {
           background: #fff; border-radius: 8px; width: min(520px, 92vw);
           box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
+          ${maxHeight ? `max-height: ${maxHeight};` : ''}
         }
         .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid #eee; }
         .modal-body { padding: 1rem 1.25rem; }

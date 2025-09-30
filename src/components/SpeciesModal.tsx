@@ -12,8 +12,8 @@ const SpeciesModal: React.FC<SpeciesModalProps> = ({ isOpen, onClose, speciesDat
     .sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Species Caught">
-      <div className="species-list">
+    <Modal isOpen={isOpen} onClose={onClose} title="Species Caught" maxHeight="600px">
+      <div className="species-list species-modal-content">
         {sortedSpecies.length === 0 ? (
           <p>No species data available.</p>
         ) : (
