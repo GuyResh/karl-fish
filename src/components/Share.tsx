@@ -85,7 +85,7 @@ const Share: React.FC = () => {
           const latestWithCoords = allNmea
             .filter((d: any) => d.latitude && d.longitude)
             .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-          if (latestWithCoords) {
+          if (latestWithCoords && typeof latestWithCoords.latitude === 'number' && typeof latestWithCoords.longitude === 'number') {
             setCurrentNmeaLocation({ lat: latestWithCoords.latitude, lng: latestWithCoords.longitude });
           }
         }
