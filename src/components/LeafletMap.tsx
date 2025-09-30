@@ -354,10 +354,12 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
       }
     });
 
-    // Fit map to show all markers
+    // Fit map to show all markers with a maximum zoom level
     if (catches.length > 0 && mapInstanceRef.current && markersRef.current.length > 0) {
       const group = L.featureGroup(markersRef.current);
-      mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
+      mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1), {
+        maxZoom: 12  // Prevent over-zooming
+      });
     }
   }, [catches, mapLoaded, currentLocation, showCurrentLocation]);
 
