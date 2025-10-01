@@ -39,9 +39,10 @@ export default async function handler(req: any, res: any) {
 	try {
 		// Rate limit: allow only one expensive query per window per instance
 		if (shouldSkipQuery(windowMinutes)) {
-			return res.status(200).json({
-				status: 'ok',
-				message: `Health check skipped to respect rate limit (${windowMinutes}m window).`
+			res.setHeader('Retry-After', String(windowMinutes * 60));
+			return res.status(429).json({
+				status: 'rate_limited',
+				message: `Rate limit exceeded. Try again in up to ${windowMinutes} minute(s).`
 			});
 		}
 
