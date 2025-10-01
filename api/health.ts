@@ -18,12 +18,10 @@ function shouldSkipQuery(windowMinutes: number): boolean {
 function getSupabaseClient(): SupabaseClient {
 	const url = process.env.VITE_SUPABASE_URL as string;
 	const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
-	const anonKey = process.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-	const key = serviceKey || anonKey;
-	if (!url || !key) {
-		throw new Error('Missing Supabase configuration');
+	if (!url || !serviceKey) {
+		throw new Error('Missing Supabase configuration: require VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
 	}
-	return createClient(url, key, { auth: { persistSession: false } });
+	return createClient(url, serviceKey, { auth: { persistSession: false } });
 }
 
 export default async function handler(req: any, res: any) {
