@@ -40,9 +40,11 @@ export default async function handler(req: any, res: any) {
 		if (shouldSkipQuery(windowMinutes)) {
 			res.setHeader('Retry-After', String(windowMinutes * 60));
 			if (format === 'prometheus') {
-				return res.status(429).type('text/plain').send(`# HELP karlfish_health_status Health check status\n# TYPE karlfish_health_status gauge\nkarlfish_health_status{status="rate_limited"} 0\n`);
+				res.setHeader('Content-Type', 'text/plain');
+				return res.status(429).send(`# HELP karlfish_health_status Health check status\n# TYPE karlfish_health_status gauge\nkarlfish_health_status{status="rate_limited"} 0\n`);
 			} else if (format === 'text') {
-				return res.status(429).type('text/plain').send(`Rate limit exceeded. Try again in up to ${windowMinutes} minute(s).\n`);
+				res.setHeader('Content-Type', 'text/plain');
+				return res.status(429).send(`Rate limit exceeded. Try again in up to ${windowMinutes} minute(s).\n`);
 			} else {
 				return res.status(429).json({
 					status: 'rate_limited',
@@ -98,7 +100,8 @@ export default async function handler(req: any, res: any) {
 				prometheusOutput += `karlfish_user_sessions_total{username="${user.username}",type="private"} ${user.privateSessions}\n`;
 				prometheusOutput += `karlfish_user_sessions_total{username="${user.username}",type="shared"} ${user.sharedSessions}\n`;
 			}
-			return res.status(200).type('text/plain').send(prometheusOutput);
+			res.setHeader('Content-Type', 'text/plain');
+			return res.status(200).send(prometheusOutput);
 		} else if (format === 'text') {
 			let textOutput = `Karl Fish Health Check - ${new Date().toISOString()}\n`;
 			textOutput += `Status: OK\n\n`;
@@ -106,16 +109,19 @@ export default async function handler(req: any, res: any) {
 			for (const user of result) {
 				textOutput += `  ${user.username}: ${user.privateSessions} private, ${user.sharedSessions} shared\n`;
 			}
-			return res.status(200).type('text/plain').send(textOutput);
+			res.setHeader('Content-Type', 'text/plain');
+			return res.status(200).send(textOutput);
 		} else {
 			return res.status(200).json({ status: 'ok', data: result });
 		}
 	} catch (error: any) {
 		console.error('Health check error:', error?.message || error);
 		if (format === 'prometheus') {
-			return res.status(503).type('text/plain').send(`# HELP karlfish_health_status Health check status\n# TYPE karlfish_health_status gauge\nkarlfish_health_status{status="error"} 0\n`);
+			res.setHeader('Content-Type', 'text/plain');
+			return res.status(503).send(`# HELP karlfish_health_status Health check status\n# TYPE karlfish_health_status gauge\nkarlfish_health_status{status="error"} 0\n`);
 		} else if (format === 'text') {
-			return res.status(503).type('text/plain').send(`Karl Fish Health Check - ${new Date().toISOString()}\nStatus: ERROR\nService Unavailable\n`);
+			res.setHeader('Content-Type', 'text/plain');
+			return res.status(503).send(`Karl Fish Health Check - ${new Date().toISOString()}\nStatus: ERROR\nService Unavailable\n`);
 		} else {
 			return res.status(503).json({ status: 'error', error: 'Service Unavailable' });
 		}
