@@ -679,6 +679,11 @@ li code {
   font-style: italic;
 }
 
+.friend-username {
+  color: #666;
+  font-size: 0.8rem;
+}
+
 /* Dashboard specific - right aligned */
 .dashboard .location-line {
   justify-content: flex-end;
@@ -1068,8 +1073,8 @@ li code {
 }
 
 .dashboard-recent-sessions .session-details {
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 0.1rem;
+  margin-top: 0.25rem;
 }
 
 .dashboard-recent-sessions .session-details > div {
@@ -1094,13 +1099,15 @@ li code {
 }
 
 .session-item {
-  padding: 1rem;
+  padding: 0.875rem 1rem 0.75rem 1rem;
   border: 1px solid #eee;
   border-radius: 6px;
   background: #f8f9fa;
   text-decoration: none;
   color: inherit;
-  display: block;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
   transition: all 0.2s ease;
 }
 
@@ -1115,17 +1122,22 @@ li code {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.session-header {
+.session-left-column {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.session-right-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .session-details {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.1rem;
   font-size: 0.9rem;
   color: #666;
 }
@@ -1141,9 +1153,8 @@ li code {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
 }
 
 /* Map Modal Styles */
