@@ -5,6 +5,7 @@ import { FishingDataService } from '../database';
 import { FishingSession } from '../types';
 import { UnitConverter } from '../utils/unitConverter';
 import { nmea2000Service } from '../services/nmea2000Service';
+import { SharedDataService } from '../services/sharedDataService';
 import ConfirmModal from './ConfirmModal';
 import SpeciesModal from './SpeciesModal';
 import LiveMapModal from './LiveMapModal';
@@ -21,6 +22,12 @@ const Dashboard: React.FC = () => {
     totalFishingTime: 0
   });
   const [recentSessions, setRecentSessions] = useState<FishingSession[]>([]);
+  const [allSessions, setAllSessions] = useState<FishingSession[]>([]);
+  const [friendSessions, setFriendSessions] = useState<FishingSession[]>([]);
+  const [friendSessionsWithUsers, setFriendSessionsWithUsers] = useState<Array<{ session: FishingSession; username: string }>>([]);
+  const [hasFriendData, setHasFriendData] = useState(false);
+  const [showMine, setShowMine] = useState(true);
+  const [showFriends, setShowFriends] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
   const [isSpeciesModalOpen, setIsSpeciesModalOpen] = useState(false);
@@ -32,19 +39,97 @@ const Dashboard: React.FC = () => {
   const [currentHeading, setCurrentHeading] = useState<number | null>(null);
   const [currentDepth, setCurrentDepth] = useState<number | null>(null);
 
+  const convertSessionDates = (session: FishingSession): FishingSession => {
+    return {
+      ...session,
+      date: session.date instanceof Date ? session.date : new Date(session.date),
+      startTime: session.startTime instanceof Date ? session.startTime : new Date(session.startTime),
+      endTime: session.endTime ? (session.endTime instanceof Date ? session.endTime : new Date(session.endTime)) : undefined,
+      lastModified: session.lastModified ? (session.lastModified instanceof Date ? session.lastModified : new Date(session.lastModified)) : undefined
+    };
+  };
+
+  const updateRecentSessions = (userSessions: FishingSession[], friendSessionsData: FishingSession[]) => {
+    let filteredSessions: FishingSession[] = [];
+    
+    if (showMine) {
+      filteredSessions = [...filteredSessions, ...userSessions];
+    }
+    
+    if (showFriends) {
+      filteredSessions = [...filteredSessions, ...friendSessionsData];
+    }
+    
+    // Ensure all dates are Date objects and sort by date (most recent first)
+    const sortedSessions = filteredSessions
+      .map(convertSessionDates)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+    
+    setRecentSessions(sortedSessions);
+  };
+
   const loadDashboardData = async () => {
     try {
-      const [statsData, sessions] = await Promise.all([
+      const [statsData, userSessions, sharedSessions, profiles] = await Promise.all([
         FishingDataService.getSessionStats(),
-        FishingDataService.getAllSessions()
+        FishingDataService.getAllSessions(),
+        SharedDataService.getSessions(),
+        SharedDataService.getProfiles()
       ]);
       
       console.log('Dashboard loaded stats:', statsData);
-      console.log('Dashboard loaded sessions:', sessions.length);
+      console.log('Dashboard loaded user sessions:', userSessions.length);
+      console.log('Dashboard loaded shared sessions:', sharedSessions.length);
+      console.log('Dashboard loaded profiles:', profiles.length);
+      
       setStats(statsData);
-      setRecentSessions(sessions.slice(0, 4)); // Show last 4 sessions
+      setAllSessions(userSessions);
+      
+      // Create a map of user_id to username for quick lookup
+      const userIdToUsername = new Map<string, string>();
+      profiles.forEach(profile => {
+        userIdToUsername.set(profile.id, profile.username);
+      });
+      
+      // Convert shared sessions to FishingSession format with user info
+      const friendSessionsWithUsersData = sharedSessions
+        .map(session => {
+          const sessionData = session.session_data as FishingSession;
+          if (sessionData && sessionData.id) {
+            const username = userIdToUsername.get(session.user_id) || 'Unknown Friend';
+            return {
+              session: convertSessionDates(sessionData),
+              username: username
+            };
+          }
+          return null;
+        })
+        .filter((item): item is { session: FishingSession; username: string } => item !== null);
+      
+      const friendSessionsData = friendSessionsWithUsersData.map(item => item.session);
+      
+      // Check if there's any friend data available
+      const hasFriendSessions = friendSessionsData.length > 0;
+      setHasFriendData(hasFriendSessions);
+      
+      // If no friend data, only show Mine checkbox and disable Friends
+      if (!hasFriendSessions) {
+        setShowMine(true);
+        setShowFriends(false);
+      }
+      
+      setFriendSessions(friendSessionsData);
+      setFriendSessionsWithUsers(friendSessionsWithUsersData);
+      
+      // Update recent sessions based on current filter state
+      updateRecentSessions(userSessions, friendSessionsData);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      // On error, only show Mine checkbox
+      setHasFriendData(false);
+      setShowMine(true);
+      setShowFriends(false);
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +138,19 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Update recent sessions when filter checkboxes change
+  useEffect(() => {
+    updateRecentSessions(allSessions, friendSessions);
+  }, [showMine, showFriends, allSessions, friendSessions]);
+
+  const handleMineChange = (checked: boolean) => {
+    setShowMine(checked);
+  };
+
+  const handleFriendsChange = (checked: boolean) => {
+    setShowFriends(checked);
+  };
 
   // Listen for data changes to refresh dashboard
   useEffect(() => {
@@ -277,110 +375,170 @@ const Dashboard: React.FC = () => {
         <div className="card">
           <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h2 className="card-title">Recent Sessions</h2>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                className="btn btn-danger btn-sm"
-                onClick={() => setIsDeleteAllOpen(true)}
-                title="Delete ALL sessions and catches"
-              >
-                <Trash2 size={14} />
-                Delete All
-              </button>
-              <Link to="/sessions" className="btn btn-secondary btn-sm">
-                View All
-              </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '14px' }}>
+                  <input
+                    type="checkbox"
+                    checked={showMine}
+                    onChange={(e) => handleMineChange(e.target.checked)}
+                    style={{ margin: 0 }}
+                  />
+                  Mine
+                </label>
+                {hasFriendData && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '14px' }}>
+                    <input
+                      type="checkbox"
+                      checked={showFriends}
+                      onChange={(e) => handleFriendsChange(e.target.checked)}
+                      style={{ margin: 0 }}
+                    />
+                    Friends
+                  </label>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => setIsDeleteAllOpen(true)}
+                  title="Delete ALL sessions and catches"
+                >
+                  <Trash2 size={14} />
+                  Delete All
+                </button>
+                <Link to="/sessions" className="btn btn-secondary btn-sm">
+                  View All
+                </Link>
+              </div>
             </div>
           </div>
           {recentSessions.length === 0 ? (
             <div className="empty-state">
               <Fish size={48} />
               <h3>No sessions found</h3>
-              <p>Start logging your fishing adventures!</p>
-              <Link to="/sessions/new" className="btn btn-primary">
-                Create First Session
-              </Link>
+              {!showMine && !showFriends ? (
+                <p>Please check Mine and/or Friends check boxes above</p>
+              ) : showMine && !showFriends ? (
+                <>
+                  <p>Start logging your fishing adventures!</p>
+                  <Link to="/sessions/new" className="btn btn-primary">
+                    Create First Session
+                  </Link>
+                </>
+              ) : !showMine && showFriends ? (
+                <p>Your friends haven't shared any sessions yet</p>
+              ) : !hasFriendData ? (
+                <>
+                  <p>Start logging your fishing adventures!</p>
+                  <Link to="/sessions/new" className="btn btn-primary">
+                    Create First Session
+                  </Link>
+                </>
+              ) : (
+                <p>No sessions found</p>
+              )}
             </div>
           ) : (
             <div className="recent-sessions dashboard-recent-sessions">
-              {recentSessions.map(session => (
-                <Link key={session.id} to={`/sessions/${session.id}`} className="session-item session-item-clickable">
-                  <div className="session-header">
-                    <div className="session-date">
-                      {session.date.toLocaleDateString()}
-                      {/* time moved next to date */}
-                      <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <Clock size={14} />
-                        {session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        {` - `}
-                        {session.endTime
-                          ? (
-                              <>
-                                {session.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                <span className="duration">
-                                  {(() => {
-                                    const ms = session.endTime.getTime() - session.startTime.getTime();
-                                    const totalMinutes = Math.round(ms / (1000 * 60));
-                                    const h = Math.floor(totalMinutes / 60);
-                                    const m = totalMinutes % 60;
-                                    const duration = h > 0 ? `${h}h ${m}m` : `${m}m`;
-                                    return `(${duration})`;
-                                  })()}
-                                </span>
-                              </>
-                            )
-                          : 'In progress'}
-                      </span>
-                    </div>
-                    <div className="session-location">
-                      <div className="location-line">
-                        <MapPin size={14} />
-                        {session.location.latitude.toFixed(4)}°N, {Math.abs(session.location.longitude).toFixed(4)}°W
+              {recentSessions.map(session => {
+                // Find if this is a friend session and get the username
+                const friendSessionInfo = friendSessionsWithUsers.find(item => item.session.id === session.id);
+                const isFriendSession = !!friendSessionInfo;
+                
+                return (
+                  <Link key={session.id} to={`/sessions/${session.id}`} className="session-item session-item-clickable">
+                    {/* Left Column: Date/Time + Session Details */}
+                    <div className="session-left-column">
+                      <div className="session-date">
+                        {session.date.toLocaleDateString()}
+                        {/* time moved next to date */}
+                        <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={14} />
+                          {session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {` - `}
+                          {session.endTime
+                            ? (
+                                <>
+                                  {session.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  <span className="duration">
+                                    {(() => {
+                                      const ms = session.endTime.getTime() - session.startTime.getTime();
+                                      const totalMinutes = Math.round(ms / (1000 * 60));
+                                      const h = Math.floor(totalMinutes / 60);
+                                      const m = totalMinutes % 60;
+                                      const duration = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                                      return `(${duration})`;
+                                    })()}
+                                  </span>
+                                </>
+                              )
+                            : 'In progress'}
+                        </span>
                       </div>
-                      {session.location.description && (
-                        <div className="location-desc">
-                          {session.location.description}
+                      <div className="session-details">
+                        <div className="session-catches">
+                          <Fish size={14} />
+                          {session.catches.length} catches
+                          {session.catches.length > 0 && (
+                            <div className="catch-species">
+                              {(() => {
+                                // Group catches by species and count them
+                                const speciesCount: { [key: string]: number } = {};
+                                session.catches.forEach(catch_ => {
+                                  const species = catch_.species?.replace('Custom:', '') || 'Unknown';
+                                  speciesCount[species] = (speciesCount[species] || 0) + 1;
+                                });
+                                
+                                // Create display strings with counts
+                                return Object.entries(speciesCount)
+                                  .map(([species, count]) => count > 1 ? `${species} (${count})` : species)
+                                  .join(', ');
+                              })()}
+                            </div>
+                          )}
                         </div>
-                      )}
+                        {session.weather.temperature && (
+                          <div className="session-weather">
+                            <Thermometer size={14} />
+                            {UnitConverter.convertTemperature(session.weather.temperature).toFixed(1)}{UnitConverter.getTemperatureUnit()}
+                          </div>
+                        )}
+                        {session.weather.windSpeed && (
+                          <div className="session-wind">
+                            <Wind size={14} />
+                            {UnitConverter.convertSpeed(session.weather.windSpeed).toFixed(1)} {UnitConverter.getSpeedUnit()}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="session-details">
-                    <div className="session-catches">
-                      <Fish size={14} />
-                      {session.catches.length} catches
-                      {session.catches.length > 0 && (
-                        <div className="catch-species">
-                          {(() => {
-                            // Group catches by species and count them
-                            const speciesCount: { [key: string]: number } = {};
-                            session.catches.forEach(catch_ => {
-                              const species = catch_.species?.replace('Custom:', '') || 'Unknown';
-                              speciesCount[species] = (speciesCount[species] || 0) + 1;
-                            });
-                            
-                            // Create display strings with counts
-                            return Object.entries(speciesCount)
-                              .map(([species, count]) => count > 1 ? `${species} (${count})` : species)
-                              .join(', ');
-                          })()}
+                    
+                    {/* Right Column: Location + Friend Info */}
+                    <div className="session-right-column">
+                      <div className="session-location">
+                        <div className="location-line">
+                          <MapPin size={14} />
+                          {session.location.latitude.toFixed(4)}°N, {Math.abs(session.location.longitude).toFixed(4)}°W
                         </div>
-                      )}
+                        {session.location.description && (
+                          <div className="location-desc">
+                            {session.location.description}
+                          </div>
+                        )}
+                        {isFriendSession && (
+                          <div className="friend-username" style={{ 
+                            textAlign: 'right',
+                            color: '#666',
+                            fontSize: '0.8rem'
+                          }}>
+                            by {friendSessionInfo.username}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {/* duration removed from here - time moved beside date */}
-                  </div>
-                  {session.weather.temperature && (
-                    <div className="session-weather">
-                      <Thermometer size={14} />
-                      {UnitConverter.convertTemperature(session.weather.temperature).toFixed(1)}{UnitConverter.getTemperatureUnit()}
-                    </div>
-                  )}
-                  {session.weather.windSpeed && (
-                    <div className="session-wind">
-                      <Wind size={14} />
-                      {UnitConverter.convertSpeed(session.weather.windSpeed).toFixed(1)} {UnitConverter.getSpeedUnit()}
-                    </div>
-                  )}
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
