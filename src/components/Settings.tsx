@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Wifi, TestTube } from 'lucide-react';
+import { Save, Wifi } from 'lucide-react';
 import { AppSettings } from '../types';
 import { nmea2000Service } from '../services/nmea2000Service';
-import { testDataService } from '../services/testDataService';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -12,25 +11,42 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [isSaving, setIsSaving] = useState(false);
-  const [isTestModeActive, setIsTestModeActive] = useState(false);
+  const [nmeaMessages, setNmeaMessages] = useState<Array<{ timestamp: number; raw: string; parsed?: any }>>([]);
 
   // Monitor test mode state to keep button in sync
+  // Note: Test mode should persist across the app session, not be cleaned up on component unmount
   useEffect(() => {
-    const updateTestModeState = () => {
-      const isRunning = testDataService.isSimulationRunning();
-      setIsTestModeActive(isRunning);
-    };
-
-    // Check initial state
-    updateTestModeState();
-
-    // Check every second to stay in sync
-    const interval = setInterval(updateTestModeState, 1000);
-
-    return () => clearInterval(interval);
+    try {
+      // Seed with recent messages
+      const recent = nmea2000Service.getRecentMessages?.() || [];
+      if (recent.length) setNmeaMessages(recent);
+      // Subscribe for live updates
+      const unsubscribe = nmea2000Service.subscribeMessages?.((msg) => {
+        setNmeaMessages((prev) => {
+          const next = [...prev, { timestamp: Date.now(), raw: msg.raw, parsed: msg.parsed }];
+          return next.length > 500 ? next.slice(next.length - 500) : next;
+        });
+        // Auto-scroll to bottom
+        try {
+          const el = document.getElementById('nmeaScroll');
+          if (el) {
+            el.scrollTop = el.scrollHeight;
+          }
+        } catch {}
+      });
+      return () => { if (unsubscribe) unsubscribe(); };
+    } catch {}
   }, []);
 
-  // Note: Test mode should persist across the app session, not be cleaned up on component unmount
+  // Ensure auto-scroll happens after DOM updates when messages change
+  useEffect(() => {
+    try {
+      const el = document.getElementById('nmeaScroll');
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    } catch {}
+  }, [nmeaMessages]);
 
   const handleInputChange = (section: keyof AppSettings, field: string, value: any) => {
     setLocalSettings(prev => ({
@@ -50,30 +66,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
       console.error('Error saving settings:', error);
     } finally {
       setIsSaving(false);
-    }
-  };
-
-
-  const toggleTestMode = async () => {
-    if (isTestModeActive) {
-      // Stop test mode
-      nmea2000Service.disconnect();
-      setIsTestModeActive(false);
-    } else {
-      // Start test mode
-      try {
-        const success = await nmea2000Service.connect(
-          localSettings.nmea2000.ipAddress || 'test',
-          localSettings.nmea2000.port || 2000,
-          true // Enable test mode
-        );
-        
-        if (success) {
-          setIsTestModeActive(true);
-        }
-      } catch (error) {
-        console.error('Failed to start test mode:', error);
-      }
     }
   };
 
@@ -109,43 +101,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
         </div>
 
         <div className="settings-content">
-          {/* Angler Settings */}
-          <div className="settings-section" style={{ padding: '0.5rem 1rem' }}>
-            <h3>Angler</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: '500' }}>Login</span>
-              <input
-                type="text"
-                className="form-input"
-                value={localSettings.angler?.login || ''}
-                onChange={(e) => handleInputChange('angler', 'login', e.target.value)}
-                placeholder="Enter your login name"
-                style={{ width: '225px' }}
-              />
-              <span style={{ fontWeight: '500' }}>Password</span>
-              <input
-                type="password"
-                className="form-input"
-                value={localSettings.angler?.password || ''}
-                onChange={(e) => handleInputChange('angler', 'password', e.target.value)}
-                placeholder="Enter your password"
-                style={{ width: '225px' }}
-              />
-              <span style={{ fontWeight: '500' }}>Name</span>
-              <input
-                type="text"
-                className="form-input"
-                value={localSettings.angler?.name || ''}
-                onChange={(e) => {
-                  const value = e.target.value; // Allow typing spaces freely
-                  handleInputChange('angler', 'name', value);
-                }}
-                placeholder="John Doe"
-                style={{ width: '150px' }}
-              />
-            </div>
-          </div>
-
           {/* Units Settings */}
           <div className="settings-section">
             <h3>Units</h3>
@@ -220,6 +175,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                 />
                 Auto-connect on startup
               </label>
+              <label className="form-label" style={{ marginLeft: '24px', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '16px' }}>
+                <input
+                  type="checkbox"
+                  checked={!!localSettings.nmea2000.simulated}
+                  onChange={(e) => handleInputChange('nmea2000', 'simulated', e.target.checked)}
+                />
+                Simulated
+              </label>
             </h3>
 
             {localSettings.nmea2000.enabled && (
@@ -246,98 +209,87 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                   </div>
                 </div>
 
-                <div className="connection-test">
-                  <button 
-                    onClick={toggleTestMode}
-                    className={`btn ${isTestModeActive ? 'btn-danger' : 'btn-secondary'}`}
-                    style={{
-                      backgroundColor: isTestModeActive ? '#ef4444' : undefined,
-                      color: isTestModeActive ? 'white' : undefined,
-                      width: '250px',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <TestTube size={16} />
-                    {isTestModeActive ? 'Stop Test Mode' : 'Test with Simulated Data'}
-                  </button>
+                {/* Simulated is now a persistent checkbox; manual test button removed */}
+
+                <div className="nmea2000-info" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
+                  <div>
+                    <h4>NMEA 2000 Gateway Setup Instructions:</h4>
+                    <ol>
+                      <li>Connect the YDWG-02 gateway to your NMEA 2000 network</li>
+                      <li>Power on the gateway & connect to WiFi network <strong><em>YDWG-02</em></strong></li>
+                      <li>Access the web interface at <code>http://192.168.4.1</code></li>
+                      <li>Configure data servers:
+                        <ul>
+                          <li>Enable <strong>TCP server</strong> on port 2000</li>
+                          <li>Select <strong>RAW protocol</strong> (not NMEA 0183)</li>
+                          <li>Configure data filters as needed</li>
+                        </ul>
+                      </li>
+                      <li>Enter gateway IP (192.168.4.1) and port (2000) above</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h4>Supported NMEA 2000 PGNs (via RAW protocol):</h4>
+                    <ul>
+                      <li><strong>PGN 129025</strong> - Position, Rapid Update (GPS coords)</li>
+                      <li><strong>PGN 130306</strong> - Wind Data (speed, direction)</li>
+                      <li><strong>PGN 128267</strong> - Water Depth</li>
+                      <li><strong>PGN 127250</strong> - Vessel Heading</li>
+                      <li><strong>PGN 127488</strong> - Engine Parameters (RPM, temp, BP)</li>
+                    <li><strong>PGN 130310</strong> - Environmental Parameters (temp, BP)</li>
+                      <li><strong>PGN 127258</strong> - Engine RPM</li>
+                      <li><strong>PGN 127505</strong> - Fluid Level (fuel, water, etc.)</li>
+                    </ul>
+                  </div>
                 </div>
 
-                <div className="nmea2000-info">
-                  <h4>NMEA 2000 Gateway Setup Instructions:</h4>
-                  <ol>
-                    <li>Connect the YDWG-02 gateway to your NMEA 2000 network backbone</li>
-                    <li>Power on the gateway and connect to its WiFi network "YDWG-02"</li>
-                    <li>Access the web interface at <code>http://192.168.4.1</code></li>
-                    <li>Configure data servers:
-                      <ul>
-                        <li>Enable <strong>TCP server</strong> on port 2000</li>
-                        <li>Select <strong>RAW protocol</strong> (not NMEA 0183)</li>
-                        <li>Configure data filters as needed</li>
-                      </ul>
-                    </li>
-                    <li>Enter gateway IP (192.168.4.1) and port (2000) above</li>
-                    <li>Test the connection using the button above</li>
-                  </ol>
-                  
-                  <h4>Supported NMEA 2000 PGNs (via RAW protocol):</h4>
-                  <ul>
-                    <li><strong>PGN 129025</strong> - Position, Rapid Update (GPS coordinates)</li>
-                    <li><strong>PGN 130306</strong> - Wind Data (speed, direction)</li>
-                    <li><strong>PGN 128267</strong> - Water Depth</li>
-                    <li><strong>PGN 127250</strong> - Vessel Heading</li>
-                    <li><strong>PGN 127488</strong> - Engine Parameters (RPM, temperature, pressure)</li>
-                    <li><strong>PGN 130310</strong> - Environmental Parameters (temperature, pressure)</li>
-                    <li><strong>PGN 127258</strong> - Engine RPM</li>
-                    <li><strong>PGN 127505</strong> - Fluid Level (fuel, water, etc.)</li>
-                  </ul>
-                  {/* <h4>Why RAW Protocol?</h4>
-                  <p>RAW protocol provides complete access to all NMEA 2000 data from your marine electronics network, including engine data, detailed environmental conditions, and real-time updates. This gives Karl Fish access to the full range of data available on your vessel.</p> */}
+                <div className="nmea2000-messages" style={{ marginTop: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ margin: 0 }}>Live NMEA 2000 Messages</h4>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={async () => {
+                          try {
+                            const text = nmeaMessages.map(m => {
+                              const ts = new Date(m.timestamp).toISOString();
+                              const parsed = m.parsed ? `\n  parsed: ${JSON.stringify(m.parsed)}` : '';
+                              return `[${ts}] raw: ${m.raw}${parsed}`;
+                            }).join('\n');
+                            await navigator.clipboard.writeText(text);
+                          } catch (e) {
+                            console.error('Copy messages failed:', e);
+                          }
+                        }}
+                      >
+                        Copy
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => {
+                          try {
+                            nmea2000Service.clearMessages?.();
+                          } catch {}
+                          setNmeaMessages([]);
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div id="nmeaScroll" style={{ height: '220px', overflow: 'auto', background: '#0b1020', color: '#d6e1ff', padding: '8px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '12px', marginTop: '8px' }}>
+                    {nmeaMessages.length === 0 && (
+                      <div style={{ opacity: 0.7 }}>No messages yet.</div>
+                    )}
+                    {nmeaMessages.map((m, idx) => (
+                      <div key={idx} style={{ whiteSpace: 'pre-wrap', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '2px 0' }}>
+                        [{new Date(m.timestamp).toLocaleTimeString()}] raw: {m.raw}
+                        {m.parsed ? `\n  parsed: ${JSON.stringify(m.parsed)}` : ''}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>
-            )}
-          </div>
-
-          {/* Transfer Settings */}
-          <div className="settings-section">
-            <h3>Transfer Settings</h3>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Default Transfer Format</label>
-                <select
-                  className="form-select"
-                  value={localSettings.export.defaultFormat}
-                  onChange={(e) => handleInputChange('export', 'defaultFormat', e.target.value)}
-                >
-                  <option value="csv">CSV</option>
-                  <option value="json">JSON</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={localSettings.export.autoBackup}
-                  onChange={(e) => handleInputChange('export', 'autoBackup', e.target.checked)}
-                />
-                Enable automatic backup
-              </label>
-            </div>
-
-            {localSettings.export.autoBackup && (
-              <div className="form-group">
-                <label className="form-label">Backup Interval (days)</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={localSettings.export.backupInterval}
-                  onChange={(e) => handleInputChange('export', 'backupInterval', parseInt(e.target.value))}
-                  min="1"
-                  max="30"
-                />
-              </div>
             )}
           </div>
         </div>
