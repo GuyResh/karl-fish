@@ -104,11 +104,6 @@ export interface ExportOptions {
 }
 
 export interface AppSettings {
-  angler: {
-    login?: string;
-    password?: string;
-    name?: string;
-  };
   units: {
     temperature: 'celsius' | 'fahrenheit';
     distance: 'metric' | 'imperial';
@@ -120,6 +115,7 @@ export interface AppSettings {
     ipAddress?: string;
     port?: number;
     autoConnect: boolean;
+    simulated?: boolean;
   };
   export: {
     defaultFormat: 'csv' | 'json';
