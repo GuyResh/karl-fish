@@ -10,6 +10,9 @@ export class NMEA2000Service {
   private maxReconnectAttempts: number = 5;
   private reconnectInterval: number = 5000;
   private currentSessionId: string | null = null;
+  private messageListeners: Array<(payload: { raw: string; parsed?: any }) => void> = [];
+  private recentMessages: Array<{ timestamp: number; raw: string; parsed?: any }> = [];
+  private recentMessagesLimit: number = 1000;
 
   private constructor() {
     // Simple NMEA 2000 parser for browser environment
@@ -131,11 +134,46 @@ export class NMEA2000Service {
         if (nmeaData) {
           this.saveNMEAData(nmeaData);
         }
+
+        // Notify listeners and store recent messages
+        this.pushMessage(rawData, parsedPgn);
       } else {
         console.log('[NMEA2000] Failed to parse PGN data');
+        this.pushMessage(rawData);
       }
     } catch (error) {
       console.error('[NMEA2000] Error parsing NMEA 2000 data:', error);
+      this.pushMessage(rawData);
+    }
+  }
+
+  private pushMessage(raw: string, parsed?: any) {
+    const entry = { timestamp: Date.now(), raw, parsed };
+    this.recentMessages.push(entry);
+    if (this.recentMessages.length > this.recentMessagesLimit) {
+      this.recentMessages.splice(0, this.recentMessages.length - this.recentMessagesLimit);
+    }
+    for (const listener of this.messageListeners) {
+      try { listener({ raw, parsed }); } catch {}
+    }
+  }
+
+  subscribeMessages(listener: (payload: { raw: string; parsed?: any }) => void): () => void {
+    this.messageListeners.push(listener);
+    return () => {
+      this.messageListeners = this.messageListeners.filter(l => l !== listener);
+    };
+  }
+
+  getRecentMessages(): Array<{ timestamp: number; raw: string; parsed?: any }> {
+    return [...this.recentMessages];
+  }
+
+  clearMessages(): void {
+    this.recentMessages = [];
+    // Inform listeners that messages were cleared so UIs can update
+    for (const listener of this.messageListeners) {
+      try { listener({ raw: '', parsed: undefined }); } catch {}
     }
   }
 
