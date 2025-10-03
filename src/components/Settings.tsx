@@ -49,13 +49,25 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
   }, [nmeaMessages]);
 
   const handleInputChange = (section: keyof AppSettings, field: string, value: any) => {
-    setLocalSettings(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
+    setLocalSettings(prev => {
+      const next = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: value
+        }
+      } as AppSettings;
+
+      // Immediately persist critical N2K toggles so header connect honors current state
+      if (
+        section === 'nmea2000' &&
+        (field === 'enabled' || field === 'autoConnect' || field === 'simulated')
+      ) {
+        try { onUpdate(next); } catch {}
       }
-    }));
+
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -215,7 +227,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                   <div>
                     <h4>NMEA 2000 Gateway Setup Instructions:</h4>
                     <ol>
-                      <li>Connect the YDWG-02 gateway to your NMEA 2000 network</li>
+                      <li>Connect the YDWG-02 gateway to your N2K network</li>
                       <li>Power on the gateway & connect to WiFi network <strong><em>YDWG-02</em></strong></li>
                       <li>Access the web interface at <code>http://192.168.4.1</code></li>
                       <li>Configure data servers:
