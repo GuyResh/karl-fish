@@ -6,9 +6,6 @@ export class NMEA2000Service {
   private static instance: NMEA2000Service;
   private socket: WebSocket | null = null;
   private isConnected: boolean = false;
-  private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
-  private reconnectInterval: number = 5000;
   private currentSessionId: string | null = null;
   private messageListeners: Array<(payload: { raw: string; parsed?: any }) => void> = [];
   private recentMessages: Array<{ timestamp: number; raw: string; parsed?: any }> = [];
@@ -39,7 +36,6 @@ export class NMEA2000Service {
       this.socket.onopen = () => {
         console.log('Connected to NMEA 2000 gateway');
         this.isConnected = true;
-        this.reconnectAttempts = 0;
       };
 
       this.socket.onmessage = (event) => {
@@ -49,7 +45,8 @@ export class NMEA2000Service {
       this.socket.onclose = () => {
         console.log('Disconnected from NMEA 2000 gateway');
         this.isConnected = false;
-        this.attemptReconnect(ipAddress, port);
+        // Don't auto-reconnect - let the UI handle retries
+        // this.attemptReconnect(ipAddress, port);
       };
 
       this.socket.onerror = (error) => {
@@ -57,18 +54,35 @@ export class NMEA2000Service {
         this.isConnected = false;
       };
 
-      // Wait for connection to establish
+      // Wait for connection to establish with timeout
       return new Promise((resolve) => {
+        let resolved = false;
+        
         const checkConnection = () => {
+          if (resolved) return;
+          
           if (this.isConnected) {
+            resolved = true;
             resolve(true);
-          } else if (this.socket?.readyState === WebSocket.CLOSED) {
+          } else if (this.socket?.readyState === WebSocket.CLOSED || this.socket?.readyState === WebSocket.CLOSING) {
+            resolved = true;
             resolve(false);
           } else {
             setTimeout(checkConnection, 100);
           }
         };
-        checkConnection();
+        
+        // Start checking after a short delay to allow WebSocket to initialize
+        setTimeout(checkConnection, 100);
+        
+        // Set up a longer timeout to match UI expectations
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            console.log('NMEA 2000 connection attempt timed out');
+            resolve(false);
+          }
+        }, 12000); // 12 second timeout to allow UI 10-second timeout to work
       });
     } catch (error) {
       console.error('Error connecting to NMEA 2000 gateway:', error);
@@ -79,7 +93,6 @@ export class NMEA2000Service {
   private async startTestMode(): Promise<boolean> {
     console.log('Starting NMEA 2000 test mode with simulated data');
     this.isConnected = true;
-    this.reconnectAttempts = 0;
 
     // Clear any old NMEA data to ensure we start fresh with offshore coordinates
     try {
@@ -97,18 +110,6 @@ export class NMEA2000Service {
     return true;
   }
 
-  private attemptReconnect(ipAddress: string, port: number): void {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      console.log(`Attempting to reconnect to NMEA 2000 gateway (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      
-      setTimeout(() => {
-        this.connect(ipAddress, port);
-      }, this.reconnectInterval);
-    } else {
-      console.log('Max reconnection attempts reached');
-    }
-  }
 
   private handleNMEAData(rawData: string): void {
     try {
