@@ -534,18 +534,31 @@ const Transfer: React.FC = () => {
           {/* Transfer Options */}
           <div className="export-section">
             <h3>Transfer Options</h3>
-            <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={exportOptions.includePhotos}
-                  onChange={(e) => setExportOptions(prev => ({ 
-                    ...prev, 
-                    includePhotos: e.target.checked 
-                  }))}
-                />
-                Include photos in transfer (if available)
-              </label>
+            <div className="form-row" style={{ alignItems: 'center', gap: '2rem' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={exportOptions.includePhotos}
+                    onChange={(e) => setExportOptions(prev => ({ 
+                      ...prev, 
+                      includePhotos: e.target.checked 
+                    }))}
+                  />
+                  Include photos in transfer (if available)
+                </label>
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    onChange={() => {}}
+                    disabled
+                  />
+                  Enable automatic backup (coming soon)
+                </label>
+              </div>
             </div>
           </div>
 
@@ -620,7 +633,7 @@ const Transfer: React.FC = () => {
               className="btn btn-info"
             >
               <Share2 size={16} />
-              Share
+              Sync
             </button>
 
             <button
