@@ -44,11 +44,21 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
         nmea2000Service.disconnect();
         setIsConnected(false);
       } else {
-        if (settings?.nmea2000.enabled && settings.nmea2000.ipAddress) {
-          const success = await nmea2000Service.connect(
-            settings.nmea2000.ipAddress,
-            settings.nmea2000.port || 2000
-          );
+        if (settings?.nmea2000.enabled) {
+          let success = false;
+          if (settings.nmea2000.simulated) {
+            // Start simulated mode without requiring IP address
+            success = await nmea2000Service.connect(
+              settings.nmea2000.ipAddress || 'test',
+              settings.nmea2000.port || 2000,
+              true
+            );
+          } else if (settings.nmea2000.ipAddress) {
+            success = await nmea2000Service.connect(
+              settings.nmea2000.ipAddress,
+              settings.nmea2000.port || 2000
+            );
+          }
           setIsConnected(success);
         }
       }
@@ -107,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
 
         <div className="header-actions">
           <div 
-            className="furuno-status"
+            className="n2k-status"
             title={isConnected ? "NMEA 2000 Connected" : "NMEA 2000 Disconnected"}
             onClick={handleNMEA2000Toggle}
             style={{ 
