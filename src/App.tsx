@@ -35,40 +35,36 @@ const Share = lazy(() => import('./components/Share'));
 // Migration function to handle old settings structure
 function migrateSettings(settings: any): AppSettings {
   // If settings already have nmea2000 and angler, return as-is
-  if (settings.nmea2000 && settings.angler) {
-    return settings;
+  if (settings.nmea2000) {
+    return settings as AppSettings;
   }
 
-  // Migrate from old furuno structure
-  const migratedSettings: AppSettings = {
-    angler: settings.angler || {
-      login: '',
-      password: '',
-      name: ''
-    },
-    units: settings.units || {
+  // Hard reset to new shape; drop legacy keys (e.g., furuno)
+  const resetSettings: AppSettings = {
+    units: {
       temperature: 'fahrenheit',
       distance: 'imperial',
       weight: 'imperial',
       pressure: 'inHg'
     },
     nmea2000: {
-      enabled: settings.furuno?.enabled || false,
-      ipAddress: settings.furuno?.ipAddress || '',
-      port: settings.furuno?.port || 2000,
-      autoConnect: settings.furuno?.autoConnect || false
+      enabled: false,
+      ipAddress: '',
+      port: 2000,
+      autoConnect: false,
+      simulated: false
     },
-    export: settings.export || {
+    export: {
       defaultFormat: 'csv',
       autoBackup: false,
       backupInterval: 7
     }
   };
 
-  // Save migrated settings
-  FishingDataService.saveSettings(migratedSettings);
+  // Save reset settings
+  FishingDataService.saveSettings(resetSettings);
   
-  return migratedSettings;
+  return resetSettings;
 }
 
 // AppContent component that handles authentication logic
@@ -92,11 +88,6 @@ function AppContent() {
           UnitConverter.setSettings(migratedSettings);
         } else {
           const defaultSettings: AppSettings = {
-            angler: {
-              login: '',
-              password: '',
-              name: ''
-            },
             units: {
               temperature: 'fahrenheit',
               distance: 'imperial',
@@ -107,7 +98,8 @@ function AppContent() {
               enabled: false,
               ipAddress: '',
               port: 2000,
-              autoConnect: false
+              autoConnect: false,
+              simulated: false
             },
             export: {
               defaultFormat: 'csv',
@@ -128,6 +120,26 @@ function AppContent() {
 
     loadSettings();
   }, []);
+
+  // Auto-connect to NMEA 2000 on startup based on settings
+  useEffect(() => {
+    const autoConnectIfEnabled = async () => {
+      if (!settings || !settings.nmea2000?.enabled || !settings.nmea2000.autoConnect) return;
+      try {
+        const { ipAddress, port, simulated } = settings.nmea2000;
+        // When simulated flag is on, use test mode
+        // If simulated is false, only connect when user clicks the header icon
+        if (simulated) {
+          // Reuse service connect with testMode=true
+          const { nmea2000Service } = await import('./services/nmea2000Service');
+          await nmea2000Service.connect(ipAddress || 'test', port || 2000, true);
+        }
+      } catch (e) {
+        console.error('Auto-connect to NMEA 2000 failed:', e);
+      }
+    };
+    autoConnectIfEnabled();
+  }, [settings]);
 
   useEffect(() => {
     const checkOfflineMode = async () => {
