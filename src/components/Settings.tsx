@@ -228,7 +228,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                     <h4>NMEA 2000 Gateway Setup Instructions:</h4>
                     <ol>
                       <li>Connect the YDWG-02 gateway to your N2K network</li>
-                      <li>Power on the gateway & connect to WiFi network <strong><em>YDWG-02</em></strong></li>
+                      <li>Power on gateway & connect to WiFi network <strong><em>YDWG-02</em></strong></li>
                       <li>Access the web interface at <code>http://192.168.4.1</code></li>
                       <li>Configure data servers:
                         <ul>
@@ -255,7 +255,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate }) => {
                   </div>
                 </div>
 
-                <div className="nmea2000-messages" style={{ marginTop: '16px' }}>
+                <div className="nmea2000-messages" style={{ marginTop: '16px', maxWidth: '865px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h4 style={{ margin: 0 }}>Live NMEA 2000 Messages</h4>
                     <div style={{ display: 'flex', gap: '8px' }}>
