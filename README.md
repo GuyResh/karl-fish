@@ -332,3 +332,41 @@ For issues and questions:
 - [ ] Fishing gear and tackle management
 - [ ] Advanced mapping and GPS features
 
+#### 🚢 Planned NMEA 2000 PGN Support
+**Navigation & GPS:**
+- [ ] PGN 129026 - COG & SOG, Rapid Update (Course/Speed Over Ground)
+- [ ] PGN 129283 - Cross Track Error (route deviation)
+- [ ] PGN 129284 - Navigation Data (bearing/distance to waypoints)
+- [ ] PGN 129285 - Navigation — Route/WP Information
+- [ ] PGN 129291 - Set & Drift, Rapid Update (current effects)
+- [ ] PGN 129539 - GNSS DOPs (GPS quality indicators)
+- [ ] PGN 129540 - GNSS Sats in View (satellite count)
+
+**Environmental & Weather:**
+- [ ] PGN 130311 - Environmental Parameters (extended)
+- [ ] PGN 130312 - Temperature (dedicated temperature sensor)
+- [ ] PGN 130313 - Humidity
+- [ ] PGN 130314 - Actual Pressure (barometric)
+- [ ] PGN 130316 - Temperature, Extended Range
+
+**Engine & Power:**
+- [ ] PGN 127489 - Engine Parameters, Dynamic (extended engine data)
+- [ ] PGN 127508 - Battery Status (voltage, current, temperature)
+- [ ] PGN 127750 - DC Detailed Status (battery bank details)
+
+**Speed & Performance:**
+- [ ] PGN 128259 - Speed, Water Referenced (through water speed)
+- [ ] PGN 128260 - Distance Log (trip distance)
+
+**Safety & Communication:**
+- [ ] PGN 129038 - AIS Class A Position Report
+- [ ] PGN 129039 - AIS Class B Position Report
+- [ ] PGN 129794 - AIS Class A Static and Voyage Related Data
+- [ ] PGN 129809 - AIS Class B "CS" Static Data Report
+
+**Fishing-Specific (if available):**
+- [ ] PGN 130820 - Water Temperature (dedicated sensor)
+- [ ] PGN 130821 - Water Salinity
+- [ ] PGN 130822 - Water pH
+- [ ] PGN 130823 - Water Dissolved Oxygen
+
