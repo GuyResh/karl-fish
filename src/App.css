@@ -13,6 +13,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f5f5f5;
   color: #333;
+  /* Base font size scales with viewport for better responsiveness */
+  font-size: clamp(14px, 1.5vw + 0.5rem, 16px);
 }
 
 .app {
@@ -96,7 +98,7 @@ body {
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -104,17 +106,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: calc(800px - 4rem);
+  max-width: 100%;
   margin: 0 auto;
-  gap: 1rem;
-  flex-wrap: nowrap;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.0rem;
+  font-size: clamp(0.875rem, 2vw + 0.5rem, 1.0rem);
   font-weight: bold;
   color: white;
   white-space: nowrap;
@@ -123,9 +126,9 @@ body {
 
 .nav {
   display: flex;
-  gap: 0.5rem;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
   list-style: none;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   flex-shrink: 1;
   min-width: 0;
 }
@@ -133,10 +136,10 @@ body {
 .nav a {
   color: white;
   text-decoration: none;
-  padding: 0.5rem 0.4rem;
+  padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.3rem, 1vw, 0.4rem);
   border-radius: 4px;
   transition: background-color 0.2s;
-  font-size: 0.95rem;
+  font-size: clamp(0.8rem, 1.5vw + 0.25rem, 0.95rem);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -155,11 +158,12 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 1.5vw + 0.25rem, 0.9rem);
   cursor: pointer;
-  padding: 8px;
+  padding: clamp(6px, 1.5vw, 8px);
   border-radius: 4px;
   transition: background-color 0.2s;
+  flex-shrink: 0;
 }
 
 .n2k-status:hover {
@@ -196,7 +200,7 @@ body {
 }
 
 .card-title {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 2.5vw + 0.5rem, 1.25rem);
   font-weight: bold;
   color: #333;
 }
@@ -206,10 +210,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
   border: none;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 1.5vw + 0.25rem, 0.9rem);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
@@ -512,19 +516,22 @@ body {
 }
 
 /* Responsive Design */
+/* Tablet and below (627px tablet, 768px breakpoint) */
 @media (max-width: 768px) {
   .main-content {
-    padding: 1rem;
+    padding: clamp(0.75rem, 2vw, 1rem);
   }
   
   .header-content {
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: clamp(0.5rem, 2vw, 0.75rem);
+    justify-content: center;
   }
   
   .nav {
-    gap: 0.5rem;
+    gap: clamp(0.25rem, 1vw, 0.5rem);
     flex-wrap: wrap;
+    justify-content: center;
   }
   
   .form-row,
@@ -537,23 +544,40 @@ body {
   }
   
   .table {
-    font-size: 0.8rem;
+    font-size: clamp(0.75rem, 1.5vw, 0.8rem);
   }
   
   .table th,
   .table td {
-    padding: 0.5rem;
+    padding: clamp(0.375rem, 1vw, 0.5rem);
   }
 }
 
+/* Small phones */
 @media (max-width: 480px) {
   .stats-grid {
     grid-template-columns: 1fr;
   }
   
   .nav {
+    flex-direction: row;
+    gap: clamp(0.25rem, 1vw, 0.5rem);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .header-content {
     flex-direction: column;
-    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .logo {
+    justify-content: center;
+  }
+  
+  .header-actions {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
 
@@ -2022,7 +2046,7 @@ li code {
 
 .header-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
