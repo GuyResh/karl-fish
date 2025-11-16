@@ -38,6 +38,8 @@ const Dashboard: React.FC = () => {
   const [isGpsConnected, setIsGpsConnected] = useState(false);
   const [currentHeading, setCurrentHeading] = useState<number | null>(null);
   const [currentDepth, setCurrentDepth] = useState<number | null>(null);
+  const [screenDimensions, setScreenDimensions] = useState({ width: 0, height: 0 });
+  const [showGrid, setShowGrid] = useState(false);
 
   const convertSessionDates = (session: FishingSession): FishingSession => {
     return {
@@ -137,6 +139,68 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
+    
+    // Get screen dimensions (physical pixels)
+    const updateScreenDimensions = () => {
+      // On Android, window.screen.width/height may report density-independent pixels (dp)
+      // We need devicePixelRatio to convert to physical pixels
+      // However, sometimes we need to check multiple sources
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      
+      // Try different methods to get physical resolution
+      const screenWidth = window.screen.width;
+      const screenHeight = window.screen.height;
+      
+      // Method 1: Multiply by devicePixelRatio (standard approach)
+      const method1Width = Math.round(screenWidth * devicePixelRatio);
+      const method1Height = Math.round(screenHeight * devicePixelRatio);
+      
+      // Method 2: Check if screen.width is already in physical pixels
+      // On some Android devices, screen.width might already be physical
+      // If devicePixelRatio is close to 1, screen.width might already be physical
+      
+      // Method 3: Use window.innerWidth/Height * devicePixelRatio (viewport-based)
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const method3Width = Math.round(viewportWidth * devicePixelRatio);
+      const method3Height = Math.round(viewportHeight * devicePixelRatio);
+      
+      // On Android, window.innerWidth/innerHeight gives the actual CSS pixel dimensions
+      // which is what the browser uses for layout. This is what we should display.
+      // window.screen.width might be in density-independent pixels (dp) or scaled.
+      // The grid uses CSS pixels, so we should match that.
+      const cssWidth = window.innerWidth;
+      const cssHeight = window.innerHeight;
+      
+      // For display, show the CSS pixel dimensions (what the grid uses)
+      // This is the actual rendering resolution
+      setScreenDimensions({
+        width: cssWidth,
+        height: cssHeight
+      });
+      
+      // Debug logging (remove in production)
+      console.log('Screen dimensions:', {
+        screenWidth,
+        screenHeight,
+        devicePixelRatio,
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        outerWidth: window.outerWidth,
+        outerHeight: window.outerHeight,
+        method1: { width: method1Width, height: method1Height },
+        viewport: { width: viewportWidth, height: viewportHeight },
+        method3: { width: method3Width, height: method3Height },
+        final: { width: cssWidth, height: cssHeight }
+      });
+    };
+    
+    updateScreenDimensions();
+    window.addEventListener('resize', updateScreenDimensions);
+    
+    return () => {
+      window.removeEventListener('resize', updateScreenDimensions);
+    };
   }, []);
 
   // Update recent sessions when filter checkboxes change
@@ -278,9 +342,110 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard">
+      {/* Debug Grid Overlay */}
+      {showGrid && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          backgroundImage: `
+            linear-gradient(to right, rgba(255,0,0,0.5) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,0,0,0.5) 1px, transparent 1px)
+          `,
+          backgroundSize: '100px 100px',
+          backgroundPosition: '0 0'
+        }}>
+          {/* X-axis labels (horizontal) */}
+          {Array.from({ length: Math.ceil(window.innerWidth / 100) + 1 }, (_, i) => {
+            const x = i * 100;
+            if (x > window.innerWidth) return null;
+            return (
+              <div
+                key={`x-${i}`}
+                style={{
+                  position: 'absolute',
+                  left: `${x}px`,
+                  top: '0',
+                  width: '2px',
+                  height: '15px',
+                  background: 'red',
+                  fontSize: '11px',
+                  color: 'red',
+                  fontWeight: 'bold',
+                  textShadow: '0 0 2px white, 0 0 2px white',
+                  paddingTop: '16px',
+                  textAlign: 'center',
+                  lineHeight: '1'
+                }}
+              >
+                {x}
+              </div>
+            );
+          })}
+          {/* Y-axis labels (vertical) */}
+          {Array.from({ length: Math.ceil(window.innerHeight / 100) + 1 }, (_, i) => {
+            const y = i * 100;
+            if (y > window.innerHeight) return null;
+            return (
+              <div
+                key={`y-${i}`}
+                style={{
+                  position: 'absolute',
+                  top: `${y}px`,
+                  left: '0',
+                  width: '40px',
+                  height: '2px',
+                  background: 'red',
+                  fontSize: '11px',
+                  color: 'red',
+                  fontWeight: 'bold',
+                  textShadow: '0 0 2px white, 0 0 2px white',
+                  paddingLeft: '42px',
+                  textAlign: 'left',
+                  lineHeight: '1',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                {y}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      
       <div className="card">
         <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 className="card-title">Fishing Dashboard</h1>
+          <h1 className="card-title">
+            Fishing Dashboard
+            {screenDimensions.width > 0 && screenDimensions.height > 0 && (
+              <span style={{ fontSize: '0.85em', fontWeight: 'normal', marginLeft: '0.5rem', opacity: 0.7 }}>
+                ({screenDimensions.width} x {screenDimensions.height})
+                <span style={{ fontSize: '0.75em', marginLeft: '0.5rem' }}>
+                  [CSS: {window.innerWidth} x {window.innerHeight}]
+                </span>
+              </span>
+            )}
+            <button
+              onClick={() => setShowGrid(!showGrid)}
+              style={{
+                marginLeft: '1rem',
+                padding: '0.25rem 0.5rem',
+                fontSize: '0.75rem',
+                background: showGrid ? '#dc3545' : '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              {showGrid ? 'Hide Grid' : 'Show Grid'}
+            </button>
+          </h1>
           <div 
             className="location-display"
             onClick={() => {
