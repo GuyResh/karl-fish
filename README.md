@@ -12,6 +12,7 @@ A comprehensive React-based fishing log application that can be deployed as a we
 - **Fish Catch Tracking**: Log species, length, weight, condition, bait, and notes
 - **Environmental Data**: Track weather conditions, water temperature, depth, and clarity
 - **Location Services**: GPS integration for accurate position logging
+- **Offline Maps**: Download map tiles for offline use with leaflet.offline plugin
 
 ### 📡 NMEA 2000 Integration
 - **NMEA 2000 Network Support**: Automatic data collection from all connected marine electronics via N2K gateway
@@ -309,6 +310,7 @@ For issues and questions:
 - [x] Session sharing with privacy controls
 - [x] Interactive sharing dashboard with user and species filtering
 - [x] Leaflet map integration with catch location visualization
+- [x] Offline map tiles with leaflet.offline plugin support
 - [x] Color-coded species identification across all interfaces
 - [x] Offline-first data storage
 - [x] Cross-platform deployment (Vercel, GitHub Pages)
