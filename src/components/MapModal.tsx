@@ -49,6 +49,8 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, latitude, longitud
               center={[latitude, longitude]}
               zoom={8}
               height="100%"
+              enableOfflineMode={true}
+              showOfflineControl={true}
             />
           </div>
           

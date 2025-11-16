@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+// Import leaflet.offline plugin
+import 'leaflet.offline';
 
 // Fix for default markers in Leaflet with Vite
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -42,6 +44,8 @@ export interface LeafletMapProps {
   className?: string;
   showCurrentLocation?: boolean;
   currentLocationOverride?: { lat: number; lng: number };
+  enableOfflineMode?: boolean;
+  showOfflineControl?: boolean;
 }
 
 const LeafletMap: React.FC<LeafletMapProps> = ({
@@ -51,7 +55,9 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   height = '400px',
   className = '',
   showCurrentLocation = false,
-  currentLocationOverride
+  currentLocationOverride,
+  enableOfflineMode = true,
+  showOfflineControl = true
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -163,34 +169,139 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Calculate center if not provided
-    let mapCenter: [number, number];
-    if (center) {
-      mapCenter = center;
-    } else if (catches.length > 0) {
-      const avgLat = catches.reduce((sum, c) => sum + c.latitude, 0) / catches.length;
-      const avgLng = catches.reduce((sum, c) => sum + c.longitude, 0) / catches.length;
-      mapCenter = [avgLat, avgLng];
-    } else {
-      mapCenter = [41.0, -70.8]; // Default to Block Island area
-    }
+    const initializeMap = async () => {
+      // Calculate center if not provided
+      let mapCenter: [number, number];
+      if (center) {
+        mapCenter = center;
+      } else if (catches.length > 0) {
+        const avgLat = catches.reduce((sum, c) => sum + c.latitude, 0) / catches.length;
+        const avgLng = catches.reduce((sum, c) => sum + c.longitude, 0) / catches.length;
+        mapCenter = [avgLat, avgLng];
+      } else {
+        mapCenter = [41.0, -70.8]; // Default to Block Island area
+      }
 
-    // Create map
-    const map = L.map(mapRef.current, {
-      center: mapCenter,
-      zoom: zoom,
-      zoomControl: true,
-      attributionControl: true
-    });
+      // Create map
+      const map = L.map(mapRef.current!, {
+        center: mapCenter,
+        zoom: zoom,
+        zoomControl: true,
+        attributionControl: true
+      });
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19
-    }).addTo(map);
+      // Add OpenStreetMap tiles (with or without offline support)
+      let tileLayer;
+      if (enableOfflineMode) {
+        try {
+          // Try to use offline functionality if available
+          console.log('Checking for offline functionality...');
+          console.log('L.tileLayer available:', !!(L as any).tileLayer);
+          console.log('L.tileLayer.offline available:', !!(L as any).tileLayer && !!(L as any).tileLayer.offline);
+          
+          if ((L as any).tileLayer && (L as any).tileLayer.offline) {
+            console.log('Creating offline tile layer using L.tileLayer.offline...');
+            // Use a more rate-limit friendly tile provider
+            tileLayer = (L as any).tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              maxZoom: 19,
+              subdomains: ['a', 'b', 'c'],
+              // Add rate limiting at the tile layer level
+              tileSize: 256,
+              updateWhenIdle: true,
+              updateWhenZooming: false
+            }).addTo(map);
+            console.log('Offline tile layer created successfully');
 
-    mapInstanceRef.current = map;
-    setMapLoaded(true);
+            // Add offline control for downloading tiles
+            if (showOfflineControl) {
+              console.log('Creating offline control...');
+              
+              if ((L as any).control) {
+                console.log('Leaflet control object:', (L as any).control);
+                console.log('Available control methods:', Object.keys((L as any).control));
+                
+                // Try both possible method names
+                if ((L as any).control.savetiles) {
+                  console.log('Using L.control.savetiles');
+                  try {
+                    const saveTilesControl = (L as any).control.savetiles(tileLayer, {
+                      position: 'topright',
+                      zoomlevels: [13, 14, 15], // Further reduced to prevent rate limiting
+                      confirmDownload: (tileCount: number) => {
+                        console.log(`About to download ${tileCount} tiles`);
+                        if (tileCount > 25) {
+                          return confirm(`This will download ${tileCount} tiles. This may take a while and could trigger rate limiting. Continue?`);
+                        }
+                        return confirm(`Download ${tileCount} tiles for offline use?`);
+                      },
+                      // Add rate limiting to prevent 429 errors
+                      timeout: 60000, // 60 second timeout
+                      delay: 100, // 100ms delay between tile downloads
+                      maxConcurrent: 2 // Only download 2 tiles at a time
+                    });
+                    saveTilesControl.addTo(map);
+                    console.log('Save tiles control added successfully');
+                  } catch (error) {
+                    console.error('Error creating save tiles control:', error);
+                  }
+                } else if ((L as any).control.offline) {
+                  console.log('Using L.control.offline');
+                  try {
+                    const offlineControl = (L as any).control.offline(tileLayer, {
+                      position: 'topright',
+                      text: 'Download tiles',
+                      title: 'Download tiles for offline use',
+                      confirmDownload: (tileCount: number) => {
+                        console.log(`About to download ${tileCount} tiles`);
+                        if (tileCount > 50) {
+                          return confirm(`This will download ${tileCount} tiles. This may take a while. Continue?`);
+                        }
+                        return confirm(`Download ${tileCount} tiles for offline use?`);
+                      }
+                    });
+                    offlineControl.addTo(map);
+                    console.log('Offline control added successfully');
+                  } catch (error) {
+                    console.error('Error creating offline control:', error);
+                  }
+                } else {
+                  console.warn('Neither L.control.savetiles nor L.control.offline is available');
+                }
+              } else {
+                console.warn('No control methods available');
+              }
+            } else {
+              console.log('Offline control not added - showOfflineControl:', showOfflineControl);
+            }
+          } else {
+            // Fallback to standard tile layer
+            tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              maxZoom: 19
+            }).addTo(map);
+          }
+        } catch (error) {
+          console.warn('Offline map functionality not available, using standard tiles:', error);
+          // Fallback to standard tile layer
+          tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+          }).addTo(map);
+        }
+      } else {
+        // Use standard tile layer
+        tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(map);
+      }
+
+      mapInstanceRef.current = map;
+      setMapLoaded(true);
+    };
+
+    initializeMap();
 
     return () => {
       if (mapInstanceRef.current) {

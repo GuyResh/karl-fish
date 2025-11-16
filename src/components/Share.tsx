@@ -954,6 +954,8 @@ const Share: React.FC = () => {
                       className="catch-locations-map"
                       showCurrentLocation={true}
                       currentLocationOverride={currentNmeaLocation || undefined}
+                      enableOfflineMode={true}
+                      showOfflineControl={true}
                     />
                   ) : (
                     <div className="map-placeholder">

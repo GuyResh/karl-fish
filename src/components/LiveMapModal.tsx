@@ -112,6 +112,8 @@ const LiveMapModal: React.FC<LiveMapModalProps> = ({ isOpen, onClose }) => {
                 center={[currentLocation!.lat, currentLocation!.lng]}
                 zoom={8}
                 height="100%"
+                enableOfflineMode={true}
+                showOfflineControl={true}
               />
             ) : (
               <div className="map-loading">
