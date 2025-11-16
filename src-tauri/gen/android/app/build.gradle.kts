@@ -14,18 +14,31 @@ val tauriProperties = Properties().apply {
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 36
     namespace = "com.karlfish.app"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "com.karlfish.app"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
     }
+    signingConfigs {
+        val debugKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
+        if (debugKeystore.exists()) {
+            create("release") {
+                // Use debug keystore for testing (replace with your own keystore for production)
+                storeFile = debugKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
     buildTypes {
         getByName("debug") {
+            // Uses default debug signing config automatically
             manifestPlaceholders["usesCleartextTraffic"] = "true"
             isDebuggable = true
             isJniDebuggable = true
@@ -37,6 +50,9 @@ android {
             }
         }
         getByName("release") {
+            // Use debug signing config for release builds (for testing)
+            // This ensures the APK is signed even if release keystore doesn't exist
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }
@@ -50,6 +66,26 @@ android {
     }
     buildFeatures {
         buildConfig = true
+    }
+    
+    applicationVariants.all {
+        val variant = this
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val variantName = variant.name
+            when {
+                variantName.contains("Universal", ignoreCase = true) -> {
+                    output.outputFileName = "karlfish-universal-release.apk"
+                }
+                variantName.contains("Arm64", ignoreCase = true) -> {
+                    output.outputFileName = "karlfish-arm64-release.apk"
+                }
+                else -> {
+                    // Default naming for other variants
+                    output.outputFileName = "karlfish-${variantName.lowercase()}-release.apk"
+                }
+            }
+        }
     }
 }
 
@@ -67,3 +103,14 @@ dependencies {
 }
 
 apply(from = "tauri.build.gradle.kts")
+
+// Make assembleRelease and assembleUniversalRelease build both universal and ARM64 APKs
+afterEvaluate {
+    tasks.named("assembleRelease") {
+        dependsOn("assembleUniversalRelease", "assembleArm64Release")
+    }
+    // Also ensure universal build triggers ARM64 build
+    tasks.named("assembleUniversalRelease") {
+        finalizedBy("assembleArm64Release")
+    }
+}
