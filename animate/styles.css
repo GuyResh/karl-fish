@@ -1,0 +1,317 @@
+/* Fish Animation Showcase Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+    color: white;
+}
+
+.header h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.controls {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #555;
+}
+
+.control-group select {
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.control-group select:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.toggle-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.showcase {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+.version {
+    padding: 3rem;
+    text-align: center;
+    border-right: 1px solid #e5e7eb;
+}
+
+.version:last-child {
+    border-right: none;
+}
+
+.version h3 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: #374151;
+}
+
+.fish-demo {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 2px dashed #e5e7eb;
+}
+
+.fish-container {
+    display: inline-block;
+}
+
+.fish-icon {
+    color: #3b82f6;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.description {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.info {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.info h3 {
+    margin-bottom: 1rem;
+    color: #374151;
+}
+
+.info ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.info li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    color: #6b7280;
+}
+
+.info li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: bold;
+}
+
+/* CSS Animations */
+@keyframes wiggle {
+    0%, 100% { 
+        transform: rotate(0deg) scale(1); 
+    }
+    25% { 
+        transform: rotate(-8deg) scale(1.05); 
+    }
+    50% { 
+        transform: rotate(8deg) scale(1.1); 
+    }
+    75% { 
+        transform: rotate(-4deg) scale(1.05); 
+    }
+}
+
+@keyframes swim {
+    0%, 100% { 
+        transform: translateX(0) rotate(0deg) scale(1); 
+    }
+    25% { 
+        transform: translateX(20px) rotate(5deg) scale(1.05); 
+    }
+    50% { 
+        transform: translateX(-20px) rotate(-5deg) scale(1.1); 
+    }
+    75% { 
+        transform: translateX(10px) rotate(3deg) scale(1.05); 
+    }
+}
+
+@keyframes swallow {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg); 
+    }
+    20% { 
+        transform: scale(1.2) rotate(3deg); 
+    }
+    40% { 
+        transform: scale(0.9) rotate(-2deg); 
+    }
+    60% { 
+        transform: scale(1.3) rotate(5deg); 
+    }
+    80% { 
+        transform: scale(1.1) rotate(-1deg); 
+    }
+}
+
+@keyframes bounce {
+    0%, 100% { 
+        transform: translateY(0) rotate(0deg); 
+    }
+    50% { 
+        transform: translateY(-20px) rotate(10deg); 
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+    50% { 
+        transform: scale(1.15); 
+        opacity: 0.8; 
+    }
+}
+
+/* Animation Classes */
+.fish-wiggle .fish-icon {
+    animation: wiggle 2s ease-in-out infinite;
+}
+
+.fish-swim .fish-icon {
+    animation: swim 3s ease-in-out infinite;
+}
+
+.fish-swallow .fish-icon {
+    animation: swallow 1.5s ease-in-out infinite;
+}
+
+.fish-bounce .fish-icon {
+    animation: bounce 1s ease-out infinite;
+}
+
+.fish-pulse .fish-icon {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .comparison {
+        grid-template-columns: 1fr;
+    }
+    
+    .version {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .version:last-child {
+        border-bottom: none;
+    }
+    
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+}
+
+/* Hover Effects */
+.fish-demo:hover {
+    background: #f1f5f9;
+    border-color: #3b82f6;
+    transition: all 0.3s ease;
+}
+
+/* Loading State */
+.fish-container {
+    transition: all 0.3s ease;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .fish-wiggle .fish-icon,
+    .fish-swim .fish-icon,
+    .fish-swallow .fish-icon,
+    .fish-bounce .fish-icon,
+    .fish-pulse .fish-icon {
+        animation: none;
+    }
+}
+
