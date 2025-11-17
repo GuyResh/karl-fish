@@ -17,7 +17,6 @@ android {
     compileSdk = 36
     namespace = "com.karlfish.app"
     defaultConfig {
-        manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "com.karlfish.app"
         minSdk = 24
         targetSdk = 35
@@ -39,7 +38,6 @@ android {
     buildTypes {
         getByName("debug") {
             // Uses default debug signing config automatically
-            manifestPlaceholders["usesCleartextTraffic"] = "true"
             isDebuggable = true
             isJniDebuggable = true
             isMinifyEnabled = false
