@@ -7,6 +7,7 @@ export interface ConnectionError {
   reason?: string;
   message?: string;
   type?: string;
+  target?: any;
   wasClean?: boolean;
   url?: string;
   readyState?: number;
@@ -117,8 +118,7 @@ export class NMEA2000Service {
 
   async connect(ipAddress: string, port: number = 2000, testMode: boolean = false): Promise<{ success: boolean; error?: ConnectionError; errorMessage?: string }> {
     if (testMode) {
-      const success = await this.startTestMode();
-      return { success };
+      return await this.startTestMode();
     }
 
     // Clear previous error
@@ -158,12 +158,13 @@ export class NMEA2000Service {
 
       this.socket.onerror = (error) => {
         console.error('[NMEA2000] WebSocket connection error:', error);
+        const errorEvent = error as Event;
         const errorDetails: ConnectionError = {
-          type: (error as any).type,
-          target: (error as any).target,
+          type: errorEvent.type,
+          target: errorEvent.target,
           readyState: this.socket?.readyState,
           url: wsUrl,
-          message: (error as Error)?.message || 'WebSocket connection error'
+          message: 'WebSocket connection error'
         };
         this.lastError = errorDetails;
         console.error('[NMEA2000] Error details:', errorDetails);
