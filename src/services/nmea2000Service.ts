@@ -2,6 +2,16 @@ import { FishingDataService } from '../database';
 import { NMEAData } from '../types';
 import { testDataService } from './testDataService';
 
+export interface ConnectionError {
+  code?: number;
+  reason?: string;
+  message?: string;
+  type?: string;
+  wasClean?: boolean;
+  url?: string;
+  readyState?: number;
+}
+
 export class NMEA2000Service {
   private static instance: NMEA2000Service;
   private socket: WebSocket | null = null;
@@ -10,6 +20,7 @@ export class NMEA2000Service {
   private messageListeners: Array<(payload: { raw: string; parsed?: any }) => void> = [];
   private recentMessages: Array<{ timestamp: number; raw: string; parsed?: any }> = [];
   private recentMessagesLimit: number = 1000;
+  private lastError: ConnectionError | null = null;
 
   private constructor() {
     // Simple NMEA 2000 parser for browser environment
@@ -22,35 +33,140 @@ export class NMEA2000Service {
     return NMEA2000Service.instance;
   }
 
-  async connect(ipAddress: string, port: number = 2000, testMode: boolean = false): Promise<boolean> {
-    if (testMode) {
-      return this.startTestMode();
+  getLastError(): ConnectionError | null {
+    return this.lastError;
+  }
+
+  private getErrorMessage(error: ConnectionError | null): string {
+    if (!error) {
+      return 'Unknown connection error';
     }
+
+    // Check for Android-specific issues
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    
+    // WebSocket close codes
+    if (error.code !== undefined) {
+      switch (error.code) {
+        case 1006: // Abnormal closure (no close frame)
+          if (isAndroid) {
+            return 'Connection blocked. This may be due to Android security settings blocking cleartext traffic (ws://). Check network security configuration.';
+          }
+          return 'Connection closed abnormally. The server may not be reachable or the connection was blocked.';
+        case 1000: // Normal closure
+          return 'Connection closed normally.';
+        case 1001: // Going away
+          return 'Server is going away.';
+        case 1002: // Protocol error
+          return 'Protocol error. The server may not support WebSocket connections.';
+        case 1003: // Unsupported data
+          return 'Unsupported data type.';
+        case 1004: // Reserved
+          return 'Connection closed (reserved code).';
+        case 1005: // No status code
+          return 'No status code received.';
+        case 1007: // Invalid frame payload data
+          return 'Invalid data received from server.';
+        case 1008: // Policy violation
+          if (isAndroid) {
+            return 'Connection blocked by security policy. Android may be blocking cleartext WebSocket (ws://) connections. Check network security configuration.';
+          }
+          return 'Connection blocked by security policy.';
+        case 1009: // Message too big
+          return 'Message too large.';
+        case 1010: // Missing extension
+          return 'Missing required extension.';
+        case 1011: // Internal error
+          return 'Server internal error.';
+        case 1012: // Service restart
+          return 'Server is restarting.';
+        case 1013: // Try again later
+          return 'Server is busy, try again later.';
+        case 1014: // Bad gateway
+          return 'Bad gateway.';
+        case 1015: // TLS handshake failure
+          return 'TLS handshake failed.';
+      }
+    }
+
+    // Check readyState for connection issues
+    if (error.readyState === WebSocket.CLOSED && !error.wasClean) {
+      if (isAndroid) {
+        return 'Connection failed immediately. This may indicate Android is blocking cleartext WebSocket (ws://) connections. Check network security configuration in AndroidManifest.xml.';
+      }
+      return 'Connection failed. The server may not be reachable or the connection was refused.';
+    }
+
+    // Generic error messages
+    if (error.message) {
+      if (error.message.includes('Failed to construct') || error.message.includes('NetworkError')) {
+        if (isAndroid) {
+          return `Network error: ${error.message}. Android may be blocking cleartext traffic. Check network security configuration.`;
+        }
+        return `Network error: ${error.message}`;
+      }
+      return error.message;
+    }
+
+    if (error.reason) {
+      return error.reason;
+    }
+
+    return 'Connection failed. Please check your network connection and server settings.';
+  }
+
+  async connect(ipAddress: string, port: number = 2000, testMode: boolean = false): Promise<{ success: boolean; error?: ConnectionError; errorMessage?: string }> {
+    if (testMode) {
+      const success = await this.startTestMode();
+      return { success };
+    }
+
+    // Clear previous error
+    this.lastError = null;
 
     try {
       const wsUrl = `ws://${ipAddress}:${port}`;
-      console.log('Connecting to NMEA 2000 gateway at:', wsUrl);
+      console.log('[NMEA2000] Connecting to NMEA 2000 gateway at:', wsUrl);
       
       this.socket = new WebSocket(wsUrl);
       
       this.socket.onopen = () => {
-        console.log('Connected to NMEA 2000 gateway');
+        console.log('[NMEA2000] Connected to NMEA 2000 gateway');
         this.isConnected = true;
+        this.lastError = null; // Clear error on successful connection
       };
 
       this.socket.onmessage = (event) => {
         this.handleNMEAData(event.data);
       };
 
-      this.socket.onclose = () => {
-        console.log('Disconnected from NMEA 2000 gateway');
+      this.socket.onclose = (event) => {
+        console.log('[NMEA2000] Disconnected from NMEA 2000 gateway');
+        const error: ConnectionError = {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+          url: wsUrl,
+          readyState: this.socket?.readyState
+        };
+        this.lastError = error;
+        console.log('[NMEA2000] Close event details:', error);
         this.isConnected = false;
         // Don't auto-reconnect - let the UI handle retries
         // this.attemptReconnect(ipAddress, port);
       };
 
       this.socket.onerror = (error) => {
-        console.error('NMEA 2000 gateway connection error:', error);
+        console.error('[NMEA2000] WebSocket connection error:', error);
+        const errorDetails: ConnectionError = {
+          type: (error as any).type,
+          target: (error as any).target,
+          readyState: this.socket?.readyState,
+          url: wsUrl,
+          message: (error as Error)?.message || 'WebSocket connection error'
+        };
+        this.lastError = errorDetails;
+        console.error('[NMEA2000] Error details:', errorDetails);
         this.isConnected = false;
       };
 
@@ -63,10 +179,15 @@ export class NMEA2000Service {
           
           if (this.isConnected) {
             resolved = true;
-            resolve(true);
+            resolve({ success: true });
           } else if (this.socket?.readyState === WebSocket.CLOSED || this.socket?.readyState === WebSocket.CLOSING) {
             resolved = true;
-            resolve(false);
+            const error = this.lastError || { url: wsUrl, readyState: this.socket?.readyState };
+            resolve({ 
+              success: false, 
+              error,
+              errorMessage: this.getErrorMessage(error)
+            });
           } else {
             setTimeout(checkConnection, 100);
           }
@@ -79,35 +200,55 @@ export class NMEA2000Service {
         setTimeout(() => {
           if (!resolved) {
             resolved = true;
-            console.log('NMEA 2000 connection attempt timed out');
-            resolve(false);
+            console.log('[NMEA2000] Connection attempt timed out');
+            const error: ConnectionError = { 
+              url: wsUrl, 
+              message: 'Connection timeout',
+              readyState: this.socket?.readyState 
+            };
+            this.lastError = error;
+            resolve({ 
+              success: false, 
+              error,
+              errorMessage: this.getErrorMessage(error)
+            });
           }
         }, 12000); // 12 second timeout to allow UI 10-second timeout to work
       });
     } catch (error) {
-      console.error('Error connecting to NMEA 2000 gateway:', error);
-      return false;
+      console.error('[NMEA2000] Error connecting to NMEA 2000 gateway:', error);
+      const errorDetails: ConnectionError = {
+        message: (error as Error)?.message || 'Unknown error',
+        url: `ws://${ipAddress}:${port}`
+      };
+      this.lastError = errorDetails;
+      return { 
+        success: false, 
+        error: errorDetails,
+        errorMessage: this.getErrorMessage(errorDetails)
+      };
     }
   }
 
-  private async startTestMode(): Promise<boolean> {
-    console.log('Starting NMEA 2000 test mode with simulated data');
+  private async startTestMode(): Promise<{ success: boolean; error?: ConnectionError; errorMessage?: string }> {
+    console.log('[NMEA2000] Starting NMEA 2000 test mode with simulated data');
     this.isConnected = true;
+    this.lastError = null; // Clear any previous errors
 
     // Clear any old NMEA data to ensure we start fresh with offshore coordinates
     try {
       await FishingDataService.clearNMEAData();
-      console.log('Cleared old NMEA data');
+      console.log('[NMEA2000] Cleared old NMEA data');
     } catch (error) {
-      console.error('Error clearing NMEA data:', error);
+      console.error('[NMEA2000] Error clearing NMEA data:', error);
     }
 
     testDataService.startSimulation((data) => {
       this.handleNMEAData(data.rawSentence);
     });
 
-    console.log('Test mode started, isConnected:', this.isConnected);
-    return true;
+    console.log('[NMEA2000] Test mode started, isConnected:', this.isConnected);
+    return { success: true };
   }
 
 

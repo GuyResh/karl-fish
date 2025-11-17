@@ -17,6 +17,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [showConnectionError, setShowConnectionError] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [connectionTimeout, setConnectionTimeout] = useState<NodeJS.Timeout | null>(null);
   const [retryCount, setRetryCount] = useState(3);
   const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -71,25 +72,27 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
     setConnectionTimeout(timeout);
     
     try {
-      const success = await nmea2000Service.connect(
+      const result = await nmea2000Service.connect(
         settings.nmea2000.ipAddress,
         settings.nmea2000.port || 2000
       );
       
       // Clear timeout if connection succeeded
-      if (success) {
+      if (result.success) {
         clearTimeout(timeout);
         setConnectionTimeout(null);
         setIsConnected(true);
         setIsRetrying(false);
         setIsConnecting(false);
         setRetryCount(3); // Reset retry count on success
+        setConnectionError(null);
       } else {
-        // Connection failed - clear timeout and show error modal
+        // Connection failed - clear timeout and show error modal with details
         clearTimeout(timeout);
         setConnectionTimeout(null);
         setIsConnecting(false);
         setIsRetrying(false);
+        setConnectionError(result.errorMessage || 'Connection failed');
         setShowConnectionError(true);
       }
     } catch (error) {
@@ -98,6 +101,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
       setConnectionTimeout(null);
       setIsConnecting(false);
       setIsRetrying(false);
+      setConnectionError((error as Error)?.message || 'Unknown error occurred');
       setShowConnectionError(true);
     }
   };
@@ -149,38 +153,46 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
           let success = false;
           if (settings.nmea2000.simulated) {
             // Start simulated mode without requiring IP address
-            success = await nmea2000Service.connect(
+            const result = await nmea2000Service.connect(
               settings.nmea2000.ipAddress || 'test',
               settings.nmea2000.port || 2000,
               true
             );
+            success = result.success;
             setIsConnected(success);
+            if (!success) {
+              setConnectionError(result.errorMessage || 'Failed to start simulation');
+              setShowConnectionError(true);
+            }
           } else if (settings.nmea2000.ipAddress) {
             // Set up connection timeout for real connections
             const timeout = setTimeout(() => {
-              console.log('NMEA 2000 connection timeout');
+              console.log('[NMEA2000] Connection timeout');
               setIsConnecting(false);
               setIsConnected(false);
+              setConnectionError('Connection timeout. The server did not respond within 10 seconds.');
               setShowConnectionError(true);
               setConnectionTimeout(null);
             }, 10000); // 10 second timeout
             
             setConnectionTimeout(timeout);
             
-            success = await nmea2000Service.connect(
+            const result = await nmea2000Service.connect(
               settings.nmea2000.ipAddress,
               settings.nmea2000.port || 2000
             );
             
             // Clear timeout if connection succeeded
-            if (success) {
+            if (result.success) {
               clearTimeout(timeout);
               setConnectionTimeout(null);
               setIsConnected(true);
+              setConnectionError(null);
             } else {
-              // Connection failed - show error modal and wait for user input
+              // Connection failed - show error modal with details
               clearTimeout(timeout);
               setConnectionTimeout(null);
+              setConnectionError(result.errorMessage || 'Connection failed');
               setShowConnectionError(true);
             }
           }
@@ -193,6 +205,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
         clearTimeout(connectionTimeout);
         setConnectionTimeout(null);
       }
+      setConnectionError((error as Error)?.message || 'Unknown error occurred');
       setShowConnectionError(true);
     } finally {
       setIsConnecting(false);
@@ -314,9 +327,40 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
           </div>
         }
       >
-        <div style={{ textAlign: 'center', color: '#000' }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '16px' }}>Unable to connect to N2K network.</p>
-          <p style={{ margin: '0', fontSize: '16px' }}>Please check your connection settings and try again.</p>
+        <div style={{ textAlign: 'left', color: '#000' }}>
+          <p style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 'bold' }}>
+            Unable to connect to NMEA 2000 gateway
+          </p>
+          {connectionError && (
+            <div style={{ 
+              margin: '0 0 12px 0', 
+              padding: '12px', 
+              backgroundColor: '#fef2f2', 
+              border: '1px solid #fca5a5',
+              borderRadius: '6px',
+              fontSize: '14px',
+              lineHeight: '1.5'
+            }}>
+              <strong>Error Details:</strong>
+              <div style={{ marginTop: '8px', whiteSpace: 'pre-wrap' }}>{connectionError}</div>
+            </div>
+          )}
+          <div style={{ margin: '0 0 8px 0', fontSize: '14px' }}>
+            <strong>Connection Settings:</strong>
+            <div style={{ marginTop: '4px' }}>
+              IP: {settings?.nmea2000.ipAddress || 'Not set'}<br />
+              Port: {settings?.nmea2000.port || 2000}
+            </div>
+          </div>
+          <div style={{ margin: '12px 0 0 0', fontSize: '13px', color: '#666' }}>
+            <strong>Troubleshooting:</strong>
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+              <li>Verify the gateway is running and accessible</li>
+              <li>Check that both devices are on the same network</li>
+              <li>Ensure firewall allows connections on port {settings?.nmea2000.port || 2000}</li>
+              <li>On Android, check network security configuration allows cleartext traffic</li>
+            </ul>
+          </div>
         </div>
       </Modal>
     </header>
