@@ -203,7 +203,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
     <header className="header">
       <div className="header-content">
         <div className="logo">
-          <Fish size={24} />
+          <Fish />
           Karl Fish
         </div>
         
@@ -212,7 +212,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
             to="/" 
             className={isActive('/') ? 'active' : ''}
           >
-            <BarChart3 size={16} />
+            <BarChart3 />
             Dashboard
           </Link>
           <Link 
@@ -225,21 +225,21 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
             to="/transfer" 
             className={isActive('/transfer') ? 'active' : ''}
           >
-            <Download size={16} />
+            <Download />
             Transfer
           </Link>
           <Link 
             to="/share" 
             className={isActive('/share') ? 'active' : ''}
           >
-            <Share2 size={16} />
+            <Share2 />
             Share
           </Link>
           <Link 
             to="/settings" 
             className={isActive('/settings') ? 'active' : ''}
           >
-            <Settings size={16} />
+            <Settings />
             Settings
           </Link>
         </nav>
@@ -254,21 +254,13 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
               "NMEA 2000 Disconnected"
             }
             onClick={handleNMEA2000Toggle}
-            style={{ 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center',
-              padding: '8px',
-              borderRadius: '4px',
-              transition: 'background-color 0.2s'
-            }}
           >
             {(isConnecting || isRetrying) ? (
-              <WifiOff size={16} style={{ color: '#f59e0b' }} className="pulse" />
+              <WifiOff style={{ color: '#f59e0b' }} className="pulse" />
             ) : isConnected ? (
-              <Wifi size={16} style={{ color: '#10b981' }} />
+              <Wifi style={{ color: '#10b981' }} />
             ) : (
-              <WifiOff size={16} style={{ color: '#ef4444' }} />
+              <WifiOff style={{ color: '#ef4444' }} />
             )}
           </div>
 
@@ -282,7 +274,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
                 className="btn btn-sm btn-primary"
                 title="Sign Out"
               >
-                <LogOut size={16} />
+                <LogOut />
               </button>
             </div>
           ) : (
@@ -291,7 +283,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
               className="btn btn-sm btn-primary"
               title="Sign In"
             >
-              <LogIn size={16} />
+              <LogIn />
               Sign In
             </button>
           )}
