@@ -44,6 +44,7 @@ A comprehensive React-based fishing log application that can be deployed as a we
 - **Interactive Sharing Dashboard**: Filter sessions by users and species with color-coded visualization
 - **Live Map Integration**: Interactive Leaflet maps showing catch locations with clustering
 - **Real-time Updates**: Live updates when friends share new sessions
+- **Public Statistics & Leaderboard**: View aggregate statistics and leaderboard rankings for all anglers at `/stats` (no login required)
 
 ### 🖥️ Deployment Options
 - **Web Application**: Run in any modern browser
@@ -188,6 +189,17 @@ The application automatically collects from all connected N2K devices:
 7. **Species Filtering**: Filter shared sessions by species with color-coded swatches
 8. **Privacy Settings**: Control who can see your sessions (private, friends, public)
 
+### Public Statistics & Leaderboard
+1. **View Statistics**: Visit `/stats` to see aggregate statistics for all anglers (no login required)
+2. **Summary Statistics**: View total anglers, sessions, catches, average catches per session, total fishing time, species caught, and most common species
+3. **Leaderboard**: See ranked angler statistics including:
+   - Number of sessions
+   - Total fishing time (formatted as days, hours, minutes)
+   - Total catches
+   - Number of species caught
+   - Most common species
+4. **Real-time Data**: Statistics are calculated from all sessions in the database and update automatically
+
 ### Cloud Synchronization
 1. **Automatic Sync**: Your data syncs to the cloud when you're online
 2. **Offline Mode**: Continue logging sessions when offline - data syncs when reconnected
@@ -255,6 +267,83 @@ const results = await FishingDataService.searchSessions('bass');
 const stats = await FishingDataService.getSessionStats();
 ```
 
+### API Endpoints
+
+The application includes serverless API endpoints deployed on Vercel:
+
+#### Health Check Endpoint (`/api/health`)
+
+A health check endpoint that monitors database connectivity and returns user session statistics.
+
+**Features:**
+- Rate limiting: Only one query per time window (default 5 minutes, configurable via `HEALTH_WINDOW_MINUTES` environment variable)
+- Multiple response formats: JSON (default), text, and Prometheus
+- Returns user session counts (private and shared) per username
+
+**Request:**
+```bash
+GET /api/health?format=json
+GET /api/health?format=text
+GET /api/health?format=prometheus
+```
+
+**Response (JSON format, 200 OK):**
+```json
+{
+  "status": "ok",
+  "data": [
+    {
+      "username": "user1",
+      "privateSessions": 10,
+      "sharedSessions": 5
+    }
+  ]
+}
+```
+
+**Response Codes:**
+- `200 OK`: Health check successful
+- `429 Too Many Requests`: Rate limit exceeded (returns `Retry-After` header)
+- `503 Service Unavailable`: Database connection or query error
+
+**Rate Limiting:**
+The endpoint uses in-memory rate limiting per serverless instance to prevent excessive database queries. If the endpoint is called more than once within the configured time window, it returns a 429 status with a `Retry-After` header indicating when to retry.
+
+#### Statistics Endpoint (`/api/stats`)
+
+Returns aggregate statistics and leaderboard data for all anglers. Used by the public `/stats` page.
+
+**Request:**
+```bash
+GET /api/stats
+```
+
+**Response (200 OK):**
+```json
+{
+  "totalAnglers": 3,
+  "totalSessions": 630,
+  "totalCatches": 2220,
+  "averageCatchPerSession": 3.5,
+  "totalFishingTime": 3169.99,
+  "totalSpecies": 8,
+  "mostCommonSpecies": "Sailfish",
+  "mostCommonSpeciesCount": 291,
+  "anglerStats": [
+    {
+      "angler": "username",
+      "sessions": 210,
+      "fishingTime": 1048.03,
+      "catches": 754,
+      "speciesCaught": 8,
+      "mostCommonSpecies": "Bigeye Tuna"
+    }
+  ]
+}
+```
+
+**Note:** This endpoint uses the Supabase service role key to bypass Row Level Security (RLS) and access all session data for aggregate statistics.
+
 ## Development
 
 ### Project Structure
@@ -316,6 +405,7 @@ For issues and questions:
 - [x] Cross-platform deployment (Vercel, GitHub Pages)
 - [x] User-specific data isolation
 - [x] Server-side email export via Vercel API
+- [x] Public statistics and leaderboard page with aggregate data from all anglers
 
 ### 🚧 In Progress
 - [ ] Real-time notifications for friend activity
