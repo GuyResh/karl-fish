@@ -28,17 +28,32 @@ const Stats: React.FC = () => {
 
   const formatDuration = (hours: number): string => {
     if (hours < 1) {
+      // Less than 60 minutes, only show minutes
       return `${Math.round(hours * 60)}m`;
     }
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    if (h === 0) {
+    
+    const totalMinutes = Math.round(hours * 60);
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const remainingMinutes = totalMinutes % (24 * 60);
+    const h = Math.floor(remainingMinutes / 60);
+    const m = remainingMinutes % 60;
+    
+    if (days > 0) {
+      // More than 24 hours: show days, hours, minutes
+      const parts: string[] = [`${days}d`];
+      if (h > 0) parts.push(`${h}h`);
+      if (m > 0) parts.push(`${m}m`);
+      return parts.join(' ');
+    } else if (h > 0) {
+      // Less than 24 hours but more than 60 minutes: show hours and minutes
+      if (m === 0) {
+        return `${h}h`;
+      }
+      return `${h}h ${m}m`;
+    } else {
+      // Less than 60 minutes: only show minutes
       return `${m}m`;
     }
-    if (m === 0) {
-      return `${h}h`;
-    }
-    return `${h}h ${m}m`;
   };
 
   if (isLoading) {
@@ -115,22 +130,24 @@ const Stats: React.FC = () => {
             <table className="table">
               <thead>
                 <tr>
+                  <th>Rank</th>
                   <th>Angler</th>
-                  <th># Sessions</th>
-                  <th>Fishing Time</th>
-                  <th># Caught</th>
-                  <th># Species Caught</th>
+                  <th style={{ textAlign: 'center' }}># Sessions</th>
+                  <th style={{ textAlign: 'center' }}>Fishing Time</th>
+                  <th style={{ textAlign: 'center' }}># Caught</th>
+                  <th style={{ textAlign: 'center' }}># Species</th>
                   <th>Most Common</th>
                 </tr>
               </thead>
               <tbody>
                 {anglerStats.map((angler, index) => (
                   <tr key={index}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{index + 1}</td>
                     <td>{angler.angler}</td>
-                    <td>{angler.sessions}</td>
-                    <td>{formatDuration(angler.fishingTime)}</td>
-                    <td>{angler.catches}</td>
-                    <td>{angler.speciesCaught}</td>
+                    <td style={{ textAlign: 'center' }}>{angler.sessions}</td>
+                    <td style={{ textAlign: 'center' }}>{formatDuration(angler.fishingTime)}</td>
+                    <td style={{ textAlign: 'center' }}>{angler.catches}</td>
+                    <td style={{ textAlign: 'center' }}>{angler.speciesCaught}</td>
                     <td>{angler.mostCommonSpecies}</td>
                   </tr>
                 ))}
