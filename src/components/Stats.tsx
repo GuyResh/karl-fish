@@ -58,20 +58,24 @@ const Stats: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="card loading-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 160, textAlign: 'center' }}>
-        <div className="loading-spinner"></div>
-        <p>Loading statistics...</p>
+      <div className="stats-page">
+        <div className="card loading-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 160, textAlign: 'center', width: '100%' }}>
+          <div className="loading-spinner"></div>
+          <p>Loading statistics...</p>
+        </div>
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="card">
-        <div className="empty-state">
-          <Fish size={48} />
-          <h3>No statistics available</h3>
-          <p>No public fishing data found.</p>
+      <div className="stats-page">
+        <div className="card">
+          <div className="empty-state">
+            <Fish size={48} />
+            <h3>No statistics available</h3>
+            <p>No public fishing data found.</p>
+          </div>
         </div>
       </div>
     );

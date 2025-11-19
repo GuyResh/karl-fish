@@ -218,6 +218,12 @@ body {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 1rem;
   margin-bottom: 1rem;
+  width: 100%;
+}
+
+.stats-page {
+  width: 100%;
+  max-width: 100%;
 }
 
 .card-header {
