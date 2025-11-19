@@ -9,9 +9,10 @@ import Modal from './Modal';
 interface HeaderProps {
   settings: AppSettings | null;
   onShowAuth?: () => void;
+  title?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
+const Header: React.FC<HeaderProps> = ({ settings, onShowAuth, title }) => {
   const location = useLocation();
   const { user, profile, signOut } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
@@ -217,7 +218,7 @@ const Header: React.FC<HeaderProps> = ({ settings, onShowAuth }) => {
       <div className="header-content">
         <div className="logo">
           <Fish />
-          Karl Fish
+          {title || 'Karl Fish'}
         </div>
         
         <nav className="nav">

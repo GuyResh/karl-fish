@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { FishingDataService } from './database';
 import { AppSettings } from './types';
 import { UnitConverter } from './utils/unitConverter';
@@ -31,6 +31,8 @@ const CatchesList = lazy(() => import('./components/CatchesList'));
 const Settings = lazy(() => import('./components/Settings'));
 const Transfer = lazy(() => import('./components/Transfer'));
 const Share = lazy(() => import('./components/Share'));
+const Stats = lazy(() => import('./components/Stats'));
+const StatsHeader = lazy(() => import('./components/StatsHeader'));
 
 // Migration function to handle old settings structure
 function migrateSettings(settings: any): AppSettings {
@@ -69,6 +71,7 @@ function migrateSettings(settings: any): AppSettings {
 
 // AppContent component that handles authentication logic
 function AppContent() {
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +80,9 @@ function AppContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasCachedData, setHasCachedData] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  
+  // Determine header title based on route
+  const headerTitle = location.pathname === '/stats' ? 'Karl Fish Statistics' : undefined;
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -247,10 +253,12 @@ function AppContent() {
   }
 
   // Show auth modal only if not logged in AND we have neither offline mode nor cached data
-  if (!user && !isOfflineMode && !hasCachedData) {
+  // But allow stats page to be accessed without auth
+  const isStatsPage = location.pathname === '/stats';
+  if (!user && !isOfflineMode && !hasCachedData && !isStatsPage) {
     return (
       <div className="app">
-        <Header settings={settings} onShowAuth={handleShowAuthModal} />
+        <Header settings={settings} onShowAuth={handleShowAuthModal} title={headerTitle} />
         <AuthModal
           isOpen={showAuthModal}
           onClose={handleCloseAuthModal}
@@ -277,9 +285,18 @@ function AppContent() {
     );
   }
 
+  // Don't show main header on stats page - it has its own header
+  const showMainHeader = !isStatsPage;
+
   return (
     <div className="app">
-      <Header settings={settings} onShowAuth={handleShowAuthModal} />
+      {showMainHeader ? (
+        <Header settings={settings} onShowAuth={handleShowAuthModal} title={headerTitle} />
+      ) : (
+        <Suspense fallback={null}>
+          <StatsHeader />
+        </Suspense>
+      )}
       <main className="main-content">
         <Suspense fallback={
           <div className="app-loading">
@@ -295,6 +312,7 @@ function AppContent() {
             <Route path="/catches" element={<CatchesList />} />
             <Route path="/transfer" element={<Transfer />} />
             <Route path="/share" element={<Share />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/reset-password" element={<PasswordResetPage />} />
             <Route 
               path="/settings" 
