@@ -259,9 +259,32 @@ const Dashboard: React.FC = () => {
 
   const formatDuration = (hours: number): string => {
     if (hours < 1) {
+      // Less than 60 minutes, only show minutes
       return `${Math.round(hours * 60)}m`;
     }
-    return `${hours.toFixed(1)}h`;
+    
+    const totalMinutes = Math.round(hours * 60);
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const remainingMinutes = totalMinutes % (24 * 60);
+    const h = Math.floor(remainingMinutes / 60);
+    const m = remainingMinutes % 60;
+    
+    if (days > 0) {
+      // More than 24 hours: show days, hours, minutes
+      const parts: string[] = [`${days}d`];
+      if (h > 0) parts.push(`${h}h`);
+      if (m > 0) parts.push(`${m}m`);
+      return parts.join(' ');
+    } else if (h > 0) {
+      // Less than 24 hours but more than 60 minutes: show hours and minutes
+      if (m === 0) {
+        return `${h}h`;
+      }
+      return `${h}h ${m}m`;
+    } else {
+      // Less than 60 minutes: only show minutes
+      return `${m}m`;
+    }
   };
 
   if (isLoading) {
