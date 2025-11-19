@@ -413,6 +413,7 @@ For issues and questions:
 - [ ] Session collaboration features
 
 ### 📋 Planned Features
+- [ ] Year selection for Leaderboard/Statistics page (filter stats by selected year, default to current year)
 - [ ] Photo integration for fish catches
 - [ ] Advanced analytics and charts
 - [ ] Mobile app version (React Native)
