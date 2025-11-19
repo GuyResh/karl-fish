@@ -152,8 +152,18 @@ export default async function handler(req: any, res: any) {
     const totalSessions = sessions.length;
     const averageCatchPerSession = totalSessions > 0 ? totalCatches / totalSessions : 0;
 
-    // Build angler stats
-    const anglerStats = Array.from(userSessionsMap.values()).map(userStats => {
+    // Build angler stats - include all profiles, even those without sessions
+    const anglerStatsMap = new Map<string, {
+      angler: string;
+      sessions: number;
+      fishingTime: number;
+      catches: number;
+      speciesCaught: number;
+      mostCommonSpecies: string;
+    }>();
+
+    // First, add all anglers who have sessions
+    Array.from(userSessionsMap.values()).forEach(userStats => {
       let mostCommonSpeciesForUser = 'None';
       let mostCommonCountForUser = 0;
       Object.entries(userStats.speciesCounts).forEach(([species, count]) => {
@@ -163,18 +173,45 @@ export default async function handler(req: any, res: any) {
         }
       });
 
-      return {
+      anglerStatsMap.set(userStats.username, {
         angler: userStats.username,
         sessions: userStats.sessions.length,
         fishingTime: userStats.fishingTime,
         catches: userStats.catches,
         speciesCaught: userStats.species.size,
-        mostCommonSpecies: mostCommonCountForUser > 0 ? mostCommonSpeciesForUser : 'None'
-      };
-    }).sort((a, b) => b.catches - a.catches);
+        mostCommonSpecies: mostCommonCountForUser > 0 ? mostCommonSpeciesForUser : '-'
+      });
+    });
+
+    // Then, add all profiles that don't have any sessions (with zeros)
+    if (profiles) {
+      profiles.forEach(profile => {
+        if (!anglerStatsMap.has(profile.username)) {
+          anglerStatsMap.set(profile.username, {
+            angler: profile.username,
+            sessions: 0,
+            fishingTime: 0,
+            catches: 0,
+            speciesCaught: 0,
+            mostCommonSpecies: '-'
+          });
+        }
+      });
+    }
+
+    // Sort by catches (descending), then by username for ties
+    const anglerStats = Array.from(anglerStatsMap.values()).sort((a, b) => {
+      if (b.catches !== a.catches) {
+        return b.catches - a.catches;
+      }
+      return a.angler.localeCompare(b.angler);
+    });
+
+    // Total anglers should be all profiles, not just those with sessions
+    const totalAnglersCount = profiles ? profiles.length : uniqueAnglers.size;
 
     return res.status(200).json({
-      totalAnglers: uniqueAnglers.size,
+      totalAnglers: totalAnglersCount,
       totalSessions,
       totalCatches,
       averageCatchPerSession: Math.round(averageCatchPerSession * 10) / 10,

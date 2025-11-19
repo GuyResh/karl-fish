@@ -27,6 +27,9 @@ const Stats: React.FC = () => {
   }, []);
 
   const formatDuration = (hours: number): string => {
+    if (hours <= 0) {
+      return '0m';
+    }
     if (hours < 1) {
       // Less than 60 minutes, only show minutes
       return `${Math.round(hours * 60)}m`;
@@ -152,7 +155,7 @@ const Stats: React.FC = () => {
                     <td style={{ textAlign: 'center' }}>{formatDuration(angler.fishingTime)}</td>
                     <td style={{ textAlign: 'center' }}>{angler.catches}</td>
                     <td style={{ textAlign: 'center' }}>{angler.speciesCaught}</td>
-                    <td>{angler.mostCommonSpecies}</td>
+                    <td>{angler.mostCommonSpecies === '-' ? '-' : angler.mostCommonSpecies}</td>
                   </tr>
                 ))}
               </tbody>
